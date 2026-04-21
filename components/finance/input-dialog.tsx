@@ -6,34 +6,59 @@ import { cn } from "@/lib/utils"
 
 export type InputMode = "Pemasukan" | "Pengeluaran"
 
+interface Category {
+  id: number
+  name: string
+  type: "income" | "expense"
+  icon: string | null
+}
+
 interface InputDialogProps {
   open: boolean
   mode: InputMode
+  categories: Category[]
+  initialData?: { amount: number; category: string; note: string; date: string }
   onClose: () => void
   onSubmit: (data: { amount: number; category: string; note: string; date: string }) => void
 }
 
-const CATEGORIES: Record<InputMode, string[]> = {
-  Pemasukan: ["Gaji", "Bonus", "Freelance"],
-  Pengeluaran: ["Makan", "Transport", "Belanja", "Tagihan", "Hiburan"],
-}
-
-export function InputDialog({ open, mode, onClose, onSubmit }: InputDialogProps) {
+export function InputDialog({ open, mode, categories, initialData, onClose, onSubmit }: InputDialogProps) {
   const [amount, setAmount] = useState("")
   const [category, setCategory] = useState("")
   const [note, setNote] = useState("")
   const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10))
   const [error, setError] = useState<string | null>(null)
 
+  // Filter kategori berdasarkan tipe (pemasukan/pengeluaran)
+  const filteredCategories = categories.filter(c => 
+    mode === "Pemasukan" ? c.type === "income" : c.type === "expense"
+  )
+
   useEffect(() => {
     if (open) {
-      setAmount("")
-      setCategory("")
-      setNote("")
-      setDate(new Date().toISOString().slice(0, 10))
+      if (initialData) {
+        setAmount(Math.abs(initialData.amount).toString())
+        setCategory(initialData.category)
+        setNote(initialData.note)
+        try {
+           const d = new Date((initialData as any).rawDate || initialData.date);
+           if (!isNaN(d.getTime())) {
+             setDate(d.toISOString().slice(0, 10))
+           } else {
+             setDate(new Date().toISOString().slice(0, 10))
+           }
+        } catch {
+           setDate(new Date().toISOString().slice(0, 10))
+        }
+      } else {
+        setAmount("")
+        setCategory("")
+        setNote("")
+        setDate(new Date().toISOString().slice(0, 10))
+      }
       setError(null)
     }
-  }, [open, mode])
+  }, [open, initialData])
 
   useEffect(() => {
     if (!open) return
@@ -89,10 +114,10 @@ export function InputDialog({ open, mode, onClose, onSubmit }: InputDialogProps)
         <div className="flex items-start justify-between gap-4 border-b border-dashed border-border pb-4">
           <div>
             <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-              Entri Baru
+              {initialData ? "Sunting Entri" : "Entri Baru"}
             </p>
             <h2 id="input-dialog-title" className="mt-1 font-sans text-xl font-bold tracking-tight">
-              Input {mode}
+              {initialData ? "Edit" : "Input"} {mode}
             </h2>
           </div>
           <button
@@ -141,15 +166,20 @@ export function InputDialog({ open, mode, onClose, onSubmit }: InputDialogProps)
 
           <Field label="Kategori" htmlFor="tx-category">
             <div className="flex flex-wrap gap-2" role="radiogroup" aria-labelledby="tx-category">
-              {CATEGORIES[mode].map((c) => {
-                const active = category === c
+              {filteredCategories.length === 0 && (
+                <p className="font-serif text-[11px] text-muted-foreground italic">
+                  Belum ada kategori {mode.toLowerCase()}. Silakan buat di menu Kategori.
+                </p>
+              )}
+              {filteredCategories.map((c) => {
+                const active = category === c.name
                 return (
                   <button
                     type="button"
-                    key={c}
+                    key={c.id}
                     role="radio"
                     aria-checked={active}
-                    onClick={() => setCategory(c)}
+                    onClick={() => setCategory(c.name)}
                     className={cn(
                       "rounded-sm border px-3 py-1.5 font-mono text-[11px] uppercase tracking-wider transition-colors",
                       active
@@ -159,7 +189,8 @@ export function InputDialog({ open, mode, onClose, onSubmit }: InputDialogProps)
                         : "border-border bg-background text-muted-foreground hover:border-foreground/30 hover:text-foreground",
                     )}
                   >
-                    {c}
+                    {c.icon && <span className="mr-1">{c.icon}</span>}
+                    {c.name}
                   </button>
                 )
               })}
@@ -207,7 +238,7 @@ export function InputDialog({ open, mode, onClose, onSubmit }: InputDialogProps)
                 : "bg-destructive hover:bg-destructive/90",
             )}
           >
-            Simpan {mode}
+            {initialData ? "Simpan Perubahan" : `Simpan ${mode}`}
           </button>
         </div>
       </form>

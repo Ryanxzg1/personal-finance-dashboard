@@ -1,0 +1,32 @@
+import { db } from "@/lib/db";
+import { sql } from "drizzle-orm";
+import { NextResponse } from "next/server";
+
+export async function GET() {
+  try {
+    console.log("Memulai perbaikan database manual...");
+    
+    // Gunakan nama tabel yang baru agar bersih
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS personal_budgets (
+        id SERIAL PRIMARY KEY,
+        user_id VARCHAR(255) NOT NULL,
+        category_id INTEGER NOT NULL REFERENCES categories(id) ON DELETE CASCADE,
+        limit_amount NUMERIC NOT NULL,
+        month INTEGER NOT NULL,
+        year INTEGER NOT NULL
+      );
+    `);
+
+    return NextResponse.json({ 
+      success: true, 
+      message: "Tabel personal_budgets berhasil dibuat secara manual!" 
+    });
+  } catch (error: any) {
+    console.error("Gagal perbaikan manual:", error);
+    return NextResponse.json({ 
+      success: false, 
+      error: error.message 
+    }, { status: 500 });
+  }
+}

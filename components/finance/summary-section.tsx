@@ -45,7 +45,7 @@ export function SummarySection({ balance, changePct, lastEntries }: SummaryProps
           </div>
 
           <p className="mt-5 font-mono text-3xl font-medium tracking-tight text-foreground lg:text-4xl">
-            Rp 5.420.000
+            {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(balance)}
           </p>
 
           <div className="mt-4 flex items-center gap-2">

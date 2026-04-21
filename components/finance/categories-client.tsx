@@ -1,0 +1,175 @@
+"use client"
+
+import { useState, useTransition, useOptimistic } from "react"
+import { Plus, Trash2, Tag, Target } from "lucide-react"
+import { createCategory, deleteCategory } from "@/lib/actions/categories"
+import { upsertBudget } from "@/lib/actions/budgets"
+import { toast } from "sonner"
+import { cn } from "@/lib/utils"
+
+interface Category {
+  id: number
+  userId: string
+  name: string
+  type: "income" | "expense"
+  icon: string | null
+}
+
+interface Budget {
+  id: number
+  categoryId: number
+  limitAmount: string
+  month: number
+  year: number
+}
+
+interface CategoriesClientProps {
+  initialCategories: Category[]
+  initialBudgets: Budget[]
+}
+
+export function CategoriesClient({ initialCategories, initialBudgets }: CategoriesClientProps) {
+  const [isPending, startTransition] = useTransition()
+  const [name, setName] = useState("")
+  const [type, setType] = useState<"income" | "expense">("expense")
+
+  // State untuk input budget per kategori
+  const [budgetInputs, setBudgetInputs] = useState<Record<number, string>>(() => {
+    const initial: Record<number, string> = {}
+    initialBudgets.forEach(b => {
+      initial[b.categoryId] = parseFloat(b.limitAmount).toString()
+    })
+    return initial
+  })
+
+  const [optimisticCategories, addOptimisticCategory] = useOptimistic(
+    initialCategories,
+    (state, action: { type: "ADD" | "DELETE"; category?: Category; id?: number }) => {
+      if (action.type === "ADD" && action.category) {
+        return [...state, action.category]
+      }
+      if (action.type === "DELETE" && action.id) {
+        return state.filter((c) => c.id !== action.id)
+      }
+      return state
+    }
+  )
+
+  const handleAdd = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!name.trim()) return
+    startTransition(async () => {
+      const result = await createCategory({
+        name: name.trim(),
+        type: type,
+        icon: type === "income" ? "💰" : "🛒"
+      })
+      if (!result.success) toast.error("Gagal menambah kategori")
+      else {
+        toast.success("Kategori berhasil ditambahkan")
+        setName("")
+      }
+    })
+  }
+
+  const handleDelete = async (id: number) => {
+    if (!confirm("Hapus kategori ini? Semua anggaran terkait juga akan hilang.")) return
+    startTransition(async () => {
+      addOptimisticCategory({ type: "DELETE", id })
+      const result = await deleteCategory(id)
+      if (!result.success) toast.error("Gagal menghapus kategori")
+    })
+  }
+
+  const handleSaveBudget = async (categoryId: number) => {
+    const amount = budgetInputs[categoryId] || "0"
+    const now = new Date()
+    startTransition(async () => {
+      const result = await upsertBudget({
+        categoryId,
+        amount,
+        month: now.getMonth(),
+        year: now.getFullYear()
+      })
+      if (!result.success) toast.error("Gagal menyimpan anggaran")
+      else toast.success("Anggaran diperbarui")
+    })
+  }
+
+  return (
+    <div className="p-8">
+      <header className="mb-8">
+        <h2 className="font-sans text-xl font-bold tracking-tight">Manajemen Kategori & Anggaran</h2>
+        <p className="font-serif text-sm italic text-muted-foreground">Atur kategori dan batasan pengeluaran bulanan Anda.</p>
+      </header>
+
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-fit">
+          {optimisticCategories.map((cat) => (
+            <div key={cat.id} className="flex flex-col p-5 rounded-sm border border-border bg-card shadow-xs group">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <span className="text-xl">{cat.icon || "📁"}</span>
+                  <div>
+                    <p className="font-sans text-sm font-bold">{cat.name}</p>
+                    <p className={cn(
+                      "font-mono text-[10px] uppercase tracking-wider",
+                      cat.type === "income" ? "text-[#5a6b3b]" : "text-destructive"
+                    )}>{cat.type === "income" ? "Pemasukan" : "Pengeluaran"}</p>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => handleDelete(cat.id)}
+                  className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-all p-1"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
+
+              {cat.type === "expense" && (
+                <div className="relative mt-2 flex items-center gap-2 border-t border-dashed border-border pt-4">
+                  <Target className="h-3.5 w-3.5 text-muted-foreground" />
+                  <div className="flex-1">
+                    <p className="font-mono text-[9px] uppercase tracking-tighter text-muted-foreground mb-1">Anggaran Bulanan (Rp)</p>
+                    <input 
+                      type="number"
+                      value={budgetInputs[cat.id] || ""}
+                      onChange={(e) => setBudgetInputs(prev => ({ ...prev, [cat.id]: e.target.value }))}
+                      onBlur={() => handleSaveBudget(cat.id)}
+                      placeholder="Contoh: 500000"
+                      className="w-full bg-transparent border-none p-0 font-mono text-xs focus:ring-0 focus:outline-none"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+
+        <aside className="rounded-sm border border-border bg-card p-6 h-fit shadow-xs">
+          <h3 className="font-sans text-sm font-bold uppercase tracking-wider mb-4">Kategori Baru</h3>
+          <form onSubmit={handleAdd} className="flex flex-col gap-4">
+            <div className="space-y-1.5">
+              <label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Judul</label>
+              <input 
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Mis. Internet..."
+                className="w-full rounded-sm border border-border bg-background px-3 py-2 font-serif text-sm focus:outline-none focus:border-primary"
+              />
+            </div>
+            <div className="space-y-1.5">
+               <label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Tipe Arus Kas</label>
+               <div className="flex gap-1 bg-muted p-1 rounded-sm">
+                  <button type="button" onClick={() => setType("expense")} className={cn("flex-1 py-1 rounded-sm text-[10px] font-mono uppercase", type === "expense" ? "bg-card shadow-sm text-foreground" : "text-muted-foreground")}>Keluar</button>
+                  <button type="button" onClick={() => setType("income")} className={cn("flex-1 py-1 rounded-sm text-[10px] font-mono uppercase", type === "income" ? "bg-card shadow-sm text-foreground" : "text-muted-foreground")}>Masuk</button>
+               </div>
+            </div>
+            <button type="submit" className="w-full bg-primary text-primary-foreground py-2 font-sans text-xs font-bold rounded-sm tracking-widest hover:bg-primary/90 transition-colors uppercase">Tambah</button>
+          </form>
+        </aside>
+      </div>
+    </div>
+  )
+}
