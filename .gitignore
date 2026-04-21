@@ -6,6 +6,7 @@ yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
 .pnpm-debug.log*
+pnpm-debug.log*
 
 # Diagnostic reports (https://nodejs.org/api/report.html)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
@@ -17,14 +18,20 @@ node_modules/
 
 # Next.js build output
 .next/
-out/
+/out/
+/.turbo/
 
-# Production
+# Production & Build
+dist/
 build/
 
 # OS files
 .DS_Store
 *.pem
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
 
 # Env files (Very Important)
 .env
@@ -33,6 +40,7 @@ build/
 .env.test.local
 .env.production.local
 *.env.local
+.env.test
 
 # Vercel
 .vercel
@@ -40,6 +48,18 @@ build/
 # TypeScript
 *.tsbuildinfo
 next-env.d.ts
+
+# Linter/Formatter
+.eslintcache
+.prettiercache
+
+# Editor specific
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+*.swp
+*.swo
 
 # Clerk
 .clerk/
