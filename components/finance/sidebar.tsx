@@ -6,14 +6,29 @@ import { cn } from "@/lib/utils"
 import { Home, Tags, History, Plus, BookOpen, User } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
+import { UserButton, useUser } from "@clerk/nextjs"
+
+import { useRouter } from "next/navigation"
+
 export function Sidebar({ onNewEntry }: { onNewEntry?: () => void }) {
   const pathname = usePathname();
+  const { user } = useUser();
+  const router = useRouter();
   
   const items = [
     { href: "/", label: "Beranda", icon: Home },
     { href: "/kategori", label: "Kategori", icon: Tags },
     { href: "/riwayat", label: "Riwayat", icon: History },
   ]
+
+  const handleNewEntry = () => {
+    if (onNewEntry) {
+      onNewEntry();
+    } else {
+      // Jika di halaman lain, arahkan ke dashboard dengan query param untuk memilih tipe
+      router.push("/?new=select");
+    }
+  };
 
   return (
     <aside className="sticky top-0 flex h-[100dvh] w-64 shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground">
@@ -23,15 +38,15 @@ export function Sidebar({ onNewEntry }: { onNewEntry?: () => void }) {
           <BookOpen className="h-5 w-5 text-primary" aria-hidden="true" />
         </div>
         <div className="flex flex-col leading-tight">
-          <span className="font-sans text-base font-bold tracking-tight">Buku Kas</span>
-          <span className="font-serif text-xs italic text-muted-foreground">est. 2026</span>
+          <span className="font-sans text-lg font-bold tracking-tight">Buku Kas</span>
+          <span className="font-serif text-[11px] italic text-muted-foreground">est. 2026</span>
         </div>
       </div>
 
       {/* Nav */}
       <nav className="flex-1 px-3 py-5" aria-label="Navigasi utama">
-        <p className="mb-2 px-3 font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-          Menu
+        <p className="mb-2 px-3 font-mono text-[13px] uppercase tracking-[0.18em] text-muted-foreground">
+          Menu Utama
         </p>
         <ul className="flex flex-col gap-1">
           {items.map(({ href, label, icon: Icon }) => {
@@ -41,7 +56,7 @@ export function Sidebar({ onNewEntry }: { onNewEntry?: () => void }) {
                 <Link
                   href={href}
                   className={cn(
-                    "group flex w-full items-center gap-3 rounded-sm border border-transparent px-3 py-2 text-left font-serif text-sm transition-colors",
+                    "group flex w-full items-center gap-3 rounded-sm border border-transparent px-3 py-2 text-left font-serif text-[15px] transition-colors",
                     isActive
                       ? "border-sidebar-border bg-card text-foreground shadow-xs"
                       : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
@@ -57,24 +72,36 @@ export function Sidebar({ onNewEntry }: { onNewEntry?: () => void }) {
 
         <div className="my-5 h-px bg-sidebar-border" aria-hidden="true" />
 
-        <Button
-          type="button"
-          onClick={onNewEntry}
-          className="w-full justify-center gap-2 rounded-sm bg-primary font-sans text-sm font-bold tracking-wide text-primary-foreground hover:bg-primary/90"
-        >
-          <Plus className="h-4 w-4" aria-hidden="true" />
-          Input Baru
-        </Button>
+        <div className="px-3">
+          <Button
+            type="button"
+            onClick={handleNewEntry}
+            className="w-full justify-center gap-2 rounded-sm bg-primary px-4 py-2.5 font-sans text-[13px] font-bold uppercase tracking-[0.1em] text-primary-foreground shadow-xs hover:bg-primary/90 transition-all active:scale-[0.98]"
+          >
+            <Plus className="h-4 w-4" aria-hidden="true" />
+            Input Baru
+          </Button>
+        </div>
       </nav>
 
-      {/* Info Footer */}
-      <div className="border-t border-sidebar-border p-4">
-        <div className="flex items-center gap-3 rounded-sm border border-sidebar-border bg-card p-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full border border-border bg-secondary">
-             <User className="h-4 w-4 text-muted-foreground" />
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="truncate font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Pencatatan Aktif</p>
+      {/* User Footer */}
+      <div className="border-t border-sidebar-border p-4 bg-card/10">
+        <div className="flex items-center gap-3 rounded-sm border border-sidebar-border bg-card p-2 shadow-xs transition-colors hover:bg-muted/30">
+          <UserButton 
+            appearance={{
+              elements: {
+                userButtonAvatarBox: "h-9 w-9 rounded-sm border-2 border-sidebar-border shadow-xs",
+                userButtonTrigger: "focus:shadow-none focus:outline-none"
+              }
+            }}
+          />
+          <div className="min-w-0 flex-1 flex flex-col">
+            <span className="truncate font-sans text-[13px] font-bold text-foreground">
+              {user?.fullName || "Pengguna"}
+            </span>
+            <span className="truncate font-mono text-[11px] uppercase tracking-tighter text-muted-foreground">
+              {user?.primaryEmailAddress?.emailAddress || "Sign out"}
+            </span>
           </div>
         </div>
       </div>

@@ -103,9 +103,9 @@ export function TransactionsTable({ transactions, onNewEntry, onDelete, onEdit }
           />
           <button
             onClick={handleExport}
-            className="flex h-9 items-center gap-2 rounded-sm border border-border bg-background px-3 font-serif text-xs text-muted-foreground hover:bg-muted transition-colors"
+            className="flex h-9 items-center gap-2 rounded-sm border border-border bg-background px-3 font-serif text-[13px] text-muted-foreground hover:bg-muted transition-colors"
           >
-            <Download className="h-3.5 w-3.5" />
+            <Download className="h-4 w-4" />
             Ekspor
           </button>
         </div>
@@ -135,18 +135,18 @@ export function TransactionsTable({ transactions, onNewEntry, onDelete, onEdit }
                 const isIncome = tx.amount >= 0
                 return (
                   <tr key={tx.id} className="group border-b border-border/70 transition-colors hover:bg-muted/40">
-                    <Td><span className="font-mono text-xs uppercase tracking-wider text-muted-foreground">{tx.date}</span></Td>
-                    <Td><span className={cn("font-serif text-sm italic", isIncome ? "text-[#5a6b3b]" : "text-destructive")}>{tx.type}</span></Td>
+                    <Td><span className="font-mono text-[13px] uppercase tracking-wider text-muted-foreground">{tx.date}</span></Td>
+                    <Td><span className={cn("font-serif text-[15px] italic", isIncome ? "text-[#5a6b3b]" : "text-destructive")}>{tx.type}</span></Td>
                     <Td>
-                      <div className="flex flex-col gap-1">
-                        <span className={cn("inline-flex w-fit items-center gap-1.5 rounded-sm border px-2 py-0.5 font-mono text-[10px] font-medium uppercase tracking-wider", CATEGORY_STYLES[tx.category] ?? "border-border bg-secondary text-secondary-foreground")}>
+                      <div className="flex flex-col gap-1.5">
+                        <span className={cn("inline-flex w-fit items-center gap-1.5 rounded-sm border px-2 py-0.5 font-mono text-[11px] font-medium uppercase tracking-wider", CATEGORY_STYLES[tx.category] ?? "border-border bg-secondary text-secondary-foreground")}>
                           <span className="h-1.5 w-1.5 rounded-full bg-current" aria-hidden="true" />
                           {tx.category}
                         </span>
-                        <span className="font-serif text-xs text-muted-foreground">{tx.note}</span>
+                        <span className="font-serif text-[13px] text-muted-foreground">{tx.note}</span>
                       </div>
                     </Td>
-                    <Td className="text-right"><span className={cn("font-mono text-sm font-medium tabular-nums", isIncome ? "text-[#5a6b3b]" : "text-destructive")}>{formatRupiah(tx.amount)}</span></Td>
+                    <Td className="text-right"><span className={cn("font-mono text-[15px] font-bold tabular-nums", isIncome ? "text-[#5a6b3b]" : "text-destructive")}>{formatRupiah(tx.amount)}</span></Td>
                     <Td className="text-right">
                       <div className="flex items-center justify-end gap-1 opacity-60 transition-opacity group-hover:opacity-100">
                         <IconButton label="Edit" icon={Pencil} onClick={() => onEdit?.(tx)} />
@@ -165,7 +165,7 @@ export function TransactionsTable({ transactions, onNewEntry, onDelete, onEdit }
 }
 
 function Th({ children, className }: { children: React.ReactNode; className?: string }) {
-  return <th className={cn("px-6 py-3 font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground", className)}>{children}</th>
+  return <th className={cn("px-6 py-4 font-mono text-[13px] uppercase tracking-[0.15em] text-muted-foreground/80", className)}>{children}</th>
 }
 
 function Td({ children, className }: { children: React.ReactNode; className?: string }) {
@@ -182,12 +182,12 @@ function IconButton({ label, icon: Icon, tone = "default", onClick }: { label: s
 
 function FilterSelect({ icon: Icon, label, value, options, onChange }: { icon: any; label: string; value: string; options: { label: string; value: string }[]; onChange: (v: string) => void }) {
   return (
-    <label className="flex items-center gap-2 rounded-sm border border-border bg-background px-3 py-1.5 text-xs shadow-xs focus-within:border-primary/60 transition-colors cursor-pointer">
-      <Icon className="h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" />
+    <label className="flex items-center gap-2 rounded-sm border border-border bg-background px-3 py-2 text-[13px] shadow-xs focus-within:border-primary/60 transition-colors cursor-pointer">
+      <Icon className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
       <select value={value} onChange={(e) => onChange(e.target.value)} className="appearance-none bg-transparent pr-4 font-serif text-foreground focus:outline-none">
         {options.map((opt) => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
       </select>
-      <ChevronDown className="-ml-4 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+      <ChevronDown className="-ml-4 h-4 w-4 text-muted-foreground pointer-events-none" />
     </label>
   )
 }

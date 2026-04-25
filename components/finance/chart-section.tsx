@@ -58,54 +58,57 @@ export function ChartSection({ transactions }: ChartSectionProps) {
 
   return (
     <section className="rounded-sm border border-border bg-card p-6 shadow-xs">
-      <div className="mb-6">
-        <h3 className="font-sans text-sm font-bold uppercase tracking-wider text-foreground">
+      <div className="mb-4">
+        <h3 className="font-sans text-sm font-bold uppercase tracking-[0.1em] text-foreground">
           Tren Keuangan 7 Hari Terakhir
         </h3>
-        <p className="font-serif text-xs italic text-muted-foreground">
+        <p className="font-serif text-[13px] italic text-muted-foreground">
           Perbandingan arus kas mingguan Anda.
         </p>
       </div>
 
-      <div className="h-[240px] w-full">
+      <div className="h-[300px] w-full">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+          <BarChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
             <XAxis 
               dataKey="name" 
               axisLine={false} 
               tickLine={false} 
-              tick={{ fontSize: 10, fontFamily: 'var(--font-mono)', fill: 'hsl(var(--muted-foreground))' }}
+              tick={{ fontSize: 13, fontFamily: 'var(--font-mono)', fill: 'var(--muted-foreground)' }}
+              dy={10}
             />
             <YAxis 
               axisLine={false} 
               tickLine={false} 
-              tick={{ fontSize: 10, fontFamily: 'var(--font-mono)', fill: 'hsl(var(--muted-foreground))' }}
+              tick={{ fontSize: 13, fontFamily: 'var(--font-mono)', fill: 'var(--muted-foreground)' }}
+              tickFormatter={(value) => value >= 1000 ? `${(value/1000).toFixed(0)}k` : value}
             />
             <Tooltip 
-              cursor={{ fill: 'hsl(var(--muted)/0.4)' }}
+              cursor={{ fill: 'var(--muted)', fillOpacity: 0.4 }}
               contentStyle={{ 
-                backgroundColor: 'hsl(var(--card))', 
-                border: '1px solid hsl(var(--border))',
+                backgroundColor: 'var(--card)', 
+                border: '1px solid var(--border)',
                 borderRadius: '4px',
-                fontSize: '12px',
-                fontFamily: 'var(--font-serif)'
+                fontSize: '14px',
+                fontFamily: 'var(--font-serif)',
+                padding: '12px'
               }}
             />
-            <Bar dataKey="pemasukan" fill="#5a6b3b" radius={[2, 2, 0, 0]} />
-            <Bar dataKey="pengeluaran" fill="hsl(var(--destructive))" radius={[2, 2, 0, 0]} />
+            <Bar dataKey="pemasukan" fill="#5a6b3b" radius={[4, 4, 0, 0]} barSize={32} />
+            <Bar dataKey="pengeluaran" fill="var(--destructive)" radius={[4, 4, 0, 0]} barSize={32} />
           </BarChart>
         </ResponsiveContainer>
       </div>
 
-      <div className="mt-4 flex items-center justify-center gap-4 border-t border-dashed border-border pt-4">
+      <div className="mt-2 flex items-center justify-center gap-4 border-t border-dashed border-border pt-4">
         <div className="flex items-center gap-2">
           <div className="h-2 w-2 rounded-full bg-[#5a6b3b]" />
-          <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Pemasukan</span>
+          <span className="font-mono text-[13px] uppercase tracking-wider text-muted-foreground">Pemasukan</span>
         </div>
         <div className="flex items-center gap-2">
           <div className="h-2 w-2 rounded-full bg-destructive" />
-          <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Pengeluaran</span>
+          <span className="font-mono text-[13px] uppercase tracking-wider text-muted-foreground">Pengeluaran</span>
         </div>
       </div>
     </section>

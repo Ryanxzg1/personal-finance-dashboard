@@ -5,6 +5,8 @@ import { transactions, NewTransaction } from "@/lib/db/schema"
 import { revalidatePath } from "next/cache"
 import { eq, desc, and } from "drizzle-orm"
 import { auth } from "@clerk/nextjs/server"
+import { transactionSchema } from "@/lib/validations/transaction"
+import { z } from "zod"
 
 /**
  * Menambahkan transaksi baru ke database
@@ -12,17 +14,27 @@ import { auth } from "@clerk/nextjs/server"
 export async function createTransaction(data: Omit<NewTransaction, "userId">) {
   try {
     const { userId } = await auth();
-    if (!userId) throw new Error("Unauthorized");
+    if (!userId) return { success: false, error: "Unauthorized" };
+
+    // Validasi dengan Zod
+    const validatedData = transactionSchema.parse({
+      ...data,
+      date: data.date ? new Date(data.date) : new Date(),
+    });
 
     const result = await db.insert(transactions).values({
-      ...data,
+      ...validatedData,
       userId,
-      date: data.date ? new Date(data.date) : new Date(),
+      // Drizzle numeric handle string, so validatedData.amount (string) is fine
+      amount: validatedData.amount,
     }).returning();
     
     revalidatePath("/");
     return { success: true, data: result[0] };
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return { success: false, error: error.errors[0].message };
+    }
     console.error("Failed to create transaction:", error);
     return { success: false, error: "Gagal menambahkan transaksi" };
   }
@@ -80,14 +92,21 @@ export async function deleteTransaction(id: string | number) {
 export async function updateTransaction(id: string | number, data: Partial<NewTransaction>) {
   try {
     const { userId } = await auth();
-    if (!userId) throw new Error("Unauthorized");
+    if (!userId) return { success: false, error: "Unauthorized" };
 
     const numericId = typeof id === "string" ? parseInt(id) : id;
 
+    // Pastikan data yang diperbarui valid (mengambil data yang ada jika hanya sebagian yang dikirim)
+    // Untuk mempermudah, kita validasi per field atau asumsi data parsial valid jika lolos schema opsional
+    // Namun karena transactionSchema mewajibkan semua, kita gunakan .partial()
+    const validatedData = transactionSchema.partial().parse({
+      ...data,
+      date: data.date ? new Date(data.date) : undefined,
+    });
+
     await db.update(transactions)
       .set({
-        ...data,
-        date: data.date ? new Date(data.date) : undefined,
+        ...validatedData,
       })
       .where(
         and(
@@ -99,6 +118,9 @@ export async function updateTransaction(id: string | number, data: Partial<NewTr
     revalidatePath("/");
     return { success: true };
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return { success: false, error: error.errors[0].message };
+    }
     console.error("Failed to update transaction:", error);
     return { success: false, error: "Gagal memperbarui transaksi" };
   }

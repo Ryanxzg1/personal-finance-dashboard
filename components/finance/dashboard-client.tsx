@@ -1,8 +1,8 @@
 "use client"
 
-import { useMemo, useState, useOptimistic, useTransition } from "react"
+import { useMemo, useState, useOptimistic, useTransition, useEffect } from "react"
+import { useSearchParams, useRouter } from "next/navigation"
 import { SummarySection } from "@/components/finance/summary-section"
-import { QuickInput } from "@/components/finance/quick-input"
 import { ChartSection } from "@/components/finance/chart-section"
 import {
   TransactionsTable,
@@ -13,6 +13,8 @@ import { createTransaction, deleteTransaction, updateTransaction } from "@/lib/a
 import { toast } from "sonner"
 import { TrendingUp, TrendingDown, Wallet, AlertCircle } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { TypeSelector } from "@/components/finance/type-selector"
+import { CategoryDistribution } from "@/components/finance/category-distribution"
 
 interface Category {
   id: number
@@ -40,9 +42,38 @@ type Action =
 
 export function DashboardClient({ initialTransactions, initialCategories, initialBudgets, userName }: DashboardClientProps) {
   const [isPending, startTransition] = useTransition()
+  const searchParams = useSearchParams()
+  const router = useRouter()
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [selectorOpen, setSelectorOpen] = useState(false)
   const [dialogMode, setDialogMode] = useState<InputMode>("Pemasukan")
   const [editingTx, setEditingTx] = useState<UITransaction | null>(null)
+
+  // Efek untuk menangani query param dari sidebar
+  useEffect(() => {
+    const newParam = searchParams.get("new")
+    if (newParam) {
+      if (newParam === "select") {
+        setSelectorOpen(true)
+      } else {
+        setEditingTx(null)
+        setDialogMode(newParam === "income" ? "Pemasukan" : "Pengeluaran")
+        setDialogOpen(true)
+      }
+      
+      // Hapus query param agar tidak terbuka lagi saat refresh
+      const params = new URLSearchParams(searchParams.toString())
+      params.delete("new")
+      router.replace(`/?${params.toString()}`, { scroll: false })
+    }
+  }, [searchParams, router])
+
+  const handleTypeSelect = (type: "Pemasukan" | "Pengeluaran") => {
+    setSelectorOpen(false)
+    setEditingTx(null)
+    setDialogMode(type)
+    setDialogOpen(true)
+  }
 
   // --- OPTIMISTIC UI LOGIC ---
   const [optimisticTransactions, addOptimisticAction] = useOptimistic(
@@ -63,14 +94,28 @@ export function DashboardClient({ initialTransactions, initialCategories, initia
     const currentMonth = now.getMonth()
     const currentYear = now.getFullYear()
 
+    const lastMonth = currentMonth === 0 ? 11 : currentMonth - 1
+    const lastMonthYear = currentMonth === 0 ? currentYear - 1 : currentYear
+
     const monthlyTxs = optimisticTransactions.filter(t => {
       const d = new Date(t.rawDate)
       return d.getMonth() === currentMonth && d.getFullYear() === currentYear
     })
 
+    const lastMonthTxs = optimisticTransactions.filter(t => {
+      const d = new Date(t.rawDate)
+      return d.getMonth() === lastMonth && d.getFullYear() === lastMonthYear
+    })
+
     const income = monthlyTxs.filter(t => t.amount > 0).reduce((sum, t) => sum + t.amount, 0)
     const expense = monthlyTxs.filter(t => t.amount < 0).reduce((sum, t) => sum + Math.abs(t.amount), 0)
     const balance = optimisticTransactions.reduce((sum, t) => sum + t.amount, 0)
+
+    const incomeLastMonth = lastMonthTxs.filter(t => t.amount > 0).reduce((sum, t) => sum + t.amount, 0)
+    const expenseLastMonth = lastMonthTxs.filter(t => t.amount < 0).reduce((sum, t) => sum + Math.abs(t.amount), 0)
+
+    const incomeTrend = incomeLastMonth > 0 ? ((income - incomeLastMonth) / incomeLastMonth) * 100 : 0
+    const expenseTrend = expenseLastMonth > 0 ? ((expense - expenseLastMonth) / expenseLastMonth) * 100 : 0
 
     // Calculate progress for each category with a budget
     const progress = initialBudgets.map(budget => {
@@ -88,7 +133,10 @@ export function DashboardClient({ initialTransactions, initialCategories, initia
       }
     }).filter(b => b.limit > 0)
 
-    return { stats: { income, expense, balance }, budgetProgress: progress }
+    return { 
+      stats: { income, expense, balance, incomeTrend, expenseTrend }, 
+      budgetProgress: progress 
+    }
   }, [optimisticTransactions, initialBudgets, initialCategories])
 
   const openAddDialog = (mode: InputMode) => {
@@ -125,7 +173,7 @@ export function DashboardClient({ initialTransactions, initialCategories, initia
            date: d,
            type: data.amount >= 0 ? "income" : "expense",
         })
-        if (!result.success) toast.error("Gagal memperbarui data")
+        if (!result.success) toast.error(result.error || "Gagal memperbarui data")
         else toast.success("Transaksi diperbarui")
       })
     } else {
@@ -147,38 +195,44 @@ export function DashboardClient({ initialTransactions, initialCategories, initia
           type: data.amount >= 0 ? "income" : "expense",
           date: d,
         })
-        if (!result.success) toast.error("Gagal menyimpan data")
+        if (!result.success) toast.error(result.error || "Gagal menyimpan data")
         else toast.success("Transaksi disimpan")
       })
     }
   }
 
   return (
-    <div className="space-y-6 p-6 lg:p-8">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <StatCard label="Saldo Total" amount={stats.balance} icon={Wallet} color="text-foreground" />
-        <StatCard label="Masuk Bulan Ini" amount={stats.income} icon={TrendingUp} color="text-[#5a6b3b]" />
-        <StatCard label="Keluar Bulan Ini" amount={stats.expense} icon={TrendingDown} color="text-destructive" />
+    <div className="space-y-4 p-4 lg:p-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <StatCard 
+          label="Saldo Total" 
+          amount={stats.balance} 
+          icon={Wallet} 
+          color="text-foreground" 
+          subLabel={`Akumulasi per ${new Date().toLocaleString("id-ID", { month: "long", year: "numeric" })}`}
+        />
+        <StatCard label="Masuk Bulan Ini" amount={stats.income} icon={TrendingUp} color="text-[#5a6b3b]" trend={stats.incomeTrend} />
+        <StatCard label="Keluar Bulan Ini" amount={stats.expense} icon={TrendingDown} color="text-destructive" trend={stats.expenseTrend} />
       </div>
 
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1fr_360px]">
-        <div className="space-y-6">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1fr_360px]">
+        <div className="space-y-4">
            <ChartSection transactions={optimisticTransactions} />
            
            {/* Budget Progress Widget (BARU) */}
            {budgetProgress.length > 0 && (
-             <div className="rounded-sm border border-border bg-card p-6 shadow-xs">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="font-sans text-sm font-bold uppercase tracking-wider text-foreground">Pantauan Anggaran</h3>
-                  <div className="flex items-center gap-1 text-[10px] uppercase font-mono text-muted-foreground">
-                    <AlertCircle className="h-3 w-3" />
+             <div className="rounded-sm border border-border bg-card p-5 shadow-xs">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-sans text-sm font-bold uppercase tracking-[0.1em] text-foreground">Pantauan Anggaran</h3>
+                  <div className="flex items-center gap-1 text-[11px] uppercase font-mono text-muted-foreground">
+                    <AlertCircle className="h-3.5 w-3.5" />
                     Real-time
                   </div>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
                   {budgetProgress.map((bp) => (
-                    <div key={bp.name} className="space-y-2">
-                       <div className="flex items-center justify-between font-mono text-[10px] uppercase tracking-wider">
+                    <div key={bp.name} className="space-y-1.5">
+                       <div className="flex items-center justify-between font-mono text-[11px] uppercase tracking-wider">
                           <span className="flex items-center gap-2 text-foreground font-bold">
                             <span>{bp.icon}</span>
                             {bp.name}
@@ -187,7 +241,7 @@ export function DashboardClient({ initialTransactions, initialCategories, initia
                             Rp {bp.spent.toLocaleString("id-ID")} / Rp {bp.limit.toLocaleString("id-ID")}
                           </span>
                        </div>
-                       <div className="h-2 w-full bg-muted rounded-full overflow-hidden border border-border/50">
+                       <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden border border-border/50">
                           <div 
                             className={cn(
                               "h-full transition-all duration-500",
@@ -203,7 +257,7 @@ export function DashboardClient({ initialTransactions, initialCategories, initia
            )}
         </div>
         
-        <QuickInput onIncome={() => openAddDialog("Pemasukan")} onExpense={() => openAddDialog("Pengeluaran")} />
+        <CategoryDistribution transactions={optimisticTransactions} />
       </div>
 
       <TransactionsTable
@@ -215,7 +269,13 @@ export function DashboardClient({ initialTransactions, initialCategories, initia
           else toast.success("Transaksi dihapus")
         })}
         onEdit={openEditDialog}
-        onNewEntry={() => openAddDialog("Pengeluaran")}
+        onNewEntry={() => setSelectorOpen(true)}
+      />
+
+      <TypeSelector
+        open={selectorOpen}
+        onClose={() => setSelectorOpen(false)}
+        onSelect={handleTypeSelect}
       />
 
       <InputDialog
@@ -230,18 +290,38 @@ export function DashboardClient({ initialTransactions, initialCategories, initia
   )
 }
 
-function StatCard({ label, amount, icon: Icon, color }: { label: string; amount: number; icon: any; color: string }) {
+function StatCard({ label, amount, icon: Icon, color, trend, subLabel }: { label: string; amount: number; icon: any; color: string; trend?: number; subLabel?: string }) {
   return (
-    <div className="rounded-sm border border-border bg-card p-5 shadow-xs">
+    <div className="rounded-sm border border-border bg-card p-4 shadow-xs transition-all hover:shadow-md group">
       <div className="flex items-center justify-between gap-4">
         <div>
-          <p className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">{label}</p>
-          <p className={cn("mt-1 font-mono text-xl font-bold tracking-tight", color)}>
+          <p className="font-mono text-[13px] uppercase tracking-wider text-muted-foreground">{label}</p>
+          <p className={cn("mt-1 font-mono text-2xl font-bold tracking-tight lg:text-3xl", color)}>
             Rp {Math.abs(amount).toLocaleString("id-ID")}
           </p>
+          
+          {subLabel && (
+            <p className="mt-2 font-serif text-[11px] italic text-muted-foreground lowercase">
+              {subLabel}
+            </p>
+          )}
+
+          {trend !== undefined && (
+            <div className="mt-3 flex items-center gap-2">
+              <span className={cn(
+                "font-mono text-[11px] font-bold px-2 py-0.5 rounded-full border",
+                trend > 0 ? "text-[#5a6b3b] border-[#5a6b3b]/20 bg-[#5a6b3b]/10" : 
+                trend < 0 ? "text-destructive border-destructive/20 bg-destructive/10" : 
+                "text-muted-foreground border-border bg-muted"
+              )}>
+                {trend > 0 ? "+" : ""}{trend.toFixed(1)}%
+              </span>
+              <span className="font-serif text-[11px] italic text-muted-foreground lowercase">vs bulan lalu</span>
+            </div>
+          )}
         </div>
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted/50">
-          <Icon className={cn("h-5 w-5", color)} />
+        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted/50 group-hover:bg-muted transition-colors">
+          <Icon className={cn("h-6 w-6", color)} />
         </div>
       </div>
     </div>

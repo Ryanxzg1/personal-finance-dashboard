@@ -19,10 +19,10 @@ export default async function DashboardLayout({
         {/* Header Global */}
         <header className="flex items-center justify-between border-b border-border bg-card/60 px-8 py-5">
           <div>
-            <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
+            <p className="font-mono text-[13px] uppercase tracking-[0.2em] text-muted-foreground">
               Buku Kas · Sistem Pencatatan Digital
             </p>
-            <h1 className="mt-1 font-sans text-2xl font-bold tracking-tight text-foreground">
+            <h1 className="mt-1 font-sans text-3xl font-bold tracking-tight text-foreground">
               Selamat datang, {userName}.
             </h1>
           </div>
