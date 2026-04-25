@@ -23,35 +23,40 @@ export const requestNotificationPermission = async () => {
   return false;
 };
 
+export const registerServiceWorker = async () => {
+  if (typeof window !== "undefined" && "serviceWorker" in navigator) {
+    try {
+      const registration = await navigator.serviceWorker.register("/sw.js");
+      console.log("Service Worker registered with scope:", registration.scope);
+      return registration;
+    } catch (error) {
+      console.error("Service Worker registration failed:", error);
+    }
+  }
+  return null;
+};
+
 export const sendNotification = (title: string, options?: NotificationOptions) => {
   if (typeof window === "undefined" || !("Notification" in window) || Notification.permission !== "granted") {
     return;
   }
 
   try {
-    // 1. Coba gunakan Service Worker jika tersedia (Lebih stabil di mobile/PWA)
-    if ("serviceWorker" in navigator && navigator.serviceWorker.controller) {
+    // 1. Coba gunakan Service Worker (Wajib untuk mobile/PWA agar muncul)
+    if ("serviceWorker" in navigator) {
       navigator.serviceWorker.ready.then((registration) => {
         registration.showNotification(title, {
-          icon: "/icon-192x192.png",
+          icon: "/icon.svg",
           ...options,
         });
-      }).catch(err => {
-        console.warn("ServiceWorker notification failed, falling back...", err);
-        // Fallback ke standard Notification
+      }).catch(() => {
+        // Fallback ke standard jika SW gagal
         new Notification(title, options);
       });
     } else {
-      // 2. Fallback ke standard Notification (Desktop)
-      // Dibungkus try-catch karena di mobile ini sering throw "Illegal constructor"
-      try {
-        new Notification(title, options);
-      } catch (e) {
-        console.warn("Standard Notification constructor failed (common on mobile).");
-      }
+      new Notification(title, options);
     }
   } catch (error) {
-    // Pastikan error tidak membuat aplikasi crash/redirect
     console.error("Critical error in sendNotification:", error);
   }
 };

@@ -22,7 +22,7 @@ export default async function HistoryPage() {
         type: tx.type === "income" ? "Pemasukan" : "Pengeluaran",
         category: tx.category,
         note: tx.description,
-        amount: Number(tx.amount),
+        amount: tx.type === "income" ? Number(tx.amount) : -Number(tx.amount),
       };
     });
   }

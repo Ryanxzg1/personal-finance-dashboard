@@ -15,7 +15,7 @@ import { TrendingUp, TrendingDown, Wallet, AlertCircle, Bell, BellOff } from "lu
 import { cn } from "@/lib/utils"
 import { TypeSelector } from "@/components/finance/type-selector"
 import { CategoryDistribution } from "@/components/finance/category-distribution"
-import { requestNotificationPermission, sendNotification } from "@/lib/notifications"
+import { requestNotificationPermission, sendNotification, registerServiceWorker } from "@/lib/notifications"
 
 interface Category {
   id: number
@@ -55,6 +55,8 @@ export function DashboardClient({ initialTransactions, initialCategories, initia
     if ("Notification" in window) {
       setNotifGranted(Notification.permission === "granted")
     }
+    // Registrasi Service Worker untuk notifikasi mobile
+    registerServiceWorker()
   }, [])
 
   const handleRequestNotif = async () => {
@@ -127,12 +129,12 @@ export function DashboardClient({ initialTransactions, initialCategories, initia
       return d.getMonth() === lastMonth && d.getFullYear() === lastMonthYear
     })
 
-    const income = monthlyTxs.filter(t => t.amount > 0).reduce((sum, t) => sum + t.amount, 0)
-    const expense = monthlyTxs.filter(t => t.amount < 0).reduce((sum, t) => sum + Math.abs(t.amount), 0)
-    const balance = optimisticTransactions.reduce((sum, t) => sum + t.amount, 0)
+    const income = monthlyTxs.reduce((sum, t) => t.amount > 0 ? sum + Number(t.amount) : sum, 0)
+    const expense = monthlyTxs.reduce((sum, t) => t.amount < 0 ? sum + Math.abs(Number(t.amount)) : sum, 0)
+    const balance = optimisticTransactions.reduce((sum, t) => sum + Number(t.amount), 0)
 
-    const incomeLastMonth = lastMonthTxs.filter(t => t.amount > 0).reduce((sum, t) => sum + t.amount, 0)
-    const expenseLastMonth = lastMonthTxs.filter(t => t.amount < 0).reduce((sum, t) => sum + Math.abs(t.amount), 0)
+    const incomeLastMonth = lastMonthTxs.reduce((sum, t) => t.amount > 0 ? sum + Number(t.amount) : sum, 0)
+    const expenseLastMonth = lastMonthTxs.reduce((sum, t) => t.amount < 0 ? sum + Math.abs(Number(t.amount)) : sum, 0)
 
     const incomeTrend = incomeLastMonth > 0 ? ((income - incomeLastMonth) / incomeLastMonth) * 100 : 0
     const expenseTrend = expenseLastMonth > 0 ? ((expense - expenseLastMonth) / expenseLastMonth) * 100 : 0
@@ -187,7 +189,7 @@ export function DashboardClient({ initialTransactions, initialCategories, initia
       startTransition(async () => {
         addOptimisticAction({ type: "UPDATE", transaction: updatedTxUI })
         const result = await updateTransaction(editingTx.id, {
-           amount: data.amount.toString(),
+           amount: Math.abs(data.amount).toString(),
            category: data.category,
            description: data.note,
            date: d,
@@ -251,7 +253,7 @@ export function DashboardClient({ initialTransactions, initialCategories, initia
 
         const result = await createTransaction({
           description: data.note,
-          amount: data.amount.toString(),
+          amount: Math.abs(data.amount).toString(),
           category: data.category,
           type: data.amount >= 0 ? "income" : "expense",
           date: d,
@@ -283,7 +285,7 @@ export function DashboardClient({ initialTransactions, initialCategories, initia
           label="Saldo Total" 
           amount={stats.balance} 
           icon={Wallet} 
-          color="text-foreground" 
+          color={stats.balance >= 0 ? "text-foreground" : "text-destructive"} 
           subLabel={`Akumulasi per ${new Date().toLocaleString("id-ID", { month: "long", year: "numeric" })}`}
         />
         <StatCard label="Masuk Bulan Ini" amount={stats.income} icon={TrendingUp} color="text-[#5a6b3b]" trend={stats.incomeTrend} />
@@ -372,7 +374,7 @@ function StatCard({ label, amount, icon: Icon, color, trend, subLabel }: { label
         <div>
           <p className="font-mono text-[13px] uppercase tracking-wider text-muted-foreground">{label}</p>
           <p className={cn("mt-1 font-mono text-2xl font-bold tracking-tight lg:text-3xl", color)}>
-            Rp {Math.abs(amount).toLocaleString("id-ID")}
+            {amount < 0 ? "-" : ""}Rp {Math.abs(amount).toLocaleString("id-ID")}
           </p>
           
           {subLabel && (
