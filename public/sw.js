@@ -1,4 +1,8 @@
-// Service Worker for Browser Notifications
+// Service Worker for Browser Notifications & PWA Support
+self.addEventListener('fetch', function(event) {
+  // Listener ini wajib ada agar website dianggap sebagai PWA oleh Chrome
+});
+
 self.addEventListener('push', function(event) {
   const data = event.data ? event.data.json() : {};
   const title = data.title || 'Buku Kas Digital';
