@@ -27,12 +27,25 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Strategi Fetch: Ambil dari cache dulu, jika tidak ada baru ke jaringan
+// Strategi Fetch: Network First (Coba jaringan dulu, jika gagal baru ambil dari cache)
 self.addEventListener('fetch', (event) => {
+  // Hanya tangani permintaan GET (halaman, gambar, dll)
+  if (event.request.method !== 'GET') return;
+
   event.respondWith(
-    caches.match(event.request).then((response) => {
-      return response || fetch(event.request);
-    })
+    fetch(event.request)
+      .then((response) => {
+        // Simpan salinan respon terbaru ke cache
+        const resClone = response.clone();
+        caches.open(CACHE_NAME).then((cache) => {
+          cache.put(event.request, resClone);
+        });
+        return response;
+      })
+      .catch(() => {
+        // Jika gagal (offline), ambil dari cache
+        return caches.match(event.request);
+      })
   );
 });
 
