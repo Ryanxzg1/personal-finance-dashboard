@@ -1,0 +1,23 @@
+{
+  "name": "Buku Kas Digital",
+  "short_name": "BukuKas",
+  "description": "Dashboard keuangan pribadi modern dan efisien.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#5a6b3b",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/finance_app_icon_1777132015262.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/finance_app_icon_1777132015262.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ]
+}
