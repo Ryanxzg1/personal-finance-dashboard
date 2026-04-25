@@ -39,6 +39,10 @@ export default function RootLayout({
   return (
     <ClerkProvider>
       <html lang="id">
+        <head>
+          <link rel="manifest" href="/manifest.json" />
+          <meta name="mobile-web-app-capable" content="yes" />
+        </head>
         <body className="font-serif antialiased bg-background text-foreground">
           {children}
           {process.env.NODE_ENV === 'production' && <Analytics />}
