@@ -1,7 +1,7 @@
 const CACHE_NAME = 'buku-kas-v1';
 const ASSETS_TO_CACHE = [
   '/',
-  '/manifest.json',
+  '/manifest.webmanifest',
   '/icon-pwa.png',
   '/sw.js'
 ];

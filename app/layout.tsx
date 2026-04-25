@@ -9,7 +9,7 @@ const _libreBaskerville = Libre_Baskerville({ subsets: ['latin'], weight: ["400"
 export const metadata: Metadata = {
   title: 'Buku Kas — Catatan Keuangan Pribadi',
   description: 'Catat pemasukan dan pengeluaran harian dengan rapi dan terstruktur.',
-  manifest: "/manifest.json",
+  manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
@@ -40,7 +40,7 @@ export default function RootLayout({
     <ClerkProvider>
       <html lang="id">
         <head>
-          <link rel="manifest" href="/manifest.json" />
+          <link rel="manifest" href="/manifest.webmanifest" />
           <meta name="mobile-web-app-capable" content="yes" />
         </head>
         <body className="font-serif antialiased bg-background text-foreground">
