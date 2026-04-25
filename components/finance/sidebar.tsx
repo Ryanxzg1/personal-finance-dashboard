@@ -22,11 +22,12 @@ export function Sidebar({ onNewEntry }: { onNewEntry?: () => void }) {
   ]
 
   const handleNewEntry = () => {
+    // Selalu arahkan ke dashboard dengan query param
+    router.push("/?new=select");
+    
+    // Jika ada callback tambahan (misal untuk menutup mobile menu), jalankan
     if (onNewEntry) {
       onNewEntry();
-    } else {
-      // Jika di halaman lain, arahkan ke dashboard dengan query param untuk memilih tipe
-      router.push("/?new=select");
     }
   };
 
