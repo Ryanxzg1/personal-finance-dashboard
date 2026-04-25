@@ -15,6 +15,10 @@ export const metadata: Metadata = {
     statusBarStyle: "default",
     title: "Buku Kas",
   },
+  other: {
+    "mobile-web-app-capable": "yes",
+    "apple-mobile-web-app-capable": "yes",
+  },
   formatDetection: {
     telephone: false,
   },
