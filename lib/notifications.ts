@@ -46,8 +46,8 @@ export const sendNotification = (title: string, options?: NotificationOptions) =
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.ready.then((registration) => {
         registration.showNotification(title, {
-          icon: "/finance_app_icon_1777132015262.png",
-          badge: "/finance_app_icon_1777132015262.png",
+          icon: "/icon-pwa.png",
+          badge: "/icon-pwa.png",
           vibrate: [100, 50, 100],
           ...options,
         });

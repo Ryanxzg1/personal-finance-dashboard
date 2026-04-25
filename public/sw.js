@@ -2,10 +2,10 @@
 self.addEventListener('push', function(event) {
   const data = event.data ? event.data.json() : {};
   const title = data.title || 'Buku Kas Digital';
-  const options = {
+    const options = {
     body: data.body || 'Ada pembaruan transaksi untuk Anda.',
-    icon: '/finance_app_icon_1777132015262.png',
-    badge: '/finance_app_icon_1777132015262.png',
+    icon: '/icon-pwa.png',
+    badge: '/icon-pwa.png',
     vibrate: [100, 50, 100],
     data: {
       dateOfArrival: Date.now(),
@@ -37,8 +37,8 @@ self.addEventListener('message', function(event) {
   if (event.data && event.data.type === 'SHOW_NOTIFICATION') {
     const { title, options } = event.data;
     self.registration.showNotification(title, {
-      icon: '/finance_app_icon_1777132015262.png',
-      badge: '/finance_app_icon_1777132015262.png',
+      icon: '/icon-pwa.png',
+      badge: '/icon-pwa.png',
       vibrate: [100, 50, 100],
       ...options
     });
