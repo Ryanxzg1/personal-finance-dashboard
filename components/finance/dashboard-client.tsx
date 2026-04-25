@@ -237,8 +237,7 @@ export function DashboardClient({ initialTransactions, initialCategories, initia
                // 1. Sistem Notification
                sendNotification("⚠️ Anggaran Terlampaui!", {
                  body: msg,
-                 tag: "budget-alert",
-                 requireInteraction: true
+                 tag: "budget-alert"
                })
 
                // 2. Fallback Toast (Jika notifikasi sistem diblokir)
