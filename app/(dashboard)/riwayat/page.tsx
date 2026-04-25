@@ -28,7 +28,7 @@ export default async function HistoryPage() {
   }
 
   return (
-    <div className="p-8">
+    <div className="p-4 lg:p-8">
       <header className="mb-8">
         <h2 className="font-sans text-xl font-bold tracking-tight">Riwayat Transaksi</h2>
         <p className="font-serif text-sm italic text-muted-foreground">Semua catatan pengeluaran dan pemasukan Anda.</p>

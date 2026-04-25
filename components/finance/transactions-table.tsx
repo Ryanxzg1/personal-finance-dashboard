@@ -1,8 +1,11 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { Calendar, ChevronDown, NotebookPen, Pencil, Plus, Tag, Trash2, Download } from "lucide-react"
+import { Calendar, ChevronDown, NotebookPen, Pencil, Plus, Tag, Trash2 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import dynamic from "next/dynamic"
+
+const ExportButton = dynamic(() => import("./export-button"), { ssr: false })
 
 export type TxType = "Pemasukan" | "Pengeluaran"
 
@@ -61,18 +64,6 @@ export function TransactionsTable({ transactions, onNewEntry, onDelete, onEdit }
     })
   }, [transactions, selectedMonth, selectedYear, category])
 
-  const handleExport = () => {
-    if (filtered.length === 0) return
-    const headers = ["Tanggal", "Jenis", "Kategori", "Catatan", "Jumlah"]
-    const rows = filtered.map(t => [t.date, t.type, t.category, t.note, t.amount])
-    const csvContent = [headers.join(","), ...rows.map(e => e.join(","))].join("\n")
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement("a")
-    link.setAttribute("href", url)
-    link.setAttribute("download", `buku-kas-${months[selectedMonth]}-${selectedYear}.csv`)
-    link.click()
-  }
 
   const isEmpty = filtered.length === 0
 
@@ -101,13 +92,12 @@ export function TransactionsTable({ transactions, onNewEntry, onDelete, onEdit }
             onChange={setCategory}
             options={allCategories.map(c => ({ label: c, value: c }))}
           />
-          <button
-            onClick={handleExport}
-            className="flex h-9 items-center gap-2 rounded-sm border border-border bg-background px-3 font-serif text-[13px] text-muted-foreground hover:bg-muted transition-colors"
-          >
-            <Download className="h-4 w-4" />
-            Ekspor
-          </button>
+          <ExportButton 
+            filteredData={filtered} 
+            selectedMonthName={months[selectedMonth]} 
+            selectedYear={selectedYear}
+            disabled={isEmpty}
+          />
         </div>
       </div>
 

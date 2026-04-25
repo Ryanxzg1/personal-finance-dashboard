@@ -11,10 +11,11 @@ import {
 import { InputDialog, type InputMode } from "@/components/finance/input-dialog"
 import { createTransaction, deleteTransaction, updateTransaction } from "@/lib/actions/transactions"
 import { toast } from "sonner"
-import { TrendingUp, TrendingDown, Wallet, AlertCircle } from "lucide-react"
+import { TrendingUp, TrendingDown, Wallet, AlertCircle, Bell, BellOff } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { TypeSelector } from "@/components/finance/type-selector"
 import { CategoryDistribution } from "@/components/finance/category-distribution"
+import { requestNotificationPermission, sendNotification } from "@/lib/notifications"
 
 interface Category {
   id: number
@@ -48,6 +49,25 @@ export function DashboardClient({ initialTransactions, initialCategories, initia
   const [selectorOpen, setSelectorOpen] = useState(false)
   const [dialogMode, setDialogMode] = useState<InputMode>("Pemasukan")
   const [editingTx, setEditingTx] = useState<UITransaction | null>(null)
+  const [notifGranted, setNotifGranted] = useState(false)
+
+  useEffect(() => {
+    if ("Notification" in window) {
+      setNotifGranted(Notification.permission === "granted")
+    }
+  }, [])
+
+  const handleRequestNotif = async () => {
+    const granted = await requestNotificationPermission()
+    setNotifGranted(granted)
+    if (granted) {
+      toast.success("Notifikasi diaktifkan")
+      sendNotification("🔔 Notifikasi Aktif", {
+        body: "Anda akan menerima peringatan jika pengeluaran melebihi anggaran.",
+        icon: "/icon-192x192.png"
+      })
+    }
+  }
 
   // Efek untuk menangani query param dari sidebar
   useEffect(() => {
@@ -188,6 +208,48 @@ export function DashboardClient({ initialTransactions, initialCategories, initia
       }
       startTransition(async () => {
         addOptimisticAction({ type: "ADD", transaction: newTxUI })
+        
+        // Cek apakah melebihi budget (Push Notification)
+        if (data.amount < 0) {
+           const category = initialCategories.find(c => c.name === data.category)
+           const budget = initialBudgets.find(b => b.categoryId === category?.id)
+           
+           if (budget) {
+             const now = new Date()
+             const currentMonth = now.getMonth()
+             const currentYear = now.getFullYear()
+             
+             // Hitung manual pengeluaran kategori ini di bulan ini (instan)
+             const existingSpent = initialTransactions.filter(t => {
+               const d = new Date(t.rawDate)
+               return d.getMonth() === currentMonth && 
+                      d.getFullYear() === currentYear && 
+                      t.category === data.category && 
+                      t.amount < 0
+             }).reduce((sum, t) => sum + Math.abs(t.amount), 0)
+
+             const totalSpent = existingSpent + Math.abs(data.amount)
+             const limit = parseFloat(budget.limitAmount)
+             
+             if (totalSpent > limit) {
+               const msg = `Pengeluaran ${data.category} (Rp ${totalSpent.toLocaleString("id-ID")}) melebihi batas Rp ${limit.toLocaleString("id-ID")}!`
+               
+               // 1. Sistem Notification
+               sendNotification("⚠️ Anggaran Terlampaui!", {
+                 body: msg,
+                 tag: "budget-alert",
+                 requireInteraction: true
+               })
+
+               // 2. Fallback Toast (Jika notifikasi sistem diblokir)
+               toast.error(msg, {
+                 duration: 5000,
+                 icon: <AlertCircle className="h-5 w-5" />
+               })
+             }
+           }
+        }
+
         const result = await createTransaction({
           description: data.note,
           amount: data.amount.toString(),
@@ -203,6 +265,20 @@ export function DashboardClient({ initialTransactions, initialCategories, initia
 
   return (
     <div className="space-y-4 p-4 lg:p-6">
+      <div className="flex items-center justify-between">
+         <h2 className="font-sans text-sm font-bold uppercase tracking-[0.2em] text-muted-foreground">Dashboard Overview</h2>
+         <button 
+           onClick={handleRequestNotif}
+           className={cn(
+             "flex items-center gap-2 rounded-full px-3 py-1 text-[11px] font-mono uppercase tracking-wider transition-colors",
+             notifGranted ? "text-[#5a6b3b] bg-[#5a6b3b]/10" : "text-muted-foreground bg-muted hover:bg-muted/80"
+           )}
+         >
+           {notifGranted ? <Bell className="h-3 w-3" /> : <BellOff className="h-3 w-3" />}
+           {notifGranted ? "Notifikasi Aktif" : "Aktifkan Notifikasi"}
+         </button>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <StatCard 
           label="Saldo Total" 

@@ -95,8 +95,20 @@ export function ChartSection({ transactions }: ChartSectionProps) {
                 padding: '12px'
               }}
             />
-            <Bar dataKey="pemasukan" fill="#5a6b3b" radius={[4, 4, 0, 0]} barSize={32} />
-            <Bar dataKey="pengeluaran" fill="var(--destructive)" radius={[4, 4, 0, 0]} barSize={32} />
+            <Bar 
+              dataKey="pemasukan" 
+              fill="#5a6b3b" 
+              radius={[0, 0, 0, 0]} 
+              barSize={24} 
+              stackId="a" 
+            />
+            <Bar 
+              dataKey="pengeluaran" 
+              fill="var(--destructive)" 
+              radius={[4, 4, 0, 0]} 
+              barSize={24} 
+              stackId="a" 
+            />
           </BarChart>
         </ResponsiveContainer>
       </div>

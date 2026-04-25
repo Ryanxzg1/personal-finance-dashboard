@@ -97,7 +97,7 @@ export function CategoriesClient({ initialCategories, initialBudgets }: Categori
   }
 
   return (
-    <div className="p-8">
+    <div className="p-4 lg:p-8">
       <header className="mb-8">
         <h2 className="font-sans text-xl font-bold tracking-tight">Manajemen Kategori & Anggaran</h2>
         <p className="font-serif text-sm italic text-muted-foreground">Atur kategori dan batasan pengeluaran bulanan Anda.</p>
