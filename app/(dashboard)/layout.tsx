@@ -2,6 +2,7 @@ import { Sidebar } from "@/components/finance/sidebar";
 import { currentUser } from "@clerk/nextjs/server";
 import { UserButton } from "@clerk/nextjs";
 import { MobileMenu } from "@/components/finance/mobile-menu";
+import { CommandMenu } from "@/components/finance/command-menu";
 
 export default async function DashboardLayout({
   children,
@@ -25,16 +26,22 @@ export default async function DashboardLayout({
             <MobileMenu />
 
             <div>
-              <p className="hidden font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground sm:block lg:text-[13px]">
-                Buku Kas · Sistem Pencatatan Digital
-              </p>
-              <h1 className="font-sans text-xl font-bold tracking-tight text-foreground lg:mt-1 lg:text-3xl">
+              <h1 className="font-sans text-xl font-bold tracking-tight text-foreground lg:text-3xl">
                 Selamat datang, {userName}.
               </h1>
             </div>
           </div>
-          <div className="flex items-center gap-4">
-            <UserButton />
+          <div className="flex items-center gap-3 lg:gap-6">
+            <div className="hidden sm:block">
+              <CommandMenu />
+            </div>
+            <UserButton 
+              appearance={{
+                elements: {
+                  userButtonAvatarBox: "h-9 w-9 rounded-sm border-2 border-border shadow-xs",
+                }
+              }}
+            />
           </div>
         </header>
 
