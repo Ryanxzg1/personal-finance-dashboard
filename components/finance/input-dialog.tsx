@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { X } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { AmountInput } from "@/components/ui/amount-input"
 
 export type InputMode = "Pemasukan" | "Pengeluaran"
 
@@ -13,18 +14,26 @@ interface Category {
   icon: string | null
 }
 
+interface Account {
+  id: number
+  name: string
+  type: string
+}
+
 interface InputDialogProps {
   open: boolean
   mode: InputMode
   categories: Category[]
-  initialData?: { amount: number; category: string; note: string; date: string }
+  accounts: Account[]
+  initialData?: { amount: number; category: string; note: string; date: string; accountId?: number | null }
   onClose: () => void
-  onSubmit: (data: { amount: number; category: string; note: string; date: string }) => void
+  onSubmit: (data: { amount: number; category: string; note: string; date: string; accountId?: number | null }) => void
 }
 
-export function InputDialog({ open, mode, categories, initialData, onClose, onSubmit }: InputDialogProps) {
+export function InputDialog({ open, mode, categories, accounts, initialData, onClose, onSubmit }: InputDialogProps) {
   const [amount, setAmount] = useState("")
   const [category, setCategory] = useState("")
+  const [accountId, setAccountId] = useState<number | null | undefined>(undefined)
   const [note, setNote] = useState("")
   const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10))
   const [error, setError] = useState<string | null>(null)
@@ -39,6 +48,7 @@ export function InputDialog({ open, mode, categories, initialData, onClose, onSu
       if (initialData) {
         setAmount(Math.abs(initialData.amount).toString())
         setCategory(initialData.category)
+        setAccountId(initialData.accountId)
         setNote(initialData.note)
         try {
            const d = new Date((initialData as any).rawDate || initialData.date);
@@ -53,12 +63,13 @@ export function InputDialog({ open, mode, categories, initialData, onClose, onSu
       } else {
         setAmount("")
         setCategory("")
+        setAccountId(accounts.length > 0 ? accounts[0].id : undefined)
         setNote("")
         setDate(new Date().toISOString().slice(0, 10))
       }
       setError(null)
     }
-  }, [open, initialData])
+  }, [open, initialData, accounts])
 
   useEffect(() => {
     if (!open) return
@@ -89,6 +100,7 @@ export function InputDialog({ open, mode, categories, initialData, onClose, onSu
       category,
       note: note.trim() || category,
       date,
+      accountId,
     })
     onClose()
   }
@@ -109,7 +121,7 @@ export function InputDialog({ open, mode, categories, initialData, onClose, onSu
 
       <form
         onSubmit={handleSubmit}
-        className="relative z-10 w-full max-w-md rounded-sm border border-border bg-card p-6 shadow-lg"
+        className="relative z-10 w-full max-w-md rounded-sm border border-border bg-card p-6 shadow-lg overflow-y-auto max-h-[90vh]"
       >
         <div className="flex items-start justify-between gap-4 border-b border-dashed border-border pb-4">
           <div>
@@ -130,7 +142,7 @@ export function InputDialog({ open, mode, categories, initialData, onClose, onSu
           </button>
         </div>
 
-        <div className="mt-5 flex flex-col gap-4">
+        <div className="mt-5 flex flex-col gap-5">
           <Field label="Tanggal" htmlFor="tx-date">
             <input
               id="tx-date"
@@ -142,26 +154,28 @@ export function InputDialog({ open, mode, categories, initialData, onClose, onSu
             />
           </Field>
 
-          <Field label="Jumlah (Rp)" htmlFor="tx-amount">
-            <input
-              id="tx-amount"
-              inputMode="numeric"
-              placeholder="0"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value.replace(/[^\d]/g, ""))}
-              className={cn(
-                "w-full rounded-sm border border-input bg-background px-3 py-2 font-mono text-base tracking-tight focus:outline-none",
-                tone === "income"
-                  ? "focus:border-[#5a6b3b]"
-                  : "focus:border-destructive",
-              )}
+          <AmountInput 
+            label="Jumlah (Rp)"
+            value={amount}
+            onChange={setAmount}
+            tone={tone}
+          />
+
+          <Field label={mode === "Pemasukan" ? "Masuk Ke Akun" : "Bayar Pakai Akun"} htmlFor="tx-account">
+            <select
+              id="tx-account"
+              value={accountId || ""}
+              onChange={(e) => setAccountId(Number(e.target.value))}
+              className="w-full rounded-sm border border-input bg-background px-3 py-2 font-serif text-sm focus:border-primary focus:outline-none"
               required
-            />
-            {amount && (
-              <p className="mt-1 font-mono text-xs text-muted-foreground">
-                ≈ Rp {Number(amount).toLocaleString("id-ID")}
-              </p>
-            )}
+            >
+              <option value="" disabled>Pilih Akun...</option>
+              {accounts.map((acc) => (
+                <option key={acc.id} value={acc.id}>
+                  {acc.name} ({acc.type.replace("_", " ")})
+                </option>
+              ))}
+            </select>
           </Field>
 
           <Field label="Kategori" htmlFor="tx-category">
@@ -195,9 +209,6 @@ export function InputDialog({ open, mode, categories, initialData, onClose, onSu
                 )
               })}
             </div>
-            <p className="mt-2 font-serif text-xs italic text-muted-foreground">
-              Wajib diisi — memastikan data tetap terstruktur.
-            </p>
           </Field>
 
           <Field label="Catatan (opsional)" htmlFor="tx-note">

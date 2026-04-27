@@ -10,11 +10,14 @@ import {
 } from "@/components/finance/transactions-table"
 import { InputDialog, type InputMode } from "@/components/finance/input-dialog"
 import { createTransaction, deleteTransaction, updateTransaction } from "@/lib/actions/transactions"
+import { updateAccount } from "@/lib/actions/accounts"
 import { toast } from "sonner"
 import { TrendingUp, TrendingDown, Wallet, AlertCircle, Bell, BellOff } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { TypeSelector } from "@/components/finance/type-selector"
 import { CategoryDistribution } from "@/components/finance/category-distribution"
+import { AccountSummary } from "@/components/finance/account-summary"
+import { AccountDialog } from "@/components/finance/account-dialog"
 import { requestNotificationPermission, sendNotification, registerServiceWorker } from "@/lib/notifications"
 
 interface Category {
@@ -29,10 +32,18 @@ interface Budget {
   limitAmount: string
 }
 
+interface Account {
+  id: number
+  name: string
+  type: string
+  initialBalance: string
+}
+
 interface DashboardClientProps {
   initialTransactions: UITransaction[]
   initialCategories: Category[]
   initialBudgets: Budget[]
+  initialAccounts: Account[]
   userName: string
 }
 
@@ -41,7 +52,13 @@ type Action =
   | { type: "DELETE"; id: string }
   | { type: "UPDATE"; transaction: UITransaction }
 
-export function DashboardClient({ initialTransactions, initialCategories, initialBudgets, userName }: DashboardClientProps) {
+export function DashboardClient({ 
+  initialTransactions, 
+  initialCategories, 
+  initialBudgets, 
+  initialAccounts,
+  userName 
+}: DashboardClientProps) {
   const [isPending, startTransition] = useTransition()
   const searchParams = useSearchParams()
   const router = useRouter()
@@ -49,6 +66,8 @@ export function DashboardClient({ initialTransactions, initialCategories, initia
   const [selectorOpen, setSelectorOpen] = useState(false)
   const [dialogMode, setDialogMode] = useState<InputMode>("Pemasukan")
   const [editingTx, setEditingTx] = useState<UITransaction | null>(null)
+  const [editingAccount, setEditingAccount] = useState<any | null>(null)
+  const [accountDialogOpen, setAccountDialogOpen] = useState(false)
   const [notifGranted, setNotifGranted] = useState(false)
 
   useEffect(() => {
@@ -97,6 +116,77 @@ export function DashboardClient({ initialTransactions, initialCategories, initia
     setDialogOpen(true)
   }
 
+  const openEditAccountDialog = (acc: any) => {
+    setEditingAccount(acc)
+    setAccountDialogOpen(true)
+  }
+
+  const handleAccountSubmit = async (data: any) => {
+    if (!editingAccount) return
+    
+    const newBalance = parseFloat(data.initialBalance) || 0
+    const oldBalance = editingAccount.currentBalance
+    const diff = newBalance - oldBalance
+
+    startTransition(async () => {
+      // 1. Jika saldo bertambah, buat transaksi Pemasukan otomatis
+      if (diff > 0) {
+        const txData = {
+          amount: diff.toString(),
+          category: "Penyesuaian Saldo",
+          description: `Penyesuaian saldo akun ${data.name}`,
+          type: "income" as const,
+          date: new Date(),
+          accountId: editingAccount.id
+        }
+
+        const txResult = await createTransaction(txData)
+        
+        if (txResult.success) {
+          // Optimistic update agar langsung muncul di tabel
+          const d = new Date()
+          const formattedDate = `${String(d.getDate()).padStart(2, "0")} ${d.toLocaleString("id-ID", { month: "short" })}`.replace(".", "")
+          
+          addOptimisticAction({
+            type: "ADD",
+            transaction: {
+              id: Math.random().toString(), // Temp ID
+              date: formattedDate,
+              rawDate: d.toISOString(),
+              type: "Pemasukan",
+              category: txData.category,
+              note: txData.description,
+              amount: diff,
+              accountId: txData.accountId
+            }
+          })
+
+          // 2. Update meta data akun (Nama & Jenis)
+          // Tetap gunakan initialBalance lama agar tidak double counting
+          const { initialBalance, ...metaData } = data
+          await updateAccount(editingAccount.id, {
+            ...metaData,
+            initialBalance: editingAccount.initialBalance 
+          })
+
+          toast.success(`Saldo berhasil disesuaikan (+Rp ${diff.toLocaleString("id-ID")})`)
+          router.refresh()
+        } else {
+          toast.error(txResult.error || "Gagal membuat transaksi penyesuaian")
+        }
+      } else {
+        // 3. Jika saldo tetap atau berkurang, update normal
+        const result = await updateAccount(editingAccount.id, data)
+        if (result.success) {
+          toast.success("Akun berhasil diperbarui")
+          router.refresh()
+        } else {
+          toast.error(result.error || "Gagal memperbarui akun")
+        }
+      }
+    })
+  }
+
   // --- OPTIMISTIC UI LOGIC ---
   const [optimisticTransactions, addOptimisticAction] = useOptimistic(
     initialTransactions,
@@ -111,7 +201,7 @@ export function DashboardClient({ initialTransactions, initialCategories, initia
   )
 
   // --- STATISTICS & BUDGET CALCULATION ---
-  const { stats, budgetProgress } = useMemo(() => {
+  const { stats, budgetProgress, accountBalances } = useMemo(() => {
     const now = new Date()
     const currentMonth = now.getMonth()
     const currentYear = now.getFullYear()
@@ -131,7 +221,19 @@ export function DashboardClient({ initialTransactions, initialCategories, initia
 
     const income = monthlyTxs.reduce((sum, t) => t.amount > 0 ? sum + Number(t.amount) : sum, 0)
     const expense = monthlyTxs.reduce((sum, t) => t.amount < 0 ? sum + Math.abs(Number(t.amount)) : sum, 0)
-    const balance = optimisticTransactions.reduce((sum, t) => sum + Number(t.amount), 0)
+    
+    // Calculate individual account balances
+    const accountBalances = initialAccounts.map(acc => {
+      const accTxs = optimisticTransactions.filter(t => t.accountId === acc.id)
+      const txSum = accTxs.reduce((sum, t) => sum + Number(t.amount), 0)
+      return {
+        ...acc,
+        currentBalance: Number(acc.initialBalance) + txSum
+      }
+    })
+
+    // Total balance is sum of all account current balances
+    const balance = accountBalances.reduce((sum, acc) => sum + acc.currentBalance, 0)
 
     const incomeLastMonth = lastMonthTxs.reduce((sum, t) => t.amount > 0 ? sum + Number(t.amount) : sum, 0)
     const expenseLastMonth = lastMonthTxs.reduce((sum, t) => t.amount < 0 ? sum + Math.abs(Number(t.amount)) : sum, 0)
@@ -157,9 +259,10 @@ export function DashboardClient({ initialTransactions, initialCategories, initia
 
     return { 
       stats: { income, expense, balance, incomeTrend, expenseTrend }, 
-      budgetProgress: progress 
+      budgetProgress: progress,
+      accountBalances
     }
-  }, [optimisticTransactions, initialBudgets, initialCategories])
+  }, [optimisticTransactions, initialBudgets, initialCategories, initialAccounts])
 
   const openAddDialog = (mode: InputMode) => {
     setEditingTx(null)
@@ -173,7 +276,7 @@ export function DashboardClient({ initialTransactions, initialCategories, initia
     setDialogOpen(true)
   }
 
-  const handleSubmit = async (data: { amount: number; category: string; note: string; date: string }) => {
+  const handleSubmit = async (data: { amount: number; category: string; note: string; date: string; accountId?: number | null }) => {
     const d = new Date(data.date)
     const formattedDate = `${String(d.getDate()).padStart(2, "0")} ${d.toLocaleString("id-ID", { month: "short" })}`.replace(".", "")
 
@@ -185,6 +288,7 @@ export function DashboardClient({ initialTransactions, initialCategories, initia
         category: data.category,
         note: data.note,
         amount: data.amount,
+        accountId: data.accountId,
       }
       startTransition(async () => {
         addOptimisticAction({ type: "UPDATE", transaction: updatedTxUI })
@@ -194,6 +298,7 @@ export function DashboardClient({ initialTransactions, initialCategories, initia
            description: data.note,
            date: d,
            type: data.amount >= 0 ? "income" : "expense",
+           accountId: data.accountId,
         })
         if (!result.success) toast.error(result.error || "Gagal memperbarui data")
         else toast.success("Transaksi diperbarui")
@@ -207,6 +312,7 @@ export function DashboardClient({ initialTransactions, initialCategories, initia
         category: data.category,
         note: data.note,
         amount: data.amount,
+        accountId: data.accountId,
       }
       startTransition(async () => {
         addOptimisticAction({ type: "ADD", transaction: newTxUI })
@@ -257,6 +363,7 @@ export function DashboardClient({ initialTransactions, initialCategories, initia
           category: data.category,
           type: data.amount >= 0 ? "income" : "expense",
           date: d,
+          accountId: data.accountId,
         })
         if (!result.success) toast.error(result.error || "Gagal menyimpan data")
         else toast.success("Transaksi disimpan")
@@ -335,6 +442,7 @@ export function DashboardClient({ initialTransactions, initialCategories, initia
         </div>
         
         <CategoryDistribution transactions={optimisticTransactions} />
+        <AccountSummary accounts={accountBalances} onEditAccount={openEditAccountDialog} />
       </div>
 
       <TransactionsTable
@@ -359,9 +467,17 @@ export function DashboardClient({ initialTransactions, initialCategories, initia
         open={dialogOpen}
         mode={dialogMode}
         categories={initialCategories}
+        accounts={initialAccounts}
         initialData={editingTx || undefined}
         onClose={() => setDialogOpen(false)}
         onSubmit={handleSubmit}
+      />
+
+      <AccountDialog
+        open={accountDialogOpen}
+        initialData={editingAccount}
+        onClose={() => setAccountDialogOpen(false)}
+        onSubmit={handleAccountSubmit}
       />
     </div>
   )

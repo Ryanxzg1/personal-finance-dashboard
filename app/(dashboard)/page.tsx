@@ -1,9 +1,10 @@
 import { DashboardClient } from "@/components/finance/dashboard-client";
 import { getTransactions } from "@/lib/actions/transactions";
 import { getCategories } from "@/lib/actions/categories";
-import { getBudgets } from "@/lib/actions/budgets";
+import { getAccounts } from "@/lib/actions/accounts";
 import { type Transaction as UITransaction } from "@/components/finance/transactions-table";
 import { currentUser } from "@clerk/nextjs/server";
+import { getBudgets } from "@/lib/actions/budgets";
 
 export const dynamic = "force-dynamic";
 
@@ -13,14 +14,16 @@ export default async function Page() {
   const now = new Date();
 
   // Ambil data dari database
-  const [txResult, catResult, budgetResult] = await Promise.all([
+  const [txResult, catResult, budgetResult, accountResult] = await Promise.all([
     getTransactions(),
     getCategories(),
-    getBudgets(now.getMonth(), now.getFullYear())
+    getBudgets(now.getMonth(), now.getFullYear()),
+    getAccounts()
   ]);
   
   const initialCategories = catResult.success && catResult.data ? catResult.data : [];
   const initialBudgets = budgetResult.success && budgetResult.data ? budgetResult.data : [];
+  const initialAccounts = accountResult.success && accountResult.data ? accountResult.data : [];
   let initialTransactions: UITransaction[] = [];
   
   if (txResult.success && txResult.data) {
@@ -38,6 +41,7 @@ export default async function Page() {
         category: tx.category,
         note: tx.description,
         amount: tx.type === "income" ? Number(tx.amount) : -Number(tx.amount),
+        accountId: tx.accountId,
       };
     });
   }
@@ -46,6 +50,7 @@ export default async function Page() {
     initialTransactions={initialTransactions} 
     initialCategories={initialCategories as any} 
     initialBudgets={initialBudgets as any}
+    initialAccounts={initialAccounts as any}
     userName={userName} 
   />;
 }

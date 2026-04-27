@@ -13,18 +13,12 @@ export default clerkMiddleware(async (auth, req) => {
   // 1. Handle CORS for API routes
   if (req.nextUrl.pathname.startsWith('/api')) {
     const response = NextResponse.next();
-    
-    // Add CORS headers
-    response.headers.set('Access-Control-Allow-Origin', '*'); // Update with specific domain in production
+    response.headers.set('Access-Control-Allow-Origin', '*');
     response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
     response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
-    // Handle preflight requests
     if (req.method === 'OPTIONS') {
-      return new NextResponse(null, { 
-        status: 204, 
-        headers: response.headers 
-      });
+      return new NextResponse(null, { status: 204, headers: response.headers });
     }
 
     if (!isPublicRoute(req)) {
@@ -36,9 +30,9 @@ export default clerkMiddleware(async (auth, req) => {
 
   // 2. Default protection for other routes
   if (!isPublicRoute(req)) {
-    await auth.protect()
+    await auth.protect();
   }
-})
+});
 
 export const config = {
   matcher: [

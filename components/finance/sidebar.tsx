@@ -39,7 +39,7 @@ export function Sidebar({ onNewEntry }: { onNewEntry?: () => void }) {
           <BookOpen className="h-5 w-5 text-primary" aria-hidden="true" />
         </div>
         <div className="flex flex-col leading-tight">
-          <span className="font-sans text-lg font-bold tracking-tight">Buku Kas</span>
+          <span className="font-sans text-lg font-bold tracking-tight">Buku Keuangan</span>
           <span className="font-serif text-[11px] italic text-muted-foreground">est. 2026</span>
         </div>
       </div>

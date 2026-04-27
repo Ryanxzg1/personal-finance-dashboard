@@ -6,6 +6,9 @@ import { revalidatePath } from "next/cache"
 import { eq, and } from "drizzle-orm"
 import { auth } from "@clerk/nextjs/server"
 
+import { budgetSchema } from "@/lib/validations/budget"
+import { z } from "zod"
+
 /**
  * Mengambil semua budget user untuk bulan/tahun tertentu
  */
@@ -35,10 +38,13 @@ export async function getBudgets(month: number, year: number) {
 /**
  * Membuat atau memperbarui budget
  */
-export async function upsertBudget(data: { categoryId: number; amount: string; month: number; year: number }) {
+export async function upsertBudget(data: z.infer<typeof budgetSchema>) {
   try {
     const { userId } = await auth();
-    if (!userId) throw new Error("Unauthorized");
+    if (!userId) return { success: false, error: "Unauthorized" };
+
+    // Validasi dengan Zod
+    const validatedData = budgetSchema.parse(data);
 
     // Cek apakah sudah ada budget untuk kategori + bulan ini
     const existing = await db
@@ -47,9 +53,9 @@ export async function upsertBudget(data: { categoryId: number; amount: string; m
       .where(
         and(
           eq(budgets.userId, userId),
-          eq(budgets.categoryId, data.categoryId),
-          eq(budgets.month, data.month),
-          eq(budgets.year, data.year)
+          eq(budgets.categoryId, validatedData.categoryId),
+          eq(budgets.month, validatedData.month),
+          eq(budgets.year, validatedData.year)
         )
       );
 
@@ -57,16 +63,16 @@ export async function upsertBudget(data: { categoryId: number; amount: string; m
       // Update
       await db
         .update(budgets)
-        .set({ limitAmount: data.amount })
+        .set({ limitAmount: validatedData.limitAmount })
         .where(eq(budgets.id, existing[0].id));
     } else {
       // Insert
       await db.insert(budgets).values({
         userId,
-        categoryId: data.categoryId,
-        limitAmount: data.amount,
-        month: data.month,
-        year: data.year,
+        categoryId: validatedData.categoryId,
+        limitAmount: validatedData.limitAmount,
+        month: validatedData.month,
+        year: validatedData.year,
       });
     }
 
@@ -74,6 +80,9 @@ export async function upsertBudget(data: { categoryId: number; amount: string; m
     revalidatePath("/");
     return { success: true };
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return { success: false, error: error.errors[0].message };
+    }
     console.error("Failed to upsert budget:", error);
     return { success: false, error: "Gagal menyimpan anggaran" };
   }

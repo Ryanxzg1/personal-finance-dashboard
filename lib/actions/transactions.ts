@@ -27,6 +27,7 @@ export async function createTransaction(data: Omit<NewTransaction, "userId">) {
       userId,
       // Drizzle numeric handle string, so validatedData.amount (string) is fine
       amount: validatedData.amount,
+      accountId: validatedData.accountId,
     }).returning();
     
     revalidatePath("/");

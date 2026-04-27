@@ -17,6 +17,7 @@ export interface Transaction {
   category: string
   note: string
   amount: number
+  accountId?: number | null
 }
 
 interface TransactionsTableProps {

@@ -6,6 +6,9 @@ import { revalidatePath } from "next/cache"
 import { eq, and } from "drizzle-orm"
 import { auth } from "@clerk/nextjs/server"
 
+import { categorySchema } from "@/lib/validations/category"
+import { z } from "zod"
+
 /**
  * Mengambil semua kategori milik user
  */
@@ -29,19 +32,25 @@ export async function getCategories() {
 /**
  * Menambah kategori baru
  */
-export async function createCategory(data: { name: string; type: "income" | "expense"; icon?: string }) {
+export async function createCategory(data: z.infer<typeof categorySchema>) {
   try {
     const { userId } = await auth();
-    if (!userId) throw new Error("Unauthorized");
+    if (!userId) return { success: false, error: "Unauthorized" };
+
+    // Validasi dengan Zod
+    const validatedData = categorySchema.parse(data);
 
     await db.insert(categories).values({
-      ...data,
+      ...validatedData,
       userId,
     });
 
     revalidatePath("/kategori");
     return { success: true };
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return { success: false, error: error.errors[0].message };
+    }
     console.error("Failed to create category:", error);
     return { success: false, error: "Gagal membuat kategori" };
   }

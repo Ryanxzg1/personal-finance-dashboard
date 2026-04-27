@@ -6,6 +6,7 @@ export const transactionSchema = z.object({
     message: "Jumlah harus berupa angka dan tidak boleh nol",
   }),
   category: z.string().min(1, "Kategori harus dipilih"),
+  accountId: z.number().optional(),
   type: z.enum(["income", "expense"], {
     errorMap: () => ({ message: "Tipe transaksi harus 'Pemasukan' atau 'Pengeluaran'" }),
   }),
