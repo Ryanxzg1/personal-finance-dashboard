@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { Home, Tags, History, Plus, BookOpen, User } from "lucide-react"
+import { Home, Tags, History, Plus, BookOpen, User, Target } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 import { UserButton, useUser } from "@clerk/nextjs"
@@ -17,6 +17,7 @@ export function Sidebar({ onNewEntry }: { onNewEntry?: () => void }) {
   
   const items = [
     { href: "/", label: "Beranda", icon: Home },
+    { href: "/tabungan", label: "Tabungan", icon: Target },
     { href: "/kategori", label: "Kategori", icon: Tags },
     { href: "/riwayat", label: "Riwayat", icon: History },
   ]
