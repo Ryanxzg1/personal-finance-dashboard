@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { Home, Tags, History, Plus, BookOpen, User, Target } from "lucide-react"
+import { Home, Tags, History, Plus, BookOpen, User, Target, Compass } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 import { UserButton, useUser } from "@clerk/nextjs"
@@ -18,6 +18,7 @@ export function Sidebar({ onNewEntry }: { onNewEntry?: () => void }) {
   const items = [
     { href: "/", label: "Beranda", icon: Home },
     { href: "/tabungan", label: "Tabungan", icon: Target },
+    { href: "/pemetaan", label: "Pemetaan Biaya", icon: Compass },
     { href: "/kategori", label: "Kategori", icon: Tags },
     { href: "/riwayat", label: "Riwayat", icon: History },
   ]
@@ -101,7 +102,7 @@ export function Sidebar({ onNewEntry }: { onNewEntry?: () => void }) {
             <span className="truncate font-sans text-[13px] font-bold text-foreground">
               {user?.fullName || "Pengguna"}
             </span>
-            <span className="truncate font-mono text-[11px] uppercase tracking-tighter text-muted-foreground">
+            <span className="truncate font-mono text-[11px] text-muted-foreground">
               {user?.primaryEmailAddress?.emailAddress || "Sign out"}
             </span>
           </div>

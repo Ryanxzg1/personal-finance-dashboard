@@ -1,4 +1,5 @@
-import { pgTable, serial, text, numeric, timestamp, varchar, integer } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, numeric, timestamp, varchar, integer, boolean } from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
 
 export const transactions = pgTable("transactions", {
   id: serial("id").primaryKey(),
@@ -59,3 +60,38 @@ export type Account = typeof accounts.$inferSelect;
 export type NewAccount = typeof accounts.$inferInsert;
 export type SavingsGoal = typeof savingsGoals.$inferSelect;
 export type NewSavingsGoal = typeof savingsGoals.$inferInsert;
+
+// --- THE BLUEPRINT (EXPENSE PLANNING) ---
+export const blueprintPlans = pgTable("blueprint_plans", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id", { length: 255 }).notNull(),
+  name: varchar("name", { length: 255 }).notNull(),
+  startDate: timestamp("start_date"),
+  endDate: timestamp("end_date"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const blueprintItems = pgTable("blueprint_items", {
+  id: serial("id").primaryKey(),
+  planId: integer("plan_id").notNull().references(() => blueprintPlans.id, { onDelete: "cascade" }),
+  description: text("description").notNull(),
+  amount: numeric("amount", { precision: 12, scale: 2 }).notNull(),
+  isEssential: boolean("is_essential").default(false),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const blueprintPlansRelations = relations(blueprintPlans, ({ many }) => ({
+  items: many(blueprintItems),
+}));
+
+export const blueprintItemsRelations = relations(blueprintItems, ({ one }) => ({
+  plan: one(blueprintPlans, {
+    fields: [blueprintItems.planId],
+    references: [blueprintPlans.id],
+  }),
+}));
+
+export type BlueprintPlan = typeof blueprintPlans.$inferSelect;
+export type NewBlueprintPlan = typeof blueprintPlans.$inferInsert;
+export type BlueprintItem = typeof blueprintItems.$inferSelect;
+export type NewBlueprintItem = typeof blueprintItems.$inferInsert;

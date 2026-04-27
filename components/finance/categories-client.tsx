@@ -239,7 +239,7 @@ export function CategoriesClient({
         <p className="font-serif text-sm italic text-muted-foreground">Atur kategori pengeluaran dan kelola sumber dana Anda.</p>
         
         {/* Tab Switcher */}
-        <div className="flex gap-2 mt-6 border-b border-border">
+        <div className="flex gap-2 mt-6 border-b border-border overflow-x-auto no-scrollbar whitespace-nowrap">
           <button 
             onClick={() => setActiveTab("categories")}
             className={cn(

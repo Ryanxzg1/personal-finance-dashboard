@@ -373,7 +373,7 @@ export function DashboardClient({
 
   return (
     <div className="space-y-4 p-4 lg:p-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
          <h2 className="font-sans text-sm font-bold uppercase tracking-[0.2em] text-muted-foreground">Dashboard Overview</h2>
          <button 
            onClick={handleRequestNotif}

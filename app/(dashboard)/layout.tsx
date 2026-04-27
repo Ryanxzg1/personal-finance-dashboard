@@ -26,8 +26,8 @@ export default async function DashboardLayout({
             <MobileMenu />
 
             <div>
-              <h1 className="font-sans text-xl font-bold tracking-tight text-foreground lg:text-3xl">
-                Selamat datang, {userName}.
+              <h1 className="font-sans text-xl font-bold tracking-tight text-foreground lg:text-3xl text-pretty">
+                Selamat datang, <span className="whitespace-nowrap">{userName}.</span>
               </h1>
             </div>
           </div>

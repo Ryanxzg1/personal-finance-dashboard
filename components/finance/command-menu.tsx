@@ -11,7 +11,8 @@ import {
   TrendingUp, 
   ArrowRight,
   Calculator,
-  LayoutDashboard
+  LayoutDashboard,
+  Compass
 } from "lucide-react"
 import { searchEverything } from "@/lib/actions/search"
 import { cn } from "@/lib/utils"
@@ -136,6 +137,13 @@ export function CommandMenu() {
               >
                 <TrendingUp className="h-4 w-4 text-muted-foreground" />
                 <span className="font-serif">Tabungan Berencana</span>
+              </Command.Item>
+              <Command.Item
+                onSelect={() => runCommand(() => router.push("/pemetaan"))}
+                className="flex items-center gap-3 rounded-sm px-3 py-2 text-sm transition-colors hover:bg-muted cursor-pointer aria-selected:bg-muted"
+              >
+                <Compass className="h-4 w-4 text-muted-foreground" />
+                <span className="font-serif">Pemetaan Biaya</span>
               </Command.Item>
             </Command.Group>
 

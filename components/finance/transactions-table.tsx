@@ -78,7 +78,7 @@ export function TransactionsTable({ transactions, onNewEntry, onDelete, onEdit }
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="grid grid-cols-2 sm:flex sm:items-center gap-2">
            <FilterSelect
             icon={Calendar}
             label="Bulan"
@@ -156,11 +156,11 @@ export function TransactionsTable({ transactions, onNewEntry, onDelete, onEdit }
 }
 
 function Th({ children, className }: { children: React.ReactNode; className?: string }) {
-  return <th className={cn("px-6 py-4 font-mono text-[13px] uppercase tracking-[0.15em] text-muted-foreground/80", className)}>{children}</th>
+  return <th className={cn("px-4 lg:px-6 py-4 font-mono text-[13px] uppercase tracking-[0.15em] text-muted-foreground/80", className)}>{children}</th>
 }
 
 function Td({ children, className }: { children: React.ReactNode; className?: string }) {
-  return <td className={cn("px-6 py-4 align-top", className)}>{children}</td>
+  return <td className={cn("px-4 lg:px-6 py-4 align-top", className)}>{children}</td>
 }
 
 function IconButton({ label, icon: Icon, tone = "default", onClick }: { label: string; icon: any; tone?: string; onClick?: () => void }) {
