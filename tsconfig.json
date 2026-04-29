@@ -23,9 +23,12 @@
       }
     ],
     "paths": {
-      "@/*": [
-        "./*"
-      ]
+      "@/*": ["./*"],
+      "@actions/*": ["./lib/actions/*"],
+      "@validations/*": ["./lib/validations/*"],
+      "@db/*": ["./lib/db/*"],
+      "@components/*": ["./components/*"],
+      "@hooks/*": ["./hooks/*"]
     }
   },
   "include": [

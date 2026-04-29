@@ -1,9 +1,9 @@
-import { Sidebar } from "@/components/finance/sidebar";
+import { Sidebar } from "@components/finance/layout/sidebar";
 import { currentUser } from "@clerk/nextjs/server";
 import { UserButton } from "@clerk/nextjs";
-import { MobileMenu } from "@/components/finance/mobile-menu";
-import { CommandMenu } from "@/components/finance/command-menu";
-import { PageTitle } from "@/components/finance/page-title";
+import { MobileMenu } from "@components/finance/layout/mobile-menu";
+import { CommandMenu } from "@components/finance/layout/command-menu";
+import { PageTitle } from "@components/finance/layout/page-title";
 
 export default async function DashboardLayout({
   children,

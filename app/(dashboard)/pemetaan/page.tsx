@@ -1,5 +1,5 @@
 import { getMappingPlans } from "@/lib/actions/mapping";
-import { MappingClient } from "@/components/finance/mapping-client";
+import { MappingClient } from "@components/finance/mapping/mapping-client";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {

@@ -1,5 +1,5 @@
 import { getMappingPlanDetails } from "@/lib/actions/mapping";
-import { MappingDetailClient } from "@/components/finance/mapping-detail-client";
+import { MappingDetailClient } from "@components/finance/mapping/mapping-detail-client";
 import { notFound } from "next/navigation";
 import { decodeId } from "@/lib/id-codec";
 

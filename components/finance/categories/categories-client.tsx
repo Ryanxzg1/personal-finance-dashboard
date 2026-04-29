@@ -6,12 +6,12 @@ import { createCategory, deleteCategory } from "@/lib/actions/categories"
 import { upsertBudget } from "@/lib/actions/budgets"
 import { createAccount, deleteAccount, updateAccount } from "@/lib/actions/accounts"
 import { createTransaction, transferFunds } from "@/lib/actions/transactions"
-import { TransferDialog } from "@/components/finance/transfer-dialog"
+import { TransferDialog } from "@components/finance/accounts/transfer-dialog"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
 
 import { AmountInput } from "@/components/ui/amount-input"
-import { AccountDialog } from "@/components/finance/account-dialog"
+import { AccountDialog } from "@components/finance/accounts/account-dialog"
 import { useRouter } from "next/navigation"
 
 interface Category {

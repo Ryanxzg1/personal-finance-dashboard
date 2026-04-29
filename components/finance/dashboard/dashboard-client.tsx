@@ -2,23 +2,23 @@
 
 import { useMemo, useState, useOptimistic, useTransition, useEffect } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
-import { SummarySection } from "@/components/finance/summary-section"
-import { ChartSection } from "@/components/finance/chart-section"
+import { SummarySection } from "@components/finance/dashboard/summary-section"
+import { ChartSection } from "@components/finance/dashboard/chart-section"
 import {
   TransactionsTable,
   type Transaction as UITransaction,
-} from "@/components/finance/transactions-table"
-import { InputDialog, type InputMode } from "@/components/finance/input-dialog"
+} from "@components/finance/transactions/transactions-table"
+import { InputDialog, type InputMode } from "@components/finance/transactions/input-dialog"
 import { createTransaction, deleteTransaction, updateTransaction, transferFunds } from "@/lib/actions/transactions"
-import { TransferDialog } from "@/components/finance/transfer-dialog"
+import { TransferDialog } from "@components/finance/accounts/transfer-dialog"
 import { updateAccount } from "@/lib/actions/accounts"
 import { toast } from "sonner"
 import { TrendingUp, TrendingDown, Wallet, AlertCircle, Bell, BellOff } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { TypeSelector } from "@/components/finance/type-selector"
-import { CategoryDistribution } from "@/components/finance/category-distribution"
-import { AccountSummary } from "@/components/finance/account-summary"
-import { AccountDialog } from "@/components/finance/account-dialog"
+import { TypeSelector } from "@components/finance/transactions/type-selector"
+import { CategoryDistribution } from "@components/finance/dashboard/category-distribution"
+import { AccountSummary } from "@components/finance/accounts/account-summary"
+import { AccountDialog } from "@components/finance/accounts/account-dialog"
 import { requestNotificationPermission, sendNotification, registerServiceWorker } from "@/lib/notifications"
 
 interface Category {

@@ -1,8 +1,8 @@
-import { DashboardClient } from "@/components/finance/dashboard-client";
+import { DashboardClient } from "@components/finance/dashboard/dashboard-client";
 import { getTransactions } from "@/lib/actions/transactions";
 import { getCategories } from "@/lib/actions/categories";
 import { getAccounts } from "@/lib/actions/accounts";
-import { type Transaction as UITransaction } from "@/components/finance/transactions-table";
+import { type Transaction as UITransaction } from "@components/finance/transactions/transactions-table";
 import { currentUser } from "@clerk/nextjs/server";
 import { getBudgets } from "@/lib/actions/budgets";
 import { Metadata } from "next";

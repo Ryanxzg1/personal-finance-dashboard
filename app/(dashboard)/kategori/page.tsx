@@ -1,7 +1,7 @@
 import { getCategories } from "@/lib/actions/categories";
 import { getBudgets } from "@/lib/actions/budgets";
 import { getAccounts } from "@/lib/actions/accounts";
-import { CategoriesClient } from "@/components/finance/categories-client";
+import { CategoriesClient } from "@/components/finance/categories/categories-client";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {

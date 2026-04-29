@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { createMappingPlan, deleteMappingPlan } from "@/lib/actions/mapping"
 import { useRouter } from "next/navigation"
-import { MappingDialog } from "@/components/finance/mapping-dialog"
+import { MappingDialog } from "./mapping-dialog"
 import { encodeId } from "@/lib/id-codec"
 
 interface MappingPlan {

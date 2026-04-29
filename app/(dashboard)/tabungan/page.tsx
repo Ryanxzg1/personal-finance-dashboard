@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 }
 
 import { getSavingsGoals } from "@/lib/actions/savings";
-import { SavingsClient } from "@/components/finance/savings-client";
+import { SavingsClient } from "@/components/finance/savings/savings-client";
 
 export const dynamic = "force-dynamic";
 
