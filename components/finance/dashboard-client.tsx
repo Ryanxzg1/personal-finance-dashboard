@@ -9,7 +9,8 @@ import {
   type Transaction as UITransaction,
 } from "@/components/finance/transactions-table"
 import { InputDialog, type InputMode } from "@/components/finance/input-dialog"
-import { createTransaction, deleteTransaction, updateTransaction } from "@/lib/actions/transactions"
+import { createTransaction, deleteTransaction, updateTransaction, transferFunds } from "@/lib/actions/transactions"
+import { TransferDialog } from "@/components/finance/transfer-dialog"
 import { updateAccount } from "@/lib/actions/accounts"
 import { toast } from "sonner"
 import { TrendingUp, TrendingDown, Wallet, AlertCircle, Bell, BellOff } from "lucide-react"
@@ -70,6 +71,7 @@ export function DashboardClient({
   const [accountDialogOpen, setAccountDialogOpen] = useState(false)
   const [notifGranted, setNotifGranted] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const [transferDialogOpen, setTransferDialogOpen] = useState(false)
 
   useEffect(() => {
     setMounted(true)
@@ -96,21 +98,28 @@ export function DashboardClient({
   useEffect(() => {
     if (!mounted) return
     const newParam = searchParams.get("new")
-    if (newParam) {
+    const transferParam = searchParams.get("transfer")
+
+    if (newParam || transferParam) {
       if (newParam === "select") {
         setSelectorOpen(true)
-      } else {
+      } else if (newParam) {
         setEditingTx(null)
         setDialogMode(newParam === "income" ? "Pemasukan" : "Pengeluaran")
         setDialogOpen(true)
+      }
+
+      if (transferParam === "true") {
+        setTransferDialogOpen(true)
       }
       
       // Hapus query param agar tidak terbuka lagi saat refresh
       const params = new URLSearchParams(searchParams.toString())
       params.delete("new")
+      params.delete("transfer")
       router.replace(`/?${params.toString()}`, { scroll: false })
     }
-  }, [searchParams, router])
+  }, [searchParams, router, mounted])
 
   const handleTypeSelect = (type: "Pemasukan" | "Pengeluaran") => {
     setSelectorOpen(false)
@@ -127,65 +136,25 @@ export function DashboardClient({
   const handleAccountSubmit = async (data: any) => {
     if (!editingAccount) return
     
-    const newBalance = parseFloat(data.initialBalance) || 0
-    const oldBalance = editingAccount.currentBalance
-    const diff = newBalance - oldBalance
-
     startTransition(async () => {
-      // 1. Jika saldo bertambah, buat transaksi Pemasukan otomatis
-      if (diff > 0) {
-        const txData = {
-          amount: diff.toString(),
-          category: "Penyesuaian Saldo",
-          description: `Penyesuaian saldo dompet ${data.name}`,
-          type: "income" as const,
-          date: new Date(),
-          accountId: editingAccount.id
-        }
-
-        const txResult = await createTransaction(txData)
-        
-        if (txResult.success) {
-          // Optimistic update agar langsung muncul di tabel
-          const d = new Date()
-          const formattedDate = `${String(d.getDate()).padStart(2, "0")} ${d.toLocaleString("id-ID", { month: "short" })}`.replace(".", "")
-          
-          addOptimisticAction({
-            type: "ADD",
-            transaction: {
-              id: Math.random().toString(), // Temp ID
-              date: formattedDate,
-              rawDate: d.toISOString(),
-              type: "Pemasukan",
-              category: txData.category,
-              note: txData.description,
-              amount: diff,
-              accountId: txData.accountId
-            }
-          })
-
-          // 2. Update meta data akun (Nama & Jenis)
-          // Tetap gunakan initialBalance lama agar tidak double counting
-          const { initialBalance, ...metaData } = data
-          await updateAccount(editingAccount.id, {
-            ...metaData,
-            initialBalance: editingAccount.initialBalance 
-          })
-
-          toast.success(`Saldo berhasil disesuaikan (+Rp ${diff.toLocaleString("id-ID")})`)
-          router.refresh()
-        } else {
-          toast.error(txResult.error || "Gagal membuat transaksi penyesuaian")
-        }
+      const result = await updateAccount(editingAccount.id, data)
+      if (result.success) {
+        toast.success("Dompet berhasil diperbarui")
+        router.refresh()
       } else {
-        // 3. Jika saldo tetap atau berkurang, update normal
-        const result = await updateAccount(editingAccount.id, data)
-        if (result.success) {
-          toast.success("Dompet berhasil diperbarui")
-          router.refresh()
-        } else {
-          toast.error(result.error || "Gagal memperbarui dompet")
-        }
+        toast.error(result.error || "Gagal memperbarui dompet")
+      }
+    })
+  }
+
+  const handleTransferSubmit = async (data: any) => {
+    startTransition(async () => {
+      const result = await transferFunds(data)
+      if (result.success) {
+        toast.success("Transfer berhasil dilakukan")
+        router.refresh()
+      } else {
+        toast.error(result.error || "Gagal melakukan transfer")
       }
     })
   }
@@ -481,6 +450,13 @@ export function DashboardClient({
         initialData={editingAccount}
         onClose={() => setAccountDialogOpen(false)}
         onSubmit={handleAccountSubmit}
+      />
+
+      <TransferDialog
+        open={transferDialogOpen}
+        accounts={accountBalances as any}
+        onClose={() => setTransferDialogOpen(false)}
+        onSubmit={handleTransferSubmit}
       />
     </div>
   )

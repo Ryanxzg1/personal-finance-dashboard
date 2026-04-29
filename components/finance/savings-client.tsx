@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useTransition } from "react"
+import { useRouter } from "next/navigation"
 import { Target, Wallet, Plus, Pencil, Trash2, Calendar, Trophy, AlertCircle, TrendingUp } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { SavingsGoalDialog } from "@/components/finance/savings-goal-dialog"
@@ -24,6 +25,7 @@ interface SavingsClientProps {
 
 export function SavingsClient({ initialGoals }: SavingsClientProps) {
   const [goals, setGoals] = useState(initialGoals)
+  const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingGoal, setEditingGoal] = useState<SavingsGoal | null>(null)
@@ -62,6 +64,7 @@ export function SavingsClient({ initialGoals }: SavingsClientProps) {
       if (result.success) {
         toast.success(editingGoal ? "Target diperbarui" : "Target baru dibuat")
         setDialogOpen(false)
+        router.refresh()
       } else {
         toast.error(result.error || "Gagal menyimpan")
       }
@@ -112,8 +115,8 @@ export function SavingsClient({ initialGoals }: SavingsClientProps) {
             ].map((sample, i) => (
               <div key={i} className="rounded-sm border border-border bg-card p-6 shadow-xs">
                 <div className="flex items-start justify-between mb-4">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-sm bg-muted text-2xl">
-                    {sample.icon}
+                  <div className="flex h-12 w-12 items-center justify-center rounded-sm bg-primary/10 text-primary">
+                    <Target className="h-6 w-6" />
                   </div>
                   <span className="font-mono text-[10px] font-bold px-2 py-1 rounded-sm uppercase tracking-wider bg-muted text-muted-foreground">
                     {sample.percent}% Contoh
@@ -157,8 +160,8 @@ export function SavingsClient({ initialGoals }: SavingsClientProps) {
             return (
               <div key={goal.id} className="group relative rounded-sm border border-border bg-card p-6 shadow-xs transition-all hover:shadow-md">
                 <div className="flex items-start justify-between mb-4">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-sm bg-primary/10 text-2xl">
-                    {goal.icon || "🎯"}
+                  <div className="flex h-12 w-12 items-center justify-center rounded-sm bg-primary/10 text-primary">
+                    {isCompleted ? <Trophy className="h-6 w-6" /> : <Target className="h-6 w-6" />}
                   </div>
                   <div className="flex flex-col items-end gap-1">
                     <span className={cn(
@@ -217,23 +220,13 @@ export function SavingsClient({ initialGoals }: SavingsClientProps) {
                     {goal.deadline && (
                       <div className="flex justify-between items-center">
                         <span className="font-mono text-[9px] uppercase tracking-wider text-muted-foreground">Target Selesai</span>
-                        <div className="flex items-center gap-2">
-                          {goal.deadline && new Date(goal.deadline) < (new Date(new Date().setMonth(new Date().getMonth() + (monthsRemaining || 0)))) && (
-                            <span className="font-sans text-[8px] bg-destructive text-white px-1 rounded-xs uppercase font-bold animate-pulse">Terlambat</span>
-                          )}
-                          <span className="font-mono text-xs font-bold text-foreground">
-                            {new Date(goal.deadline).toLocaleDateString("id-ID", { month: "long", year: "numeric" })}
-                          </span>
-                        </div>
+                        <span className="font-mono text-xs font-bold text-foreground">
+                          {new Date(goal.deadline).toLocaleDateString("id-ID", { month: "long", year: "numeric" })}
+                        </span>
                       </div>
                     )}
                     
-                    <div className={cn(
-                      "flex items-center gap-2 rounded-sm px-3 py-2 border transition-colors",
-                      goal.deadline && new Date(goal.deadline) < (new Date(new Date().setMonth(new Date().getMonth() + (monthsRemaining || 0))))
-                        ? "bg-destructive/5 text-destructive border-destructive/10"
-                        : "bg-primary/5 text-primary border-primary/10"
-                    )}>
+                    <div className="flex items-center gap-2 rounded-sm px-3 py-2 border bg-primary/5 text-primary border-primary/10 transition-colors">
                       <TrendingUp className="h-4 w-4" />
                       <div className="flex flex-col">
                         <span className="font-mono text-[9px] uppercase tracking-tighter opacity-70">Estimasi Selesai</span>

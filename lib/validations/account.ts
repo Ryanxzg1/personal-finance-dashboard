@@ -6,8 +6,6 @@ export const accountSchema = z.object({
   initialBalance: z.string().refine((val) => !isNaN(parseFloat(val)), {
     message: "Saldo awal harus berupa angka",
   }),
-  icon: z.string().optional(),
-  color: z.string().optional(),
 });
 
 export type AccountInput = z.infer<typeof accountSchema>;

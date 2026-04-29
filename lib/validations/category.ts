@@ -5,7 +5,6 @@ export const categorySchema = z.object({
   type: z.enum(["income", "expense"], {
     errorMap: () => ({ message: "Tipe kategori harus 'income' atau 'expense'" }),
   }),
-  icon: z.string().optional(),
 });
 
 export type CategoryInput = z.infer<typeof categorySchema>;

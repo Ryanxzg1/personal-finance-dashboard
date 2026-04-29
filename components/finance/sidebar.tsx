@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { Home, Tags, History, Plus, BookOpen, User, Target, Compass } from "lucide-react"
+import { Home, Tags, History, Plus, BookOpen, User, Target, Compass, TrendingUp } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 import { UserButton, useUser } from "@clerk/nextjs"
@@ -28,6 +28,15 @@ export function Sidebar({ onNewEntry }: { onNewEntry?: () => void }) {
     router.push("/?new=select");
     
     // Jika ada callback tambahan (misal untuk menutup mobile menu), jalankan
+    if (onNewEntry) {
+      onNewEntry();
+    }
+  };
+
+  const handleTransfer = () => {
+    // Selalu arahkan ke dashboard dengan query param transfer
+    router.push("/?transfer=true");
+    
     if (onNewEntry) {
       onNewEntry();
     }
@@ -75,7 +84,7 @@ export function Sidebar({ onNewEntry }: { onNewEntry?: () => void }) {
 
         <div className="my-5 h-px bg-sidebar-border" aria-hidden="true" />
 
-        <div className="px-3">
+        <div className="px-3 flex flex-col gap-2">
           <Button
             type="button"
             onClick={handleNewEntry}
@@ -83,6 +92,15 @@ export function Sidebar({ onNewEntry }: { onNewEntry?: () => void }) {
           >
             <Plus className="h-4 w-4" aria-hidden="true" />
             Input Baru
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleTransfer}
+            className="w-full justify-center gap-2 rounded-sm border-sidebar-border bg-sidebar-accent/40 px-4 py-2 font-sans text-[11px] font-bold uppercase tracking-[0.2em] text-foreground hover:bg-sidebar-accent hover:text-foreground transition-all active:scale-[0.98] shadow-xs"
+          >
+            <TrendingUp className="h-3.5 w-3.5 rotate-45 text-primary" aria-hidden="true" />
+            Transfer Dana
           </Button>
         </div>
       </nav>

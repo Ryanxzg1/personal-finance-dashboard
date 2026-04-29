@@ -3,6 +3,7 @@ import { currentUser } from "@clerk/nextjs/server";
 import { UserButton } from "@clerk/nextjs";
 import { MobileMenu } from "@/components/finance/mobile-menu";
 import { CommandMenu } from "@/components/finance/command-menu";
+import { PageTitle } from "@/components/finance/page-title";
 
 export default async function DashboardLayout({
   children,
@@ -25,11 +26,7 @@ export default async function DashboardLayout({
           <div className="flex items-center gap-4">
             <MobileMenu />
 
-            <div>
-              <h1 className="font-sans text-xl font-bold tracking-tight text-foreground lg:text-3xl text-pretty">
-                Selamat datang, <span className="whitespace-nowrap">{userName}.</span>
-              </h1>
-            </div>
+            <PageTitle userName={userName} />
           </div>
           <div className="flex items-center gap-3 lg:gap-6">
             <div className="hidden sm:block">

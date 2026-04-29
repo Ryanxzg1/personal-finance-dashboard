@@ -19,7 +19,6 @@ const savingsGoalSchema = z.object({
     message: "Target bulanan tidak valid",
   }),
   deadline: z.string().optional().nullable(),
-  icon: z.string().optional().nullable(),
 });
 
 export async function getSavingsGoals() {
@@ -52,7 +51,6 @@ export async function createSavingsGoal(data: z.infer<typeof savingsGoalSchema>)
       targetAmount: validated.targetAmount,
       currentAmount: validated.currentAmount,
       monthlyTarget: validated.monthlyTarget || null,
-      icon: validated.icon || "🎯",
       deadline: validated.deadline ? new Date(validated.deadline) : null,
     });
 

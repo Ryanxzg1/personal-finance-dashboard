@@ -1,7 +1,7 @@
 "use server"
 
 import { db } from "@/lib/db"
-import { accounts } from "@/lib/db/schema"
+import { accounts, transactions } from "@/lib/db/schema"
 import { revalidatePath } from "next/cache"
 import { eq, and } from "drizzle-orm"
 import { auth } from "@clerk/nextjs/server"
@@ -39,10 +39,23 @@ export async function createAccount(data: z.infer<typeof accountSchema>) {
     // Validasi dengan Zod
     const validatedData = accountSchema.parse(data);
 
-    await db.insert(accounts).values({
+    const [newAccount] = await db.insert(accounts).values({
       ...validatedData,
       userId,
-    });
+    }).returning();
+    
+    // AUDIT LOG: Catat saldo awal sebagai transaksi pemasukan
+    if (parseFloat(validatedData.initialBalance) > 0) {
+      await db.insert(transactions).values({
+        userId,
+        accountId: newAccount.id,
+        amount: validatedData.initialBalance,
+        category: "Saldo Awal",
+        description: `Saldo awal dompet ${validatedData.name}`,
+        type: "income",
+        date: new Date(),
+      });
+    }
 
     revalidatePath("/kategori");
     return { success: true };
@@ -87,6 +100,30 @@ export async function updateAccount(id: number, data: z.infer<typeof accountSche
     if (!userId) return { success: false, error: "Unauthorized" };
 
     const validatedData = accountSchema.parse(data);
+
+    // AUDIT LOG: Hitung selisih saldo untuk pencatatan transaksi penyesuaian
+    const [oldAccount] = await db.select().from(accounts).where(and(eq(accounts.id, id), eq(accounts.userId, userId)));
+    
+    if (oldAccount) {
+      // Kita asumsikan initialBalance yang dikirim adalah saldo baru yang diinginkan
+      // Namun di sistem ini, saldo dihitung dari initialBalance + total transaksi.
+      // Jadi jika user mengedit 'Saldo Awal', kita catat selisihnya.
+      const oldInitial = parseFloat(oldAccount.initialBalance);
+      const newInitial = parseFloat(validatedData.initialBalance);
+      const diff = newInitial - oldInitial;
+
+      if (diff !== 0) {
+        await db.insert(transactions).values({
+          userId,
+          accountId: id,
+          amount: Math.abs(diff).toString(),
+          category: "Penyesuaian Saldo",
+          description: `Penyesuaian saldo dompet ${validatedData.name}`,
+          type: diff > 0 ? "income" : "expense",
+          date: new Date(),
+        });
+      }
+    }
 
     await db.update(accounts)
       .set({

@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { X, Target, Calendar, Trophy } from "lucide-react"
+import { X, Target, Calendar, Trophy, TrendingUp } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { AmountInput } from "@/components/ui/amount-input"
 
@@ -17,8 +17,7 @@ export function SavingsGoalDialog({ open, initialData, onClose, onSubmit }: Savi
   const [targetAmount, setTargetAmount] = useState("")
   const [currentAmount, setCurrentAmount] = useState("0")
   const [monthlyTarget, setMonthlyTarget] = useState("")
-  const [deadline, setDeadline] = useState("")
-  const [icon, setIcon] = useState("🎯")
+  const [duration, setDuration] = useState("") // Baru: Target Durasi dalam bulan
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -28,15 +27,24 @@ export function SavingsGoalDialog({ open, initialData, onClose, onSubmit }: Savi
         setTargetAmount(parseFloat(initialData.targetAmount).toString())
         setCurrentAmount(parseFloat(initialData.currentAmount).toString())
         setMonthlyTarget(initialData.monthlyTarget ? parseFloat(initialData.monthlyTarget).toString() : "")
-        setDeadline(initialData.deadline ? new Date(initialData.deadline).toISOString().split('T')[0] : "")
-        setIcon(initialData.icon || "🎯")
+        
+        // Estimasi durasi dari data yang ada jika ada deadline
+        if (initialData.deadline) {
+          const start = new Date()
+          const end = new Date(initialData.deadline)
+          const months = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth())
+          setDuration(Math.max(1, months).toString())
+        } else if (initialData.monthlyTarget && parseFloat(initialData.targetAmount) > 0) {
+           const remaining = parseFloat(initialData.targetAmount) - parseFloat(initialData.currentAmount)
+           const months = Math.ceil(remaining / parseFloat(initialData.monthlyTarget))
+           setDuration(months.toString())
+        }
       } else {
         setName("")
         setTargetAmount("")
         setCurrentAmount("0")
         setMonthlyTarget("")
-        setDeadline("")
-        setIcon("🎯")
+        setDuration("12") // Default 1 tahun
       }
       setError(null)
     }
@@ -54,14 +62,23 @@ export function SavingsGoalDialog({ open, initialData, onClose, onSubmit }: Savi
       setError("Target jumlah harus lebih dari 0.")
       return
     }
+
+    const target = parseFloat(targetAmount)
+    const current = parseFloat(currentAmount) || 0
+    const dur = parseInt(duration) || 1
+    const calculatedMonthly = Math.ceil((target - current) / dur).toString()
+    
+    // Hitung deadline (bulan depan * durasi)
+    const deadlineDate = new Date()
+    deadlineDate.setMonth(deadlineDate.getMonth() + dur)
     
     onSubmit({
       name: name.trim(),
       targetAmount,
       currentAmount: currentAmount || "0",
-      monthlyTarget: monthlyTarget || null,
-      deadline: deadline || null,
-      icon,
+      monthlyTarget: calculatedMonthly,
+      deadline: deadlineDate.toISOString(),
+      icon: "🎯",
     })
     onClose()
   }
@@ -122,41 +139,39 @@ export function SavingsGoalDialog({ open, initialData, onClose, onSubmit }: Savi
             />
           </div>
 
-          <AmountInput 
-            label="Alokasi Nabung per Bulan (Rp)"
-            value={monthlyTarget}
-            onChange={setMonthlyTarget}
-            helperText="Digunakan untuk menghitung estimasi waktu tercapai."
-          />
-
           <div className="space-y-1.5">
-            <label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Target Tanggal (Opsional)</label>
-            <div className="relative">
-              <input 
-                type="date"
-                value={deadline}
-                onChange={(e) => setDeadline(e.target.value)}
-                className="w-full rounded-sm border border-input bg-background px-3 py-2 font-serif text-sm focus:border-primary focus:outline-none"
-              />
+            <label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Target Durasi (Bulan)</label>
+            <div className="flex items-center gap-3">
+               <input 
+                 type="number"
+                 min="1"
+                 value={duration}
+                 onChange={(e) => setDuration(e.target.value)}
+                 className="w-full rounded-sm border border-input bg-background px-3 py-2 font-serif text-sm focus:border-primary focus:outline-none"
+                 placeholder="Mis. 12"
+               />
+               <span className="font-serif text-sm text-muted-foreground whitespace-nowrap">Bulan</span>
             </div>
           </div>
 
-          <div className="space-y-1.5">
-            <label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Ikon</label>
-            <div className="flex gap-2">
-              {["🎯", "💻", "🏠", "🚗", "✈️", "💍", "🏥", "🎓"].map((i) => (
-                <button
-                  key={i}
-                  type="button"
-                  onClick={() => setIcon(i)}
-                  className={cn(
-                    "flex h-9 w-9 items-center justify-center rounded-sm border text-lg transition-all",
-                    icon === i ? "border-primary bg-primary/10" : "border-border bg-background hover:bg-muted"
-                  )}
-                >
-                  {i}
-                </button>
-              ))}
+          <div className="rounded-sm bg-muted/50 p-4 border border-border border-dashed">
+            <div className="flex items-center gap-2 mb-2">
+              <TrendingUp className="h-4 w-4 text-primary" />
+              <span className="font-sans text-[11px] font-bold uppercase tracking-widest text-foreground">Ringkasan Rencana</span>
+            </div>
+            <div className="space-y-2">
+              <p className="font-serif text-[12px] text-muted-foreground leading-relaxed">
+                {targetAmount && parseFloat(targetAmount) > 0 ? (
+                  <>
+                    Untuk mencapai impian dalam <span className="font-bold text-primary underline underline-offset-4">{duration || 1} bulan</span>, 
+                    Anda perlu mengalokasikan tabungan sebesar <span className="font-bold text-foreground">
+                      Rp {Math.ceil((parseFloat(targetAmount) - (parseFloat(currentAmount) || 0)) / (parseInt(duration) || 1)).toLocaleString("id-ID")}
+                    </span> per bulan.
+                  </>
+                ) : (
+                  "Masukkan target jumlah dan durasi untuk melihat ringkasan rencana menabung Anda."
+                )}
+              </p>
             </div>
           </div>
 

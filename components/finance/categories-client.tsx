@@ -5,7 +5,8 @@ import { Plus, Trash2, Tag, Target, Wallet, Landmark, CreditCard, Banknote, Penc
 import { createCategory, deleteCategory } from "@/lib/actions/categories"
 import { upsertBudget } from "@/lib/actions/budgets"
 import { createAccount, deleteAccount, updateAccount } from "@/lib/actions/accounts"
-import { createTransaction } from "@/lib/actions/transactions"
+import { createTransaction, transferFunds } from "@/lib/actions/transactions"
+import { TransferDialog } from "@/components/finance/transfer-dialog"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
 
@@ -61,6 +62,30 @@ export function CategoriesClient({
   const [editingAccount, setEditingAccount] = useState<any | null>(null)
   const [accountDialogOpen, setAccountDialogOpen] = useState(false)
 
+  const categoryStats = useMemo(() => {
+    const now = new Date()
+    const currentMonth = now.getMonth()
+    const currentYear = now.getFullYear()
+
+    return initialCategories.map(cat => {
+      const catTxs = initialTransactions.filter(t => {
+        const txDate = new Date(t.date)
+        return t.category === cat.name && 
+               txDate.getMonth() === currentMonth && 
+               txDate.getFullYear() === currentYear
+      })
+      
+      const totalAmount = catTxs.reduce((sum, t) => sum + Math.abs(Number(t.amount)), 0)
+      const count = catTxs.length
+      
+      return {
+        ...cat,
+        spent: totalAmount,
+        txCount: count
+      }
+    })
+  }, [initialCategories, initialTransactions])
+
   const accountBalances = useMemo(() => {
     return initialAccounts.map(acc => {
       const accTxs = initialTransactions.filter(t => t.accountId === acc.id)
@@ -80,36 +105,29 @@ export function CategoriesClient({
   const handleAccountSubmit = async (data: any) => {
     if (!editingAccount) return
     
-    const newBalance = parseFloat(data.initialBalance) || 0
-    const oldBalance = editingAccount.currentBalance
-    const diff = newBalance - oldBalance
-
     startTransition(async () => {
-      if (diff > 0) {
-        await createTransaction({
-          amount: diff.toString(),
-          category: "Penyesuaian Saldo",
-          description: `Penyesuaian saldo dompet ${data.name}`,
-          type: "income",
-          date: new Date(),
-          accountId: editingAccount.id
-        })
-        
-        const { initialBalance, ...metaData } = data
-        await updateAccount(editingAccount.id, {
-          ...metaData,
-          initialBalance: editingAccount.initialBalance 
-        })
-        toast.success(`Saldo berhasil disesuaikan (+Rp ${diff.toLocaleString("id-ID")})`)
+      const result = await updateAccount(editingAccount.id, data)
+      if (result.success) {
+        toast.success("Dompet berhasil diperbarui")
+        router.refresh()
       } else {
-        const result = await updateAccount(editingAccount.id, data)
-        if (result.success) toast.success("Dompet berhasil diperbarui")
-        else toast.error(result.error || "Gagal memperbarui dompet")
+        toast.error(result.error || "Gagal memperbarui dompet")
       }
-      router.refresh()
     })
   }
-  
+
+  const handleTransferSubmit = async (data: any) => {
+    startTransition(async () => {
+      const result = await transferFunds(data)
+      if (result.success) {
+        toast.success("Transfer berhasil dilakukan")
+        router.refresh()
+      } else {
+        toast.error(result.error || "Gagal melakukan transfer")
+      }
+    })
+  }
+
   // State for Categories
   const [name, setName] = useState("")
   const [type, setType] = useState<"income" | "expense">("expense")
@@ -118,6 +136,7 @@ export function CategoriesClient({
   const [accountName, setAccountName] = useState("")
   const [accountType, setAccountType] = useState("bank")
   const [initialBalance, setInitialBalance] = useState("0")
+  const [transferDialogOpen, setTransferDialogOpen] = useState(false)
 
   // State untuk input budget per kategori
   const [budgetInputs, setBudgetInputs] = useState<Record<number, string>>(() => {
@@ -161,7 +180,6 @@ export function CategoriesClient({
       const result = await createCategory({
         name: name.trim(),
         type: type,
-        icon: type === "income" ? "💰" : "🛒"
       })
       if (!result.success) toast.error("Gagal menambah kategori")
       else {
@@ -185,18 +203,10 @@ export function CategoriesClient({
     if (!accountName.trim()) return
     
     startTransition(async () => {
-      const icons = {
-        bank: "🏦",
-        cash: "💵",
-        "e-wallet": "📱",
-        credit_card: "💳"
-      }
-      
       const result = await createAccount({
         name: accountName.trim(),
         type: accountType,
         initialBalance: initialBalance || "0",
-        icon: icons[accountType as keyof typeof icons] || "💰"
       })
       
       if (!result.success) toast.error("Gagal menambah dompet")
@@ -259,51 +269,96 @@ export function CategoriesClient({
           >
             Dompet & Sumber Dana
           </button>
+          <button 
+             onClick={() => setTransferDialogOpen(true)}
+             className="ml-auto flex items-center gap-2 rounded-full px-3 py-1 text-[10px] font-mono uppercase tracking-widest transition-all bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm"
+           >
+             Transfer Dana
+           </button>
         </div>
       </header>
 
       {activeTab === "categories" ? (
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-fit">
-            {optimisticCategories.map((cat) => (
-              <div key={cat.id} className="flex flex-col p-5 rounded-sm border border-border bg-card shadow-xs group">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <span className="text-xl">{cat.icon || "📁"}</span>
-                    <div>
-                      <p className="font-sans text-sm font-bold">{cat.name}</p>
-                      <p className={cn(
-                        "font-mono text-[10px] uppercase tracking-wider",
-                        cat.type === "income" ? "text-[#5a6b3b]" : "text-destructive"
-                      )}>{cat.type === "income" ? "Pemasukan" : "Pengeluaran"}</p>
-                    </div>
-                  </div>
-                  <button 
-                    onClick={() => handleDeleteCategory(cat.id)}
-                    className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-all p-1"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </div>
+            {categoryStats.map((cat) => {
+              const budget = parseFloat(budgetInputs[cat.id] || "0")
+              const percent = budget > 0 ? Math.min(100, (cat.spent / budget) * 100) : 0
+              const isOverBudget = budget > 0 && cat.spent > budget
 
-                {cat.type === "expense" && (
-                  <div className="relative mt-2 flex items-center gap-2 border-t border-dashed border-border pt-4">
-                    <Target className="h-3.5 w-3.5 text-muted-foreground" />
-                    <div className="flex-1">
-                      <p className="font-mono text-[9px] uppercase tracking-tighter text-muted-foreground mb-1">Anggaran Bulanan (Rp)</p>
-                      <input 
-                        type="number"
-                        value={budgetInputs[cat.id] || ""}
-                        onChange={(e) => setBudgetInputs(prev => ({ ...prev, [cat.id]: e.target.value }))}
-                        onBlur={() => handleSaveBudget(cat.id)}
-                        placeholder="Contoh: 500000"
-                        className="w-full bg-transparent border-none p-0 font-mono text-xs focus:ring-0 focus:outline-none"
-                      />
+              return (
+                <div key={cat.id} className="flex flex-col p-5 rounded-sm border border-border bg-card shadow-xs group">
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex items-center gap-3">
+                      <div>
+                        <p className="font-sans text-sm font-bold">{cat.name}</p>
+                        <p className={cn(
+                          "font-mono text-[10px] uppercase tracking-wider",
+                          cat.type === "income" ? "text-[#5a6b3b]" : "text-destructive"
+                        )}>{cat.type === "income" ? "Pemasukan" : "Pengeluaran"}</p>
+                      </div>
+                    </div>
+                    <div className="flex flex-col items-end gap-1">
+                      <button 
+                        onClick={() => handleDeleteCategory(cat.id)}
+                        className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-all p-1"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                      <span className="font-mono text-[9px] text-muted-foreground uppercase">{cat.txCount} Transaksi</span>
                     </div>
                   </div>
-                )}
-              </div>
-            ))}
+
+                  <div className="mt-2 space-y-3">
+                    <div className="flex justify-between items-end">
+                      <div>
+                        <p className="font-mono text-[9px] uppercase tracking-tighter text-muted-foreground mb-0.5">Realisasi Bulan Ini</p>
+                        <p className={cn(
+                          "font-mono text-sm font-bold",
+                          isOverBudget ? "text-destructive" : "text-foreground"
+                        )}>
+                          Rp {cat.spent.toLocaleString("id-ID")}
+                        </p>
+                      </div>
+                      {budget > 0 && (
+                        <p className="font-mono text-[10px] text-muted-foreground">
+                          {percent.toFixed(0)}% dari anggaran
+                        </p>
+                      )}
+                    </div>
+
+                    {budget > 0 && (
+                      <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                        <div 
+                          className={cn(
+                            "h-full transition-all duration-500",
+                            isOverBudget ? "bg-destructive" : "bg-primary"
+                          )} 
+                          style={{ width: `${percent}%` }} 
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  {cat.type === "expense" && (
+                    <div className="relative mt-4 flex items-center gap-2 border-t border-dashed border-border pt-4">
+                      <Target className="h-3.5 w-3.5 text-muted-foreground" />
+                      <div className="flex-1">
+                        <p className="font-mono text-[9px] uppercase tracking-tighter text-muted-foreground mb-1">Set Anggaran Bulanan (Rp)</p>
+                        <input 
+                          type="number"
+                          value={budgetInputs[cat.id] || ""}
+                          onChange={(e) => setBudgetInputs(prev => ({ ...prev, [cat.id]: e.target.value }))}
+                          onBlur={() => handleSaveBudget(cat.id)}
+                          placeholder="0"
+                          className="w-full bg-transparent border-none p-0 font-mono text-xs focus:ring-0 focus:outline-none placeholder:text-muted-foreground/30"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )
+            })}
           </div>
 
           <aside className="rounded-sm border border-border bg-card p-6 h-fit shadow-xs">
@@ -338,10 +393,7 @@ export function CategoriesClient({
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <span className="text-xl p-2 bg-muted rounded-sm">
-                      {acc.type === "bank" && <Landmark className="h-5 w-5" />}
-                      {acc.type === "cash" && <Banknote className="h-5 w-5" />}
-                      {acc.type === "e-wallet" && <Wallet className="h-5 w-5" />}
-                      {acc.type === "credit_card" && <CreditCard className="h-5 w-5" />}
+                      <Wallet className="h-5 w-5" />
                     </span>
                     <div>
                       <p className="font-sans text-sm font-bold">{acc.name}</p>
@@ -425,6 +477,13 @@ export function CategoriesClient({
         initialData={editingAccount}
         onClose={() => setAccountDialogOpen(false)}
         onSubmit={handleAccountSubmit}
+      />
+
+      <TransferDialog
+        open={transferDialogOpen}
+        accounts={accountBalances as any}
+        onClose={() => setTransferDialogOpen(false)}
+        onSubmit={handleTransferSubmit}
       />
     </div>
   )

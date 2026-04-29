@@ -18,7 +18,6 @@ export const categories = pgTable("categories", {
   userId: varchar("user_id", { length: 255 }).notNull(),
   name: varchar("name", { length: 100 }).notNull(),
   type: varchar("type", { length: 20 }).notNull(), // 'income' or 'expense'
-  icon: varchar("icon", { length: 50 }),
 });
 
 export const budgets = pgTable("personal_budgets", {
@@ -36,7 +35,6 @@ export const accounts = pgTable("accounts", {
   name: varchar("name", { length: 100 }).notNull(),
   type: varchar("type", { length: 50 }).notNull(), // 'bank', 'cash', 'e-wallet', etc.
   initialBalance: numeric("initial_balance", { precision: 12, scale: 2 }).default("0").notNull(),
-  icon: varchar("icon", { length: 50 }),
   color: varchar("color", { length: 50 }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
@@ -48,7 +46,6 @@ export const savingsGoals = pgTable("savings_goals", {
   targetAmount: numeric("target_amount", { precision: 12, scale: 2 }).notNull(),
   currentAmount: numeric("current_amount", { precision: 12, scale: 2 }).default("0").notNull(),
   monthlyTarget: numeric("monthly_target", { precision: 12, scale: 2 }),
-  icon: varchar("icon", { length: 50 }),
   deadline: timestamp("deadline"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
