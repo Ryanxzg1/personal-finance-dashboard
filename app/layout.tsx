@@ -7,13 +7,16 @@ import { Libre_Baskerville, IBM_Plex_Mono, Lora } from 'next/font/google'
 const _libreBaskerville = Libre_Baskerville({ subsets: ['latin'], weight: ["400","700"] })
 
 export const metadata: Metadata = {
-  title: 'Buku Kas — Catatan Keuangan Pribadi',
+  title: {
+    default: 'Buku Keuangan — Catatan Keuangan Pribadi',
+    template: '%s | Buku Keuangan'
+  },
   description: 'Catat pemasukan dan pengeluaran harian dengan rapi dan terstruktur.',
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Buku Kas",
+    title: "Buku Keuangan",
   },
   other: {
     "mobile-web-app-capable": "yes",

@@ -3,7 +3,7 @@ import { MappingClient } from "@/components/finance/mapping-client";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Pemetaan Biaya | Rencana Keuangan",
+  title: "Pemetaan Biaya",
   description: "Arsitektur rencana pengeluaran masa depan Anda.",
 };
 

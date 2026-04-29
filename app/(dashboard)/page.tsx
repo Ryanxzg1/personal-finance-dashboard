@@ -5,6 +5,11 @@ import { getAccounts } from "@/lib/actions/accounts";
 import { type Transaction as UITransaction } from "@/components/finance/transactions-table";
 import { currentUser } from "@clerk/nextjs/server";
 import { getBudgets } from "@/lib/actions/budgets";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Dashboard",
+};
 
 export const dynamic = "force-dynamic";
 

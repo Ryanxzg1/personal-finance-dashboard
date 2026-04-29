@@ -89,7 +89,7 @@ export function CategoriesClient({
         await createTransaction({
           amount: diff.toString(),
           category: "Penyesuaian Saldo",
-          description: `Penyesuaian saldo akun ${data.name}`,
+          description: `Penyesuaian saldo dompet ${data.name}`,
           type: "income",
           date: new Date(),
           accountId: editingAccount.id
@@ -103,8 +103,8 @@ export function CategoriesClient({
         toast.success(`Saldo berhasil disesuaikan (+Rp ${diff.toLocaleString("id-ID")})`)
       } else {
         const result = await updateAccount(editingAccount.id, data)
-        if (result.success) toast.success("Akun berhasil diperbarui")
-        else toast.error(result.error || "Gagal memperbarui akun")
+        if (result.success) toast.success("Dompet berhasil diperbarui")
+        else toast.error(result.error || "Gagal memperbarui dompet")
       }
       router.refresh()
     })
@@ -199,9 +199,9 @@ export function CategoriesClient({
         icon: icons[accountType as keyof typeof icons] || "💰"
       })
       
-      if (!result.success) toast.error("Gagal menambah akun")
+      if (!result.success) toast.error("Gagal menambah dompet")
       else {
-        toast.success("Akun berhasil ditambahkan")
+        toast.success("Dompet berhasil ditambahkan")
         setAccountName("")
         setInitialBalance("0")
       }
@@ -209,11 +209,12 @@ export function CategoriesClient({
   }
 
   const handleDeleteAccount = async (id: number) => {
-    if (!confirm("Hapus akun ini? Riwayat transaksi mungkin akan terpengaruh.")) return
+    if (!confirm("Hapus dompet ini? Riwayat transaksi mungkin akan terpengaruh.")) return
+    
     startTransition(async () => {
       addOptimisticAccount({ type: "DELETE", id })
       const result = await deleteAccount(id)
-      if (!result.success) toast.error("Gagal menghapus akun")
+      if (!result.success) toast.error("Gagal menghapus dompet")
     })
   }
 
@@ -256,7 +257,7 @@ export function CategoriesClient({
               activeTab === "accounts" ? "border-primary text-primary" : "border-transparent text-muted-foreground"
             )}
           >
-            Akun & Dompet
+            Dompet & Sumber Dana
           </button>
         </div>
       </header>
@@ -383,10 +384,10 @@ export function CategoriesClient({
           </div>
 
           <aside className="rounded-sm border border-border bg-card p-6 h-fit shadow-xs">
-            <h3 className="font-sans text-sm font-bold uppercase tracking-wider mb-4">Akun Baru</h3>
+            <h3 className="font-sans text-sm font-bold uppercase tracking-wider mb-4">Dompet Baru</h3>
             <form onSubmit={handleAddAccount} className="flex flex-col gap-4">
               <div className="space-y-1.5">
-                <label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Nama Akun</label>
+                <label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Nama Dompet</label>
                 <input 
                   type="text"
                   value={accountName}
@@ -396,7 +397,7 @@ export function CategoriesClient({
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Jenis Akun</label>
+                <label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Jenis Dompet</label>
                 <select 
                   value={accountType}
                   onChange={(e) => setAccountType(e.target.value)}
@@ -413,7 +414,7 @@ export function CategoriesClient({
                 value={initialBalance}
                 onChange={setInitialBalance}
               />
-              <button type="submit" className="w-full bg-primary text-primary-foreground py-2 font-sans text-xs font-bold rounded-sm tracking-widest hover:bg-primary/90 transition-colors uppercase">Buat Akun</button>
+              <button type="submit" className="w-full bg-primary text-primary-foreground py-2 font-sans text-xs font-bold rounded-sm tracking-widest hover:bg-primary/90 transition-colors uppercase">Tambah Dompet</button>
             </form>
           </aside>
         </div>

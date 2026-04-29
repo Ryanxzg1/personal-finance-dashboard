@@ -69,8 +69,10 @@ export function DashboardClient({
   const [editingAccount, setEditingAccount] = useState<any | null>(null)
   const [accountDialogOpen, setAccountDialogOpen] = useState(false)
   const [notifGranted, setNotifGranted] = useState(false)
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
+    setMounted(true)
     if ("Notification" in window) {
       setNotifGranted(Notification.permission === "granted")
     }
@@ -92,6 +94,7 @@ export function DashboardClient({
 
   // Efek untuk menangani query param dari sidebar
   useEffect(() => {
+    if (!mounted) return
     const newParam = searchParams.get("new")
     if (newParam) {
       if (newParam === "select") {
@@ -134,7 +137,7 @@ export function DashboardClient({
         const txData = {
           amount: diff.toString(),
           category: "Penyesuaian Saldo",
-          description: `Penyesuaian saldo akun ${data.name}`,
+          description: `Penyesuaian saldo dompet ${data.name}`,
           type: "income" as const,
           date: new Date(),
           accountId: editingAccount.id
@@ -178,10 +181,10 @@ export function DashboardClient({
         // 3. Jika saldo tetap atau berkurang, update normal
         const result = await updateAccount(editingAccount.id, data)
         if (result.success) {
-          toast.success("Akun berhasil diperbarui")
+          toast.success("Dompet berhasil diperbarui")
           router.refresh()
         } else {
-          toast.error(result.error || "Gagal memperbarui akun")
+          toast.error(result.error || "Gagal memperbarui dompet")
         }
       }
     })

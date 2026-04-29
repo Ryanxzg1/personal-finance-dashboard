@@ -9,7 +9,7 @@ const isPublicRoute = createRouteMatcher([
   '/icon-pwa.png'
 ])
 
-export default clerkMiddleware(async (auth, req) => {
+export const proxy = clerkMiddleware(async (auth, req) => {
   // 1. Handle CORS for API routes
   if (req.nextUrl.pathname.startsWith('/api')) {
     const response = NextResponse.next();
@@ -42,3 +42,5 @@ export const config = {
     '/(api|trpc)(.*)',
   ],
 };
+
+export default proxy;

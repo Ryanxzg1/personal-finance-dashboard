@@ -161,7 +161,7 @@ export function InputDialog({ open, mode, categories, accounts, initialData, onC
             tone={tone}
           />
 
-          <Field label={mode === "Pemasukan" ? "Masuk Ke Akun" : "Bayar Pakai Akun"} htmlFor="tx-account">
+          <Field label={mode === "Pemasukan" ? "Masuk Ke Dompet" : "Bayar Pakai Dompet"} htmlFor="tx-account">
             <select
               id="tx-account"
               value={accountId || ""}
@@ -169,7 +169,7 @@ export function InputDialog({ open, mode, categories, accounts, initialData, onC
               className="w-full rounded-sm border border-input bg-background px-3 py-2 font-serif text-sm focus:border-primary focus:outline-none"
               required
             >
-              <option value="" disabled>Pilih Akun...</option>
+              <option value="" disabled>Pilih Dompet...</option>
               {accounts.map((acc) => (
                 <option key={acc.id} value={acc.id}>
                   {acc.name} ({acc.type.replace("_", " ")})

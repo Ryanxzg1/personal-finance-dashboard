@@ -93,7 +93,7 @@ export function CommandMenu() {
             <Search className="mr-3 h-4 w-4 shrink-0 text-muted-foreground" />
             <Command.Input
               autoFocus
-              placeholder="Cari transaksi, kategori, atau akun..."
+              placeholder="Cari transaksi, kategori, atau dompet..."
               className="flex-1 bg-transparent font-serif text-base outline-none placeholder:text-muted-foreground"
               value={query}
               onValueChange={setQuery}
@@ -129,7 +129,7 @@ export function CommandMenu() {
                 className="flex items-center gap-3 rounded-sm px-3 py-2 text-sm transition-colors hover:bg-muted cursor-pointer aria-selected:bg-muted"
               >
                 <Tags className="h-4 w-4 text-muted-foreground" />
-                <span className="font-serif">Manajemen Kategori & Akun</span>
+                <span className="font-serif">Manajemen Kategori & Dompet</span>
               </Command.Item>
               <Command.Item
                 onSelect={() => runCommand(() => router.push("/tabungan"))}
@@ -192,7 +192,7 @@ export function CommandMenu() {
 
             {/* Results: Accounts */}
             {results.accounts.length > 0 && (
-              <Command.Group heading={<span className="px-2 py-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground mt-4 block">Akun & Dompet</span>}>
+              <Command.Group heading={<span className="px-2 py-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground mt-4 block">Dompet & Sumber Dana</span>}>
                 {results.accounts.map((acc) => (
                   <Command.Item
                     key={acc.id}

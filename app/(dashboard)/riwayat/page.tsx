@@ -1,4 +1,9 @@
 import { getTransactions } from "@/lib/actions/transactions";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Riwayat Transaksi",
+};
 import { TransactionsTable, type Transaction as UITransaction } from "@/components/finance/transactions-table";
 
 export const dynamic = "force-dynamic";

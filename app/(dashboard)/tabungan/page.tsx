@@ -3,7 +3,7 @@ import { Target, TrendingUp, Wallet, ArrowRight, Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 export const metadata: Metadata = {
-  title: "Tabungan Berencana | Buku Keuangan",
+  title: "Tabungan Berencana",
   description: "Kelola target tabungan dan impian Anda.",
 }
 

@@ -38,7 +38,7 @@ export function AccountDialog({ open, initialData, onClose, onSubmit }: AccountD
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!name.trim()) {
-      setError("Nama akun wajib diisi.")
+      setError("Nama dompet wajib diisi.")
       return
     }
     onSubmit({
@@ -64,7 +64,7 @@ export function AccountDialog({ open, initialData, onClose, onSubmit }: AccountD
         <div className="flex items-start justify-between gap-4 border-b border-dashed border-border pb-4">
           <div>
             <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-              Sunting Akun
+              Sunting Dompet
             </p>
             <h2 className="mt-1 font-sans text-xl font-bold tracking-tight">
               Edit {initialData?.name}
@@ -81,7 +81,7 @@ export function AccountDialog({ open, initialData, onClose, onSubmit }: AccountD
 
         <div className="mt-5 flex flex-col gap-5">
           <div className="space-y-1.5">
-            <label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Nama Akun</label>
+            <label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Nama Dompet</label>
             <input 
               type="text"
               value={name}
@@ -93,7 +93,7 @@ export function AccountDialog({ open, initialData, onClose, onSubmit }: AccountD
           </div>
 
           <div className="space-y-1.5">
-            <label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Jenis Akun</label>
+            <label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Jenis Dompet</label>
             <div className="grid grid-cols-2 gap-2">
               {[
                 { id: "bank", label: "Bank", icon: Landmark },
