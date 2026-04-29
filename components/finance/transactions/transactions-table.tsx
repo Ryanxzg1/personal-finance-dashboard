@@ -5,7 +5,7 @@ import { Calendar, ChevronDown, NotebookPen, Pencil, Plus, Tag, Trash2 } from "l
 import { cn } from "@/lib/utils"
 import dynamic from "next/dynamic"
 
-const ExportButton = dynamic(() => import("./export-button"), { ssr: false })
+const ExportButton = dynamic(() => import("../dashboard/export-button"), { ssr: false })
 
 export type TxType = "Pemasukan" | "Pengeluaran"
 
