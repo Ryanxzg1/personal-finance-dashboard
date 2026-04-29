@@ -6,12 +6,12 @@ import { createCategory, deleteCategory } from "@/lib/actions/categories"
 import { upsertBudget } from "@/lib/actions/budgets"
 import { createAccount, deleteAccount, updateAccount } from "@/lib/actions/accounts"
 import { createTransaction, transferFunds } from "@/lib/actions/transactions"
-import { TransferDialog } from "@components/finance/accounts/transfer-dialog"
+import { TransferDialog } from "../accounts/transfer-dialog"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
 
 import { AmountInput } from "@/components/ui/amount-input"
-import { AccountDialog } from "@components/finance/accounts/account-dialog"
+import { AccountDialog } from "../accounts/account-dialog"
 import { useRouter } from "next/navigation"
 
 interface Category {
@@ -45,7 +45,7 @@ interface CategoriesClientProps {
   initialCategories: Category[]
   initialBudgets: Budget[]
   initialAccounts: Account[]
-  initialTransactions: any[]
+  initialTransactions: { amount: string; category: string; date: string; accountId: number | null }[]
 }
 
 export function CategoriesClient({ 
@@ -59,7 +59,7 @@ export function CategoriesClient({
   const [isPending, startTransition] = useTransition()
   
   // State for Account Editing
-  const [editingAccount, setEditingAccount] = useState<any | null>(null)
+  const [editingAccount, setEditingAccount] = useState<Account | undefined>(undefined)
   const [accountDialogOpen, setAccountDialogOpen] = useState(false)
 
   const categoryStats = useMemo(() => {
@@ -97,7 +97,7 @@ export function CategoriesClient({
     })
   }, [initialAccounts, initialTransactions])
 
-  const handleEditAccount = (acc: any) => {
+  const handleEditAccount = (acc: Account) => {
     setEditingAccount(acc)
     setAccountDialogOpen(true)
   }
@@ -116,7 +116,7 @@ export function CategoriesClient({
     })
   }
 
-  const handleTransferSubmit = async (data: any) => {
+  const handleTransferSubmit = async (data: { fromAccountId: number; toAccountId: number; fromAccountName: string; toAccountName: string; amount: string; date: Date }) => {
     startTransition(async () => {
       const result = await transferFunds(data)
       if (result.success) {
@@ -474,7 +474,7 @@ export function CategoriesClient({
 
       <AccountDialog
         open={accountDialogOpen}
-        initialData={editingAccount}
+        initialData={editingAccount || undefined}
         onClose={() => setAccountDialogOpen(false)}
         onSubmit={handleAccountSubmit}
       />

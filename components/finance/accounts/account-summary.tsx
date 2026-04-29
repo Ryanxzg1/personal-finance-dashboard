@@ -13,7 +13,7 @@ interface Account {
 
 interface AccountSummaryProps {
   accounts: Account[]
-  onEditAccount?: (acc: any) => void
+  onEditAccount?: (acc: Account) => void
 }
 
 export function AccountSummary({ accounts, onEditAccount }: AccountSummaryProps) {

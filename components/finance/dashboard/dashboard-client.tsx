@@ -2,23 +2,23 @@
 
 import { useMemo, useState, useOptimistic, useTransition, useEffect } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
-import { SummarySection } from "@components/finance/dashboard/summary-section"
-import { ChartSection } from "@components/finance/dashboard/chart-section"
+import { SummarySection } from "./summary-section"
+import { ChartSection } from "./chart-section"
 import {
   TransactionsTable,
   type Transaction as UITransaction,
-} from "@components/finance/transactions/transactions-table"
-import { InputDialog, type InputMode } from "@components/finance/transactions/input-dialog"
+} from "../transactions/transactions-table"
+import { InputDialog, type InputMode } from "../transactions/input-dialog"
 import { createTransaction, deleteTransaction, updateTransaction, transferFunds } from "@/lib/actions/transactions"
-import { TransferDialog } from "@components/finance/accounts/transfer-dialog"
+import { TransferDialog } from "../accounts/transfer-dialog"
 import { updateAccount } from "@/lib/actions/accounts"
 import { toast } from "sonner"
 import { TrendingUp, TrendingDown, Wallet, AlertCircle, Bell, BellOff } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { TypeSelector } from "@components/finance/transactions/type-selector"
-import { CategoryDistribution } from "@components/finance/dashboard/category-distribution"
-import { AccountSummary } from "@components/finance/accounts/account-summary"
-import { AccountDialog } from "@components/finance/accounts/account-dialog"
+import { TypeSelector } from "../transactions/type-selector"
+import { CategoryDistribution } from "./category-distribution"
+import { AccountSummary } from "../accounts/account-summary"
+import { AccountDialog } from "../accounts/account-dialog"
 import { requestNotificationPermission, sendNotification, registerServiceWorker } from "@/lib/notifications"
 
 interface Category {
@@ -67,7 +67,7 @@ export function DashboardClient({
   const [selectorOpen, setSelectorOpen] = useState(false)
   const [dialogMode, setDialogMode] = useState<InputMode>("Pemasukan")
   const [editingTx, setEditingTx] = useState<UITransaction | null>(null)
-  const [editingAccount, setEditingAccount] = useState<any | null>(null)
+  const [editingAccount, setEditingAccount] = useState<Account | undefined>(undefined)
   const [accountDialogOpen, setAccountDialogOpen] = useState(false)
   const [notifGranted, setNotifGranted] = useState(false)
   const [mounted, setMounted] = useState(false)
@@ -128,12 +128,12 @@ export function DashboardClient({
     setDialogOpen(true)
   }
 
-  const openEditAccountDialog = (acc: any) => {
+  const openEditAccountDialog = (acc: Account) => {
     setEditingAccount(acc)
     setAccountDialogOpen(true)
   }
 
-  const handleAccountSubmit = async (data: any) => {
+  const handleAccountSubmit = async (data: { name: string; type: string; initialBalance: string }) => {
     if (!editingAccount) return
     
     startTransition(async () => {
@@ -147,7 +147,7 @@ export function DashboardClient({
     })
   }
 
-  const handleTransferSubmit = async (data: any) => {
+  const handleTransferSubmit = async (data: { fromAccountId: number; toAccountId: number; fromAccountName: string; toAccountName: string; amount: string; date: Date }) => {
     startTransition(async () => {
       const result = await transferFunds(data)
       if (result.success) {
@@ -447,7 +447,7 @@ export function DashboardClient({
 
       <AccountDialog
         open={accountDialogOpen}
-        initialData={editingAccount}
+        initialData={editingAccount || undefined}
         onClose={() => setAccountDialogOpen(false)}
         onSubmit={handleAccountSubmit}
       />
