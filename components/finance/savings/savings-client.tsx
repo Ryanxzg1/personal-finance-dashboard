@@ -244,7 +244,7 @@ export function SavingsClient({ initialGoals }: SavingsClientProps) {
                 )}
 
                 {/* Hover Actions */}
-                <div className="absolute right-3 bottom-3 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="absolute right-3 bottom-3 flex items-center gap-1 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
                   <button 
                     onClick={() => handleEditClick(goal)}
                     className="p-1.5 rounded-sm bg-muted text-muted-foreground hover:text-primary transition-colors"

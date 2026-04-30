@@ -4,6 +4,7 @@ import { UserButton } from "@clerk/nextjs";
 import { MobileMenu } from "@components/finance/layout/mobile-menu";
 import { CommandMenu } from "@components/finance/layout/command-menu";
 import { PageTitle } from "@components/finance/layout/page-title";
+import { BottomNav } from "@components/finance/layout/bottom-nav";
 
 export default async function DashboardLayout({
   children,
@@ -43,9 +44,12 @@ export default async function DashboardLayout({
         </header>
 
         {/* Isi Halaman */}
-        <div className="flex-1">
+        <div className="flex-1 pb-20 lg:pb-0">
           {children}
         </div>
+
+        {/* Mobile Navigation */}
+        <BottomNav />
       </main>
     </div>
   );

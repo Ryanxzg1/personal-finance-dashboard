@@ -110,46 +110,82 @@ export function TransactionsTable({ transactions, onNewEntry, onDelete, onEdit }
             </p>
         </div>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse">
-            <thead>
-              <tr className="border-b border-border bg-muted/40 text-left">
-                <Th>Tanggal</Th>
-                <Th>Jenis</Th>
-                <Th>Kategori</Th>
-                <Th className="text-right">Jumlah</Th>
-                <Th className="w-24 text-right">Aksi</Th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((tx, idx) => {
-                const isIncome = tx.amount >= 0
-                return (
-                  <tr key={tx.id} className="group border-b border-border/70 transition-colors hover:bg-muted/40">
-                    <Td><span className="font-mono text-[13px] uppercase tracking-wider text-muted-foreground">{tx.date}</span></Td>
-                    <Td><span className={cn("font-serif text-[15px] italic", isIncome ? "text-[#5a6b3b]" : "text-destructive")}>{tx.type}</span></Td>
-                    <Td>
-                      <div className="flex flex-col gap-1.5">
-                        <span className={cn("inline-flex w-fit items-center gap-1.5 rounded-sm border px-2 py-0.5 font-mono text-[11px] font-medium uppercase tracking-wider", CATEGORY_STYLES[tx.category] ?? "border-border bg-secondary text-secondary-foreground")}>
-                          <span className="h-1.5 w-1.5 rounded-full bg-current" aria-hidden="true" />
+        <>
+          {/* Card View - Mobile Only */}
+          <div className="flex flex-col lg:hidden divide-y divide-border/50">
+            {filtered.map((tx) => {
+              const isIncome = tx.amount >= 0
+              return (
+                <div key={tx.id} className="p-4 flex flex-col gap-3 active:bg-muted/30 transition-colors">
+                  <div className="flex justify-between items-start">
+                     <div className="flex flex-col gap-1.5">
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">{tx.date}</span>
+                          <span className={cn("h-1 w-1 rounded-full bg-border")} />
+                          <span className={cn("font-serif text-xs italic", isIncome ? "text-[#5a6b3b]" : "text-destructive")}>{tx.type}</span>
+                        </div>
+                        <span className={cn("inline-flex w-fit items-center gap-1.5 rounded-sm border px-2 py-0.5 font-mono text-[10px] font-medium uppercase tracking-wider", CATEGORY_STYLES[tx.category] ?? "border-border bg-secondary text-secondary-foreground")}>
                           {tx.category}
                         </span>
-                        <span className="font-serif text-[13px] text-muted-foreground">{tx.note}</span>
-                      </div>
-                    </Td>
-                    <Td className="text-right"><span className={cn("font-mono text-[15px] font-bold tabular-nums", isIncome ? "text-[#5a6b3b]" : "text-destructive")}>{formatRupiah(tx.amount)}</span></Td>
-                    <Td className="text-right">
-                      <div className="flex items-center justify-end gap-1 opacity-60 transition-opacity group-hover:opacity-100">
+                     </div>
+                     <div className="flex items-center gap-1">
                         <IconButton label="Edit" icon={Pencil} onClick={() => onEdit?.(tx)} />
                         <IconButton label="Hapus" icon={Trash2} tone="destructive" onClick={() => onDelete?.(tx.id)} />
-                      </div>
-                    </Td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
-        </div>
+                     </div>
+                  </div>
+                  <div className="flex justify-between items-end">
+                     <span className="font-serif text-[13px] text-muted-foreground line-clamp-1 flex-1 mr-4">{tx.note}</span>
+                     <span className={cn("font-mono text-base font-bold tabular-nums shrink-0", isIncome ? "text-[#5a6b3b]" : "text-destructive")}>
+                       {formatRupiah(tx.amount)}
+                     </span>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+
+          {/* Table View - Desktop Only */}
+          <div className="hidden lg:block overflow-x-auto">
+            <table className="w-full border-collapse">
+              <thead>
+                <tr className="border-b border-border bg-muted/40 text-left">
+                  <Th>Tanggal</Th>
+                  <Th>Jenis</Th>
+                  <Th>Kategori</Th>
+                  <Th className="text-right">Jumlah</Th>
+                  <Th className="w-24 text-right">Aksi</Th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map((tx, idx) => {
+                  const isIncome = tx.amount >= 0
+                  return (
+                    <tr key={tx.id} className="group border-b border-border/70 transition-colors hover:bg-muted/40">
+                      <Td><span className="font-mono text-[13px] uppercase tracking-wider text-muted-foreground">{tx.date}</span></Td>
+                      <Td><span className={cn("font-serif text-[15px] italic", isIncome ? "text-[#5a6b3b]" : "text-destructive")}>{tx.type}</span></Td>
+                      <Td>
+                        <div className="flex flex-col gap-1.5">
+                          <span className={cn("inline-flex w-fit items-center gap-1.5 rounded-sm border px-2 py-0.5 font-mono text-[11px] font-medium uppercase tracking-wider", CATEGORY_STYLES[tx.category] ?? "border-border bg-secondary text-secondary-foreground")}>
+                            <span className="h-1.5 w-1.5 rounded-full bg-current" aria-hidden="true" />
+                            {tx.category}
+                          </span>
+                          <span className="font-serif text-[13px] text-muted-foreground">{tx.note}</span>
+                        </div>
+                      </Td>
+                      <Td className="text-right"><span className={cn("font-mono text-[15px] font-bold tabular-nums", isIncome ? "text-[#5a6b3b]" : "text-destructive")}>{formatRupiah(tx.amount)}</span></Td>
+                      <Td className="text-right">
+                        <div className="flex items-center justify-end gap-1 lg:opacity-60 transition-opacity lg:group-hover:opacity-100">
+                          <IconButton label="Edit" icon={Pencil} onClick={() => onEdit?.(tx)} />
+                          <IconButton label="Hapus" icon={Trash2} tone="destructive" onClick={() => onDelete?.(tx.id)} />
+                        </div>
+                      </Td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
     </section>
   )

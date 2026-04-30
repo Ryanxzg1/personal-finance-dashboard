@@ -37,7 +37,7 @@ export function AccountSummary({ accounts, onEditAccount }: AccountSummaryProps)
             <div className="flex items-center gap-3">
               <button 
                 onClick={() => onEditAccount?.(acc)}
-                className="opacity-0 group-hover:opacity-100 p-1 rounded-sm bg-primary/10 text-primary hover:bg-primary/20 transition-all mr-1"
+                className="opacity-100 lg:opacity-0 lg:group-hover:opacity-100 p-1 rounded-sm bg-primary/10 text-primary hover:bg-primary/20 transition-all mr-1"
               >
                 <Pencil className="h-3 w-3" />
               </button>

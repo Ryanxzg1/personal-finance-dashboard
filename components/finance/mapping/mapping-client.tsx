@@ -76,7 +76,7 @@ export function MappingClient({ initialPlans }: { initialPlans: MappingPlan[] })
               onClick={() => router.push(`/pemetaan/${encodeId(plan.id)}`)}
               className="group cursor-pointer bg-card border border-border p-6 rounded-sm shadow-xs transition-all hover:shadow-md hover:border-primary/50 relative overflow-hidden"
             >
-              <div className="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="absolute top-0 right-0 p-4 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
                 <Button 
                   variant="ghost" 
                   size="icon" 

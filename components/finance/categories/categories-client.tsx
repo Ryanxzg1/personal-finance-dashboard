@@ -301,7 +301,7 @@ export function CategoriesClient({
                     <div className="flex flex-col items-end gap-1">
                       <button 
                         onClick={() => handleDeleteCategory(cat.id)}
-                        className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-all p-1"
+                        className="opacity-100 lg:opacity-0 lg:group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-all p-1"
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
@@ -405,13 +405,13 @@ export function CategoriesClient({
                   <div className="flex items-center gap-1">
                     <button 
                       onClick={() => handleEditAccount(acc)}
-                      className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-primary transition-all p-1"
+                      className="opacity-100 lg:opacity-0 lg:group-hover:opacity-100 text-muted-foreground hover:text-primary transition-all p-1"
                     >
                       <Pencil className="h-4 w-4" />
                     </button>
                     <button 
                       onClick={() => handleDeleteAccount(acc.id)}
-                      className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-all p-1"
+                      className="opacity-100 lg:opacity-0 lg:group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-all p-1"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
