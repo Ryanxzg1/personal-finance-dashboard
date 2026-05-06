@@ -9,6 +9,12 @@ import { auth } from "@clerk/nextjs/server"
 import { categorySchema } from "@/lib/validations/category"
 import { z } from "zod"
 
+function revalidateAll() {
+  revalidatePath("/kategori")
+  revalidatePath("/")
+  revalidatePath("/riwayat")
+}
+
 /**
  * Mengambil semua kategori milik user
  */
@@ -37,15 +43,30 @@ export async function createCategory(data: z.infer<typeof categorySchema>) {
     const { userId } = await auth();
     if (!userId) return { success: false, error: "Unauthorized" };
 
-    // Validasi dengan Zod
     const validatedData = categorySchema.parse(data);
+
+    // Bug fix: Cek duplikasi nama kategori milik user yang sama
+    const existing = await db
+      .select()
+      .from(categories)
+      .where(
+        and(
+          eq(categories.userId, userId),
+          eq(categories.name, validatedData.name),
+          eq(categories.type, validatedData.type)
+        )
+      );
+
+    if (existing.length > 0) {
+      return { success: false, error: `Kategori "${validatedData.name}" sudah ada` };
+    }
 
     await db.insert(categories).values({
       ...validatedData,
       userId,
     });
 
-    revalidatePath("/kategori");
+    revalidateAll();
     return { success: true };
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -57,14 +78,24 @@ export async function createCategory(data: z.infer<typeof categorySchema>) {
 }
 
 /**
- * Menghapus kategori
+ * Menghapus kategori beserta budgetnya
  */
 export async function deleteCategory(id: number) {
   try {
     const { userId } = await auth();
     if (!userId) throw new Error("Unauthorized");
 
-    // Hapus anggaran (budgets) yang terkait dengan kategori ini terlebih dahulu
+    // Verifikasi kategori milik user (security check)
+    const [categoryToDelete] = await db
+      .select()
+      .from(categories)
+      .where(and(eq(categories.id, id), eq(categories.userId, userId)));
+
+    if (!categoryToDelete) {
+      return { success: false, error: "Kategori tidak ditemukan" };
+    }
+
+    // Hapus anggaran (budgets) terkait terlebih dahulu
     await db.delete(budgets).where(
       and(
         eq(budgets.categoryId, id),
@@ -72,6 +103,7 @@ export async function deleteCategory(id: number) {
       )
     );
 
+    // Hapus kategori
     await db.delete(categories).where(
       and(
         eq(categories.id, id),
@@ -79,7 +111,7 @@ export async function deleteCategory(id: number) {
       )
     );
 
-    revalidatePath("/kategori");
+    revalidateAll();
     return { success: true };
   } catch (error) {
     console.error("Failed to delete category:", error);

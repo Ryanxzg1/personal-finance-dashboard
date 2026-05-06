@@ -45,7 +45,7 @@ export default async function Page() {
         type: tx.type === "income" ? "Pemasukan" : "Pengeluaran",
         category: tx.category,
         note: tx.description,
-        amount: tx.type === "income" ? Number(tx.amount) : -Number(tx.amount),
+        amount: tx.type === "income" ? Math.abs(Number(tx.amount)) : -Math.abs(Number(tx.amount)),
         accountId: tx.accountId,
       };
     });

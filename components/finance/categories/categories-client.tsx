@@ -87,16 +87,6 @@ export function CategoriesClient({
     })
   }, [initialCategories, initialTransactions])
 
-  const accountBalances = useMemo(() => {
-    return initialAccounts.map(acc => {
-      const accTxs = initialTransactions.filter(t => t.accountId === acc.id)
-      const txSum = accTxs.reduce((sum, t) => sum + Number(t.amount), 0)
-      return {
-        ...acc,
-        currentBalance: Number(acc.initialBalance) + txSum
-      }
-    })
-  }, [initialAccounts, initialTransactions])
 
   const handleEditAccount = (acc: Account) => {
     setEditingAccount(acc)
@@ -175,6 +165,17 @@ export function CategoriesClient({
       return state
     }
   )
+
+  const accountBalances = useMemo(() => {
+    return optimisticAccounts.map(acc => {
+      const accTxs = initialTransactions.filter(t => t.accountId === acc.id)
+      const txSum = accTxs.reduce((sum, t) => sum + Number(t.amount), 0)
+      return {
+        ...acc,
+        currentBalance: Number(acc.initialBalance) + txSum
+      }
+    })
+  }, [optimisticAccounts, initialTransactions])
 
   const handleAddCategory = async (e: React.FormEvent) => {
     e.preventDefault()

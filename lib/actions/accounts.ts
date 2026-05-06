@@ -8,6 +8,12 @@ import { auth } from "@clerk/nextjs/server"
 import { accountSchema } from "@/lib/validations/account"
 import { z } from "zod"
 
+const REVALIDATE_PATHS = ["/", "/kategori", "/riwayat"]
+
+function revalidateAll() {
+  REVALIDATE_PATHS.forEach((path) => revalidatePath(path))
+}
+
 /**
  * Mengambil semua akun milik user
  */
@@ -36,7 +42,6 @@ export async function createAccount(data: z.infer<typeof accountSchema>) {
     const { userId } = await auth();
     if (!userId) return { success: false, error: "Unauthorized" };
 
-    // Validasi dengan Zod
     const validatedData = accountSchema.parse(data);
 
     const [newAccount] = await db.insert(accounts).values({
@@ -45,11 +50,13 @@ export async function createAccount(data: z.infer<typeof accountSchema>) {
     }).returning();
     
     // AUDIT LOG: Catat saldo awal sebagai transaksi pemasukan
-    if (parseFloat(validatedData.initialBalance) > 0) {
+    // Bug fix: gunakan Math.abs untuk memastikan saldo awal selalu positif
+    const initialBalanceNum = parseFloat(validatedData.initialBalance);
+    if (!isNaN(initialBalanceNum) && initialBalanceNum > 0) {
       await db.insert(transactions).values({
         userId,
         accountId: newAccount.id,
-        amount: validatedData.initialBalance,
+        amount: initialBalanceNum.toString(), // Pastikan selalu positif
         category: "Saldo Awal",
         description: `Saldo awal dompet ${validatedData.name}`,
         type: "income",
@@ -57,7 +64,7 @@ export async function createAccount(data: z.infer<typeof accountSchema>) {
       });
     }
 
-    revalidatePath("/kategori");
+    revalidateAll();
     return { success: true };
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -69,15 +76,24 @@ export async function createAccount(data: z.infer<typeof accountSchema>) {
 }
 
 /**
- * Menghapus akun
+ * Menghapus akun beserta seluruh transaksinya
  */
 export async function deleteAccount(id: number) {
   try {
     const { userId } = await auth();
     if (!userId) throw new Error("Unauthorized");
 
-    // Hapus semua transaksi yang terkait dengan akun ini terlebih dahulu
-    // untuk menghindari pelanggaran foreign key constraint
+    // Verifikasi akun milik user sebelum menghapus (security check)
+    const [accountToDelete] = await db
+      .select()
+      .from(accounts)
+      .where(and(eq(accounts.id, id), eq(accounts.userId, userId)));
+    
+    if (!accountToDelete) {
+      return { success: false, error: "Akun tidak ditemukan" };
+    }
+
+    // Hapus semua transaksi terkait terlebih dahulu (foreign key constraint)
     await db.delete(transactions).where(
       and(
         eq(transactions.accountId, id),
@@ -85,6 +101,7 @@ export async function deleteAccount(id: number) {
       )
     );
 
+    // Hapus akun
     await db.delete(accounts).where(
       and(
         eq(accounts.id, id),
@@ -92,7 +109,7 @@ export async function deleteAccount(id: number) {
       )
     );
 
-    revalidatePath("/kategori");
+    revalidateAll();
     return { success: true };
   } catch (error) {
     console.error("Failed to delete account:", error);
@@ -110,34 +127,42 @@ export async function updateAccount(id: number, data: z.infer<typeof accountSche
 
     const validatedData = accountSchema.parse(data);
 
-    // AUDIT LOG: Hitung selisih saldo untuk pencatatan transaksi penyesuaian
-    const [oldAccount] = await db.select().from(accounts).where(and(eq(accounts.id, id), eq(accounts.userId, userId)));
+    // Verifikasi akun milik user (security check)
+    const [oldAccount] = await db
+      .select()
+      .from(accounts)
+      .where(and(eq(accounts.id, id), eq(accounts.userId, userId)));
     
-    if (oldAccount) {
-      // Kita asumsikan initialBalance yang dikirim adalah saldo baru yang diinginkan
-      // Namun di sistem ini, saldo dihitung dari initialBalance + total transaksi.
-      // Jadi jika user mengedit 'Saldo Awal', kita catat selisihnya.
-      const oldInitial = parseFloat(oldAccount.initialBalance);
-      const newInitial = parseFloat(validatedData.initialBalance);
-      const diff = newInitial - oldInitial;
+    if (!oldAccount) {
+      return { success: false, error: "Akun tidak ditemukan" };
+    }
 
-      if (diff !== 0) {
-        await db.insert(transactions).values({
-          userId,
-          accountId: id,
-          amount: diff.toString(),
-          category: "Penyesuaian Saldo",
-          description: `Penyesuaian saldo dompet ${validatedData.name}`,
-          type: diff > 0 ? "income" : "expense",
-          date: new Date(),
-        });
-      }
+    // Bug fix: Gunakan Math.abs untuk mencegah nilai negatif pada saldo
+    const oldInitial = parseFloat(oldAccount.initialBalance);
+    const newInitial = parseFloat(validatedData.initialBalance);
+    
+    if (isNaN(newInitial)) {
+      return { success: false, error: "Saldo tidak valid" };
+    }
+
+    const diff = newInitial - oldInitial;
+
+    // Catat transaksi penyesuaian jika ada perubahan saldo
+    if (diff !== 0) {
+      await db.insert(transactions).values({
+        userId,
+        accountId: id,
+        // Bug fix: simpan nilai absolut, tipe menentukan +/-
+        amount: Math.abs(diff).toString(),
+        category: "Penyesuaian Saldo",
+        description: `Penyesuaian saldo dompet ${validatedData.name}`,
+        type: diff > 0 ? "income" : "expense",
+        date: new Date(),
+      });
     }
 
     await db.update(accounts)
-      .set({
-        ...validatedData,
-      })
+      .set({ ...validatedData })
       .where(
         and(
           eq(accounts.id, id),
@@ -145,8 +170,7 @@ export async function updateAccount(id: number, data: z.infer<typeof accountSche
         )
       );
 
-    revalidatePath("/kategori");
-    revalidatePath("/");
+    revalidateAll();
     return { success: true };
   } catch (error) {
     if (error instanceof z.ZodError) {
