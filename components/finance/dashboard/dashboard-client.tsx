@@ -140,6 +140,7 @@ export function DashboardClient({
       const result = await updateAccount(editingAccount.id, data)
       if (result.success) {
         toast.success("Dompet berhasil diperbarui")
+        setAccountDialogOpen(false)
         router.refresh()
       } else {
         toast.error(result.error || "Gagal memperbarui dompet")
@@ -152,6 +153,7 @@ export function DashboardClient({
       const result = await transferFunds(data)
       if (result.success) {
         toast.success("Transfer berhasil dilakukan")
+        setTransferDialogOpen(false)
         router.refresh()
       } else {
         toast.error(result.error || "Gagal melakukan transfer")
@@ -265,7 +267,7 @@ export function DashboardClient({
       startTransition(async () => {
         addOptimisticAction({ type: "UPDATE", transaction: updatedTxUI })
         const result = await updateTransaction(editingTx.id, {
-           amount: Math.abs(data.amount).toString(),
+           amount: data.amount.toString(),
            category: data.category,
            description: data.note,
            date: d,
@@ -331,14 +333,16 @@ export function DashboardClient({
 
         const result = await createTransaction({
           description: data.note,
-          amount: Math.abs(data.amount).toString(),
+          amount: data.amount.toString(),
           category: data.category,
           type: data.amount >= 0 ? "income" : "expense",
           date: d,
           accountId: data.accountId,
         })
         if (!result.success) toast.error(result.error || "Gagal menyimpan data")
-        else toast.success("Transaksi disimpan")
+        else {
+          toast.success("Transaksi disimpan")
+        }
       })
     }
   }
@@ -443,6 +447,7 @@ export function DashboardClient({
         initialData={editingTx || undefined}
         onClose={() => setDialogOpen(false)}
         onSubmit={handleSubmit}
+        isPending={isPending}
       />
 
       <AccountDialog
@@ -450,6 +455,7 @@ export function DashboardClient({
         initialData={editingAccount || undefined}
         onClose={() => setAccountDialogOpen(false)}
         onSubmit={handleAccountSubmit}
+        isPending={isPending}
       />
 
       <TransferDialog

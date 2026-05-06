@@ -8,6 +8,7 @@ import { SavingsGoalDialog } from "./savings-goal-dialog"
 import { createSavingsGoal, updateSavingsGoal, deleteSavingsGoal } from "@/lib/actions/savings"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
+import { motion, AnimatePresence } from "framer-motion"
 
 interface SavingsGoal {
   id: number
@@ -138,6 +139,7 @@ export function SavingsClient({ initialGoals }: SavingsClientProps) {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <AnimatePresence mode="popLayout">
           {initialGoals.map((goal) => {
             const target = parseFloat(goal.targetAmount)
             const current = parseFloat(goal.currentAmount)
@@ -158,7 +160,15 @@ export function SavingsClient({ initialGoals }: SavingsClientProps) {
             }
 
             return (
-              <div key={goal.id} className="group relative rounded-sm border border-border bg-card p-6 shadow-xs transition-all hover:shadow-md">
+              <motion.div 
+                key={goal.id} 
+                layout
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                transition={{ duration: 0.2 }}
+                className="group relative rounded-sm border border-border bg-card p-6 shadow-xs transition-all hover:shadow-md"
+              >
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex h-12 w-12 items-center justify-center rounded-sm bg-primary/10 text-primary">
                     {isCompleted ? <Trophy className="h-6 w-6" /> : <Target className="h-6 w-6" />}
@@ -244,23 +254,32 @@ export function SavingsClient({ initialGoals }: SavingsClientProps) {
                 )}
 
                 {/* Hover Actions */}
-                <div className="absolute right-3 bottom-3 flex items-center gap-1 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
+                <div className="absolute right-3 bottom-3 flex items-center gap-2 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
                   <button 
-                    onClick={() => handleEditClick(goal)}
-                    className="p-1.5 rounded-sm bg-muted text-muted-foreground hover:text-primary transition-colors"
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleEditClick(goal);
+                    }}
+                    className="p-2.5 rounded-sm bg-muted text-muted-foreground hover:text-primary transition-colors cursor-pointer"
                   >
-                    <Pencil className="h-3.5 w-3.5" />
+                    <Pencil className="h-4.5 w-4.5" />
                   </button>
                   <button 
-                    onClick={() => handleDeleteClick(goal.id)}
-                    className="p-1.5 rounded-sm bg-muted text-muted-foreground hover:text-destructive transition-colors"
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeleteClick(goal.id);
+                    }}
+                    className="p-2.5 rounded-sm bg-muted text-muted-foreground hover:text-destructive transition-colors cursor-pointer"
                   >
-                    <Trash2 className="h-3.5 w-3.5" />
+                    <Trash2 className="h-4.5 w-4.5" />
                   </button>
                 </div>
-              </div>
+              </motion.div>
             )
           })}
+          </AnimatePresence>
         </div>
       )}
 

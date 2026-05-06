@@ -4,6 +4,7 @@ import { useMemo, useState } from "react"
 import { Calendar, ChevronDown, NotebookPen, Pencil, Plus, Tag, Trash2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import dynamic from "next/dynamic"
+import { motion, AnimatePresence } from "framer-motion"
 
 const ExportButton = dynamic(() => import("../dashboard/export-button"), { ssr: false })
 
@@ -113,10 +114,19 @@ export function TransactionsTable({ transactions, onNewEntry, onDelete, onEdit }
         <>
           {/* Card View - Mobile Only */}
           <div className="flex flex-col lg:hidden divide-y divide-border/50">
+            <AnimatePresence mode="popLayout">
             {filtered.map((tx) => {
               const isIncome = tx.amount >= 0
               return (
-                <div key={tx.id} className="p-4 flex flex-col gap-3 active:bg-muted/30 transition-colors">
+                <motion.div 
+                  key={tx.id} 
+                  layout
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  transition={{ duration: 0.2 }}
+                  className="p-4 flex flex-col gap-3 active:bg-muted/30 transition-colors"
+                >
                   <div className="flex justify-between items-start">
                      <div className="flex flex-col gap-1.5">
                         <div className="flex items-center gap-2">
@@ -139,9 +149,10 @@ export function TransactionsTable({ transactions, onNewEntry, onDelete, onEdit }
                        {formatRupiah(tx.amount)}
                      </span>
                   </div>
-                </div>
+                </motion.div>
               )
             })}
+            </AnimatePresence>
           </div>
 
           {/* Table View - Desktop Only */}
@@ -157,10 +168,19 @@ export function TransactionsTable({ transactions, onNewEntry, onDelete, onEdit }
                 </tr>
               </thead>
               <tbody>
+                <AnimatePresence mode="popLayout">
                 {filtered.map((tx, idx) => {
                   const isIncome = tx.amount >= 0
                   return (
-                    <tr key={tx.id} className="group border-b border-border/70 transition-colors hover:bg-muted/40">
+                    <motion.tr 
+                      key={tx.id} 
+                      layout
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0, backgroundColor: "rgba(239, 68, 68, 0.1)" }}
+                      transition={{ duration: 0.2 }}
+                      className="group border-b border-border/70 transition-colors hover:bg-muted/40"
+                    >
                       <Td><span className="font-mono text-[13px] uppercase tracking-wider text-muted-foreground">{tx.date}</span></Td>
                       <Td><span className={cn("font-serif text-[15px] italic", isIncome ? "text-[#5a6b3b]" : "text-destructive")}>{tx.type}</span></Td>
                       <Td>
@@ -179,9 +199,10 @@ export function TransactionsTable({ transactions, onNewEntry, onDelete, onEdit }
                           <IconButton label="Hapus" icon={Trash2} tone="destructive" onClick={() => onDelete?.(tx.id)} />
                         </div>
                       </Td>
-                    </tr>
+                    </motion.tr>
                   )
                 })}
+              </AnimatePresence>
               </tbody>
             </table>
           </div>
@@ -201,8 +222,18 @@ function Td({ children, className }: { children: React.ReactNode; className?: st
 
 function IconButton({ label, icon: Icon, tone = "default", onClick }: { label: string; icon: any; tone?: string; onClick?: () => void }) {
   return (
-    <button onClick={onClick} className={cn("flex h-7 w-7 items-center justify-center rounded-sm transition-colors", tone === "destructive" ? "text-muted-foreground hover:bg-destructive/10 hover:text-destructive" : "text-muted-foreground hover:bg-muted hover:text-foreground")}>
-      <Icon className="h-3.5 w-3.5" />
+    <button 
+      type="button"
+      onClick={(e) => {
+        e.stopPropagation();
+        onClick?.();
+      }} 
+      className={cn(
+        "flex h-9 w-9 items-center justify-center rounded-sm transition-colors cursor-pointer", 
+        tone === "destructive" ? "text-muted-foreground hover:bg-destructive/10 hover:text-destructive" : "text-muted-foreground hover:bg-muted hover:text-foreground"
+      )}
+    >
+      <Icon className="h-4 w-4" />
     </button>
   )
 }

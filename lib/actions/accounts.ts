@@ -76,6 +76,15 @@ export async function deleteAccount(id: number) {
     const { userId } = await auth();
     if (!userId) throw new Error("Unauthorized");
 
+    // Hapus semua transaksi yang terkait dengan akun ini terlebih dahulu
+    // untuk menghindari pelanggaran foreign key constraint
+    await db.delete(transactions).where(
+      and(
+        eq(transactions.accountId, id),
+        eq(transactions.userId, userId)
+      )
+    );
+
     await db.delete(accounts).where(
       and(
         eq(accounts.id, id),
@@ -116,7 +125,7 @@ export async function updateAccount(id: number, data: z.infer<typeof accountSche
         await db.insert(transactions).values({
           userId,
           accountId: id,
-          amount: Math.abs(diff).toString(),
+          amount: diff.toString(),
           category: "Penyesuaian Saldo",
           description: `Penyesuaian saldo dompet ${validatedData.name}`,
           type: diff > 0 ? "income" : "expense",

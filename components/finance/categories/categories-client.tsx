@@ -9,6 +9,7 @@ import { createTransaction, transferFunds } from "@/lib/actions/transactions"
 import { TransferDialog } from "../accounts/transfer-dialog"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
+import { motion, AnimatePresence } from "framer-motion"
 
 import { AmountInput } from "@/components/ui/amount-input"
 import { AccountDialog } from "../accounts/account-dialog"
@@ -109,6 +110,7 @@ export function CategoriesClient({
       const result = await updateAccount(editingAccount.id, data)
       if (result.success) {
         toast.success("Dompet berhasil diperbarui")
+        setAccountDialogOpen(false)
         router.refresh()
       } else {
         toast.error(result.error || "Gagal memperbarui dompet")
@@ -121,6 +123,7 @@ export function CategoriesClient({
       const result = await transferFunds(data)
       if (result.success) {
         toast.success("Transfer berhasil dilakukan")
+        setTransferDialogOpen(false)
         router.refresh()
       } else {
         toast.error(result.error || "Gagal melakukan transfer")
@@ -281,13 +284,22 @@ export function CategoriesClient({
       {activeTab === "categories" ? (
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-fit">
+            <AnimatePresence mode="popLayout">
             {categoryStats.map((cat) => {
               const budget = parseFloat(budgetInputs[cat.id] || "0")
               const percent = budget > 0 ? Math.min(100, (cat.spent / budget) * 100) : 0
               const isOverBudget = budget > 0 && cat.spent > budget
 
               return (
-                <div key={cat.id} className="flex flex-col p-5 rounded-sm border border-border bg-card shadow-xs group">
+                <motion.div 
+                  key={cat.id} 
+                  layout
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.2 }}
+                  className="flex flex-col p-5 rounded-sm border border-border bg-card shadow-xs group"
+                >
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex items-center gap-3">
                       <div>
@@ -300,10 +312,14 @@ export function CategoriesClient({
                     </div>
                     <div className="flex flex-col items-end gap-1">
                       <button 
-                        onClick={() => handleDeleteCategory(cat.id)}
-                        className="opacity-100 lg:opacity-0 lg:group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-all p-1"
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteCategory(cat.id);
+                        }}
+                        className="opacity-100 lg:opacity-0 lg:group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-all p-2 -m-1 cursor-pointer"
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Trash2 className="h-4.5 w-4.5" />
                       </button>
                       <span className="font-mono text-[9px] text-muted-foreground uppercase">{cat.txCount} Transaksi</span>
                     </div>
@@ -356,9 +372,10 @@ export function CategoriesClient({
                       </div>
                     </div>
                   )}
-                </div>
+                </motion.div>
               )
             })}
+            </AnimatePresence>
           </div>
 
           <aside className="rounded-sm border border-border bg-card p-6 h-fit shadow-xs">
@@ -381,15 +398,41 @@ export function CategoriesClient({
                     <button type="button" onClick={() => setType("income")} className={cn("flex-1 py-1 rounded-sm text-[10px] font-mono uppercase", type === "income" ? "bg-card shadow-sm text-foreground" : "text-muted-foreground")}>Masuk</button>
                  </div>
               </div>
-              <button type="submit" className="w-full bg-primary text-primary-foreground py-2 font-sans text-xs font-bold rounded-sm tracking-widest hover:bg-primary/90 transition-colors uppercase">Tambah</button>
+              <button 
+                type="submit" 
+                disabled={isPending}
+                className="w-full bg-primary text-primary-foreground py-2 font-sans text-xs font-bold rounded-sm tracking-widest hover:bg-primary/90 transition-colors uppercase disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {isPending ? (
+                  <>
+                    <motion.div 
+                      animate={{ rotate: 360 }} 
+                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                      className="h-3 w-3 border-2 border-primary-foreground border-t-transparent rounded-full" 
+                    />
+                    Memproses...
+                  </>
+                ) : (
+                  "Tambah"
+                )}
+              </button>
             </form>
           </aside>
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-fit">
+            <AnimatePresence mode="popLayout">
             {accountBalances.map((acc) => (
-              <div key={acc.id} className="flex flex-col p-5 rounded-sm border border-border bg-card shadow-xs group">
+              <motion.div 
+                key={acc.id} 
+                layout
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.2 }}
+                className="flex flex-col p-5 rounded-sm border border-border bg-card shadow-xs group"
+              >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <span className="text-xl p-2 bg-muted rounded-sm">
@@ -402,20 +445,28 @@ export function CategoriesClient({
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-1">
-                    <button 
-                      onClick={() => handleEditAccount(acc)}
-                      className="opacity-100 lg:opacity-0 lg:group-hover:opacity-100 text-muted-foreground hover:text-primary transition-all p-1"
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </button>
-                    <button 
-                      onClick={() => handleDeleteAccount(acc.id)}
-                      className="opacity-100 lg:opacity-0 lg:group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-all p-1"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
+                    <div className="flex items-center gap-2">
+                      <button 
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEditAccount(acc);
+                        }}
+                        className="opacity-100 lg:opacity-0 lg:group-hover:opacity-100 text-muted-foreground hover:text-primary transition-all p-2 -m-1 cursor-pointer"
+                      >
+                        <Pencil className="h-4.5 w-4.5" />
+                      </button>
+                      <button 
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteAccount(acc.id);
+                        }}
+                        className="opacity-100 lg:opacity-0 lg:group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-all p-2 -m-1 cursor-pointer"
+                      >
+                        <Trash2 className="h-4.5 w-4.5" />
+                      </button>
+                    </div>
                 </div>
                 <div className="mt-4 pt-4 border-t border-dashed border-border flex justify-between items-end">
                    <div>
@@ -431,8 +482,9 @@ export function CategoriesClient({
                      </p>
                    </div>
                 </div>
-              </div>
+              </motion.div>
             ))}
+            </AnimatePresence>
           </div>
 
           <aside className="rounded-sm border border-border bg-card p-6 h-fit shadow-xs">
@@ -466,7 +518,24 @@ export function CategoriesClient({
                 value={initialBalance}
                 onChange={setInitialBalance}
               />
-              <button type="submit" className="w-full bg-primary text-primary-foreground py-2 font-sans text-xs font-bold rounded-sm tracking-widest hover:bg-primary/90 transition-colors uppercase">Tambah Dompet</button>
+              <button 
+                type="submit" 
+                disabled={isPending}
+                className="w-full bg-primary text-primary-foreground py-2 font-sans text-xs font-bold rounded-sm tracking-widest hover:bg-primary/90 transition-colors uppercase disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {isPending ? (
+                  <>
+                    <motion.div 
+                      animate={{ rotate: 360 }} 
+                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                      className="h-3 w-3 border-2 border-primary-foreground border-t-transparent rounded-full" 
+                    />
+                    Memproses...
+                  </>
+                ) : (
+                  "Tambah Dompet"
+                )}
+              </button>
             </form>
           </aside>
         </div>
@@ -477,6 +546,7 @@ export function CategoriesClient({
         initialData={editingAccount || undefined}
         onClose={() => setAccountDialogOpen(false)}
         onSubmit={handleAccountSubmit}
+        isPending={isPending}
       />
 
       <TransferDialog

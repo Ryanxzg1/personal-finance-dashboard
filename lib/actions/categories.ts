@@ -1,7 +1,7 @@
 "use server"
 
 import { db } from "@/lib/db"
-import { categories } from "@/lib/db/schema"
+import { categories, budgets } from "@/lib/db/schema"
 import { revalidatePath } from "next/cache"
 import { eq, and } from "drizzle-orm"
 import { auth } from "@clerk/nextjs/server"
@@ -63,6 +63,14 @@ export async function deleteCategory(id: number) {
   try {
     const { userId } = await auth();
     if (!userId) throw new Error("Unauthorized");
+
+    // Hapus anggaran (budgets) yang terkait dengan kategori ini terlebih dahulu
+    await db.delete(budgets).where(
+      and(
+        eq(budgets.categoryId, id),
+        eq(budgets.userId, userId)
+      )
+    );
 
     await db.delete(categories).where(
       and(

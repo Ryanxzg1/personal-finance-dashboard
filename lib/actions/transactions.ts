@@ -148,28 +148,26 @@ export async function transferFunds(data: {
       return { success: false, error: "Nominal transfer tidak valid" };
     }
 
-    await db.transaction(async (tx) => {
-      // 1. Transaksi Keluar dari Dompet Asal
-      await tx.insert(transactions).values({
-        userId,
-        accountId: data.fromAccountId,
-        amount: data.amount,
-        category: "Transfer Keluar",
-        description: `Transfer ke ${data.toAccountName}`,
-        type: "expense",
-        date: data.date,
-      });
+    // 1. Transaksi Keluar dari Dompet Asal
+    await db.insert(transactions).values({
+      userId,
+      accountId: data.fromAccountId,
+      amount: (-amountNum).toString(), // Harus negatif untuk pengeluaran
+      category: "Transfer Keluar",
+      description: `Transfer ke ${data.toAccountName}`,
+      type: "expense",
+      date: data.date,
+    });
 
-      // 2. Transaksi Masuk ke Dompet Tujuan
-      await tx.insert(transactions).values({
-        userId,
-        accountId: data.toAccountId,
-        amount: data.amount,
-        category: "Transfer Masuk",
-        description: `Terima transfer dari ${data.fromAccountName}`,
-        type: "income",
-        date: data.date,
-      });
+    // 2. Transaksi Masuk ke Dompet Tujuan
+    await db.insert(transactions).values({
+      userId,
+      accountId: data.toAccountId,
+      amount: amountNum.toString(), // Positif untuk pemasukan
+      category: "Transfer Masuk",
+      description: `Terima transfer dari ${data.fromAccountName}`,
+      type: "income",
+      date: data.date,
     });
 
     revalidatePath("/");
