@@ -1,10 +1,10 @@
 "use client"
 
 import { useState, useTransition, useOptimistic, useMemo } from "react"
-import { Plus, Trash2, Tag, Target, Wallet, Landmark, CreditCard, Banknote, Pencil } from "lucide-react"
+import { Plus, Trash2, Tag, Target, Wallet, Landmark, CreditCard, Banknote, Pencil, RefreshCcw } from "lucide-react"
 import { createCategory, deleteCategory } from "@/lib/actions/categories"
 import { upsertBudget } from "@/lib/actions/budgets"
-import { createAccount, deleteAccount, updateAccount } from "@/lib/actions/accounts"
+import { createAccount, deleteAccount, updateAccount, hardResetDatabase } from "@/lib/actions/accounts"
 import { createTransaction, transferFunds } from "@/lib/actions/transactions"
 import { TransferDialog } from "../accounts/transfer-dialog"
 import { toast } from "sonner"
@@ -46,7 +46,7 @@ interface CategoriesClientProps {
   initialCategories: Category[]
   initialBudgets: Budget[]
   initialAccounts: Account[]
-  initialTransactions: { amount: string; category: string; date: string; accountId: number | null }[]
+  initialTransactions: { amount: string; category: string; date: string; accountId: number | null; type: string }[]
 }
 
 export function CategoriesClient({ 
@@ -169,10 +169,27 @@ export function CategoriesClient({
   const accountBalances = useMemo(() => {
     return optimisticAccounts.map(acc => {
       const accTxs = initialTransactions.filter(t => t.accountId === acc.id)
-      const txSum = accTxs.reduce((sum, t) => sum + Number(t.amount), 0)
+      
+      // Calculate income and expense for this account
+      const income = accTxs
+        .filter(t => t.type === "income" || (t.type as any) === "Pemasukan")
+        .reduce((sum, t) => sum + Math.abs(Number(t.amount)), 0)
+        
+      const expense = accTxs
+        .filter(t => t.type === "expense" || (t.type as any) === "Pengeluaran")
+        .reduce((sum, t) => sum + Math.abs(Number(t.amount)), 0)
+
+      const txSum = accTxs.reduce((sum, t) => {
+        const amt = Math.abs(Number(t.amount))
+        return (t.type === "income" || (t.type as any) === "Pemasukan") ? sum + amt : sum - amt
+      }, 0)
+
       return {
         ...acc,
-        currentBalance: Number(acc.initialBalance) + txSum
+        currentBalance: Number(acc.initialBalance) + txSum,
+        income,
+        expense,
+        txCount: accTxs.length
       }
     })
   }, [optimisticAccounts, initialTransactions])
@@ -244,6 +261,20 @@ export function CategoriesClient({
       })
       if (!result.success) toast.error("Gagal menyimpan anggaran")
       else toast.success("Anggaran diperbarui")
+    })
+  }
+
+  const handleHardReset = async () => {
+    if (!confirm("⚠️ PERINGATAN KERAS: Apakah Anda yakin ingin MENGHAPUS SEMUA DATA? \n\nTindakan ini akan:\n1. Menghapus SEMUA dompet.\n2. Menghapus SEMUA kategori.\n3. Menghapus SEMUA transaksi & riwayat.\n4. Menghapus SEMUA target tabungan & anggaran.\n\nDATABASE AKAN KOSONG TOTAL. Data TIDAK DAPAT dikembalikan!")) return
+    
+    startTransition(async () => {
+      const result = await hardResetDatabase()
+      if (result.success) {
+        toast.success("Database berhasil dibersihkan total")
+        router.refresh()
+      } else {
+        toast.error(result.error || "Gagal melakukan hard reset")
+      }
     })
   }
 
@@ -469,19 +500,40 @@ export function CategoriesClient({
                       </button>
                     </div>
                 </div>
-                <div className="mt-4 pt-4 border-t border-dashed border-border flex justify-between items-end">
-                   <div>
-                     <p className="font-mono text-[9px] uppercase tracking-tighter text-muted-foreground mb-1">Saldo Saat Ini</p>
-                     <p className="font-mono text-sm font-bold">
-                       Rp {acc.currentBalance?.toLocaleString('id-ID')}
+                <div className="mt-5 pt-4 border-t border-dashed border-border grid grid-cols-2 gap-4">
+                   <div className="space-y-1">
+                     <div className="flex items-center gap-1.5 text-emerald-600">
+                        <Plus className="h-3 w-3" />
+                        <span className="font-mono text-[9px] uppercase tracking-tighter font-bold">Pemasukan</span>
+                     </div>
+                     <p className="font-mono text-[11px] font-bold">
+                       Rp {acc.income?.toLocaleString('id-ID')}
                      </p>
                    </div>
-                   <div className="text-right">
-                     <p className="font-mono text-[9px] uppercase tracking-tighter text-muted-foreground mb-1 text-right">Saldo Awal</p>
-                     <p className="font-mono text-[10px] text-muted-foreground">
-                       Rp {parseFloat(acc.initialBalance).toLocaleString('id-ID')}
+                   <div className="space-y-1 text-right">
+                     <div className="flex items-center gap-1.5 text-rose-600 justify-end">
+                        <span className="font-mono text-[9px] uppercase tracking-tighter font-bold">Pengeluaran</span>
+                        <Plus className="h-3 w-3 rotate-45" />
+                     </div>
+                     <p className="font-mono text-[11px] font-bold">
+                       Rp {acc.expense?.toLocaleString('id-ID')}
                      </p>
                    </div>
+                </div>
+
+                <div className="mt-4 pt-3 flex justify-between items-center bg-muted/30 -mx-5 -mb-5 px-5 py-3 rounded-b-sm border-t border-border/50">
+                    <div className="flex items-center gap-2">
+                        <Tag className="h-3 w-3 text-muted-foreground" />
+                        <span className="font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
+                            {acc.txCount} Transaksi
+                        </span>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-mono text-[10px] font-bold text-primary">
+                         Rp {acc.currentBalance?.toLocaleString('id-ID')}
+                      </p>
+                      <p className="font-mono text-[8px] uppercase tracking-tighter text-muted-foreground">Saldo Akhir</p>
+                    </div>
                 </div>
               </motion.div>
             ))}
@@ -538,6 +590,22 @@ export function CategoriesClient({
                 )}
               </button>
             </form>
+
+            <div className="mt-8 pt-6 border-t border-dashed border-border">
+              <h3 className="font-sans text-[10px] font-bold uppercase tracking-[0.2em] mb-4 text-destructive">Zona Bahaya</h3>
+              <button 
+                type="button"
+                onClick={handleHardReset}
+                disabled={isPending}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2 border border-destructive/30 text-destructive hover:bg-destructive hover:text-white transition-all rounded-sm font-mono text-[10px] uppercase tracking-widest disabled:opacity-50"
+              >
+                <RefreshCcw className={cn("h-3.5 w-3.5", isPending && "animate-spin")} />
+                Hapus & Reset Total DB
+              </button>
+              <p className="mt-2 text-[9px] text-muted-foreground italic leading-relaxed text-center px-2">
+                Hapus permanen seluruh data (Dompet, Kategori, Transaksi) untuk mulai dari nol.
+              </p>
+            </div>
           </aside>
         </div>
       )}

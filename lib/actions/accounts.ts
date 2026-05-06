@@ -46,17 +46,16 @@ export async function createAccount(data: z.infer<typeof accountSchema>) {
 
     const [newAccount] = await db.insert(accounts).values({
       ...validatedData,
+      initialBalance: "0", // Selalu 0 di tabel agar tidak double counting
       userId,
     }).returning();
     
-    // AUDIT LOG: Catat saldo awal sebagai transaksi pemasukan
-    // Bug fix: gunakan Math.abs untuk memastikan saldo awal selalu positif
     const initialBalanceNum = parseFloat(validatedData.initialBalance);
     if (!isNaN(initialBalanceNum) && initialBalanceNum > 0) {
       await db.insert(transactions).values({
         userId,
         accountId: newAccount.id,
-        amount: initialBalanceNum.toString(), // Pastikan selalu positif
+        amount: initialBalanceNum.toString(),
         category: "Saldo Awal",
         description: `Saldo awal dompet ${validatedData.name}`,
         type: "income",
@@ -137,32 +136,18 @@ export async function updateAccount(id: number, data: z.infer<typeof accountSche
       return { success: false, error: "Akun tidak ditemukan" };
     }
 
-    // Bug fix: Gunakan Math.abs untuk mencegah nilai negatif pada saldo
-    const oldInitial = parseFloat(oldAccount.initialBalance);
-    const newInitial = parseFloat(validatedData.initialBalance);
-    
-    if (isNaN(newInitial)) {
-      return { success: false, error: "Saldo tidak valid" };
-    }
-
-    const diff = newInitial - oldInitial;
-
-    // Catat transaksi penyesuaian jika ada perubahan saldo
-    if (diff !== 0) {
-      await db.insert(transactions).values({
-        userId,
-        accountId: id,
-        // Bug fix: simpan nilai absolut, tipe menentukan +/-
-        amount: Math.abs(diff).toString(),
-        category: "Penyesuaian Saldo",
-        description: `Penyesuaian saldo dompet ${validatedData.name}`,
-        type: diff > 0 ? "income" : "expense",
-        date: new Date(),
-      });
-    }
+    // Karena kita sekarang menggunakan transaksi 100% untuk saldo,
+    // Kita tidak perlu menghitung diff terhadap initialBalance tabel (karena tabel selalu 0).
+    // Kita biarkan user mengedit nama/tipe saja di sini.
+    // Jika mereka ingin koreksi saldo, mereka harus buat transaksi penyesuaian manual
+    // atau kita bisa hapus logika diff ini untuk sementara agar tidak bingung.
 
     await db.update(accounts)
-      .set({ ...validatedData })
+      .set({ 
+        name: validatedData.name,
+        type: validatedData.type,
+        initialBalance: "0" // Pastikan tetap 0
+      })
       .where(
         and(
           eq(accounts.id, id),
@@ -180,3 +165,39 @@ export async function updateAccount(id: number, data: z.infer<typeof accountSche
     return { success: false, error: "Gagal memperbarui akun" };
   }
 }
+
+/**
+ * HARD RESET: Menghapus SEMUA data user dari database
+ */
+export async function hardResetDatabase() {
+  try {
+    const { userId } = await auth();
+    if (!userId) return { success: false, error: "Unauthorized" };
+
+    // Hapus dari semua tabel terkait secara berurutan
+    // Import tabel lain jika perlu (budgets, categories, dll)
+    // Untuk amannya, kita import dinamis atau pastikan sudah ada di schema yang diimport
+    const { budgets, categories, savingsGoals, blueprintPlans, blueprintItems } = await import("@/lib/db/schema");
+
+    await db.delete(transactions).where(eq(transactions.userId, userId));
+    await db.delete(budgets).where(eq(budgets.userId, userId));
+    await db.delete(savingsGoals).where(eq(savingsGoals.userId, userId));
+    await db.delete(blueprintItems).where(eq(blueprintItems.planId, -1)); // Logika item sedikit beda tapi userId dipake di plan
+    // Sebenarnya cascading delete harusnya handle blueprintItems jika plan dihapus
+    await db.delete(blueprintPlans).where(eq(blueprintPlans.userId, userId));
+    await db.delete(accounts).where(eq(accounts.userId, userId));
+    await db.delete(categories).where(eq(categories.userId, userId));
+
+    revalidatePath("/");
+    revalidatePath("/kategori");
+    revalidatePath("/riwayat");
+    revalidatePath("/tabungan");
+    revalidatePath("/pemetaan");
+
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to hard reset database:", error);
+    return { success: false, error: "Gagal mereset total database" };
+  }
+}
+
