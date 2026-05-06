@@ -170,13 +170,22 @@ export function CategoriesClient({
     return optimisticAccounts.map(acc => {
       const accTxs = initialTransactions.filter(t => t.accountId === acc.id)
       
-      // Calculate income and expense for this account
+      // Calculate income and expense for this account - filtering out transfers, initial balance and adjustments
       const income = accTxs
-        .filter(t => t.type === "income" || (t.type as any) === "Pemasukan")
+        .filter(t => {
+          const isTechnical = t.category.startsWith("Transfer") || 
+                             t.category === "Saldo Awal" || 
+                             t.category === "Penyesuaian Saldo"
+          return !isTechnical && (t.type === "income" || (t.type as any) === "Pemasukan")
+        })
         .reduce((sum, t) => sum + Math.abs(Number(t.amount)), 0)
         
       const expense = accTxs
-        .filter(t => t.type === "expense" || (t.type as any) === "Pengeluaran")
+        .filter(t => {
+          const isTechnical = t.category.startsWith("Transfer") || 
+                             t.category === "Penyesuaian Saldo"
+          return !isTechnical && (t.type === "expense" || (t.type as any) === "Pengeluaran")
+        })
         .reduce((sum, t) => sum + Math.abs(Number(t.amount)), 0)
 
       const txSum = accTxs.reduce((sum, t) => {

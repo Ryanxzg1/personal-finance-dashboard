@@ -175,28 +175,39 @@ export function DashboardClient({
   )
 
   // --- STATISTICS & BUDGET CALCULATION ---
-  const { stats, budgetProgress, accountBalances } = useMemo(() => {
+  const { stats, budgetProgress, accountBalances, cleanTransactions } = useMemo(() => {
     const now = new Date()
     const currentMonth = now.getMonth()
     const currentYear = now.getFullYear()
-
     const lastMonth = currentMonth === 0 ? 11 : currentMonth - 1
     const lastMonthYear = currentMonth === 0 ? currentYear - 1 : currentYear
 
-    const monthlyTxs = optimisticTransactions.filter(t => {
+    const cleanTransactions = optimisticTransactions.filter(t => {
+      const isTechnical = t.category.startsWith("Transfer") || 
+                         t.category === "Saldo Awal" || 
+                         t.category === "Penyesuaian Saldo"
+      return !isTechnical
+    })
+
+    const monthlyTxs = cleanTransactions.filter(t => {
       const d = new Date(t.rawDate)
       return d.getMonth() === currentMonth && d.getFullYear() === currentYear
     })
 
-    const lastMonthTxs = optimisticTransactions.filter(t => {
+    const lastMonthTxs = cleanTransactions.filter(t => {
       const d = new Date(t.rawDate)
       return d.getMonth() === lastMonth && d.getFullYear() === lastMonthYear
     })
 
-    const income = monthlyTxs.reduce((sum, t) => t.amount > 0 ? sum + Number(t.amount) : sum, 0)
-    const expense = monthlyTxs.reduce((sum, t) => t.amount < 0 ? sum + Math.abs(Number(t.amount)) : sum, 0)
+    const income = monthlyTxs
+      .filter(t => t.amount > 0)
+      .reduce((sum, t) => sum + Number(t.amount), 0)
+
+    const expense = monthlyTxs
+      .filter(t => t.amount < 0)
+      .reduce((sum, t) => sum + Math.abs(Number(t.amount)), 0)
     
-    // Calculate individual account balances
+    // Calculate individual account balances - USE ALL TRANSACTIONS (including technical)
     const accountBalances = initialAccounts.map(acc => {
       const accTxs = optimisticTransactions.filter(t => t.accountId === acc.id)
       const txSum = accTxs.reduce((sum, t) => sum + Number(t.amount), 0)
@@ -209,8 +220,13 @@ export function DashboardClient({
     // Total balance is sum of all account current balances
     const balance = accountBalances.reduce((sum, acc) => sum + acc.currentBalance, 0)
 
-    const incomeLastMonth = lastMonthTxs.reduce((sum, t) => t.amount > 0 ? sum + Number(t.amount) : sum, 0)
-    const expenseLastMonth = lastMonthTxs.reduce((sum, t) => t.amount < 0 ? sum + Math.abs(Number(t.amount)) : sum, 0)
+    const incomeLastMonth = lastMonthTxs
+      .filter(t => t.amount > 0)
+      .reduce((sum, t) => sum + Number(t.amount), 0)
+
+    const expenseLastMonth = lastMonthTxs
+      .filter(t => t.amount < 0)
+      .reduce((sum, t) => sum + Math.abs(Number(t.amount)), 0)
 
     const incomeTrend = incomeLastMonth > 0 ? ((income - incomeLastMonth) / incomeLastMonth) * 100 : 0
     const expenseTrend = expenseLastMonth > 0 ? ((expense - expenseLastMonth) / expenseLastMonth) * 100 : 0
@@ -234,7 +250,8 @@ export function DashboardClient({
     return { 
       stats: { income, expense, balance, incomeTrend, expenseTrend }, 
       budgetProgress: progress,
-      accountBalances
+      accountBalances,
+      cleanTransactions
     }
   }, [optimisticTransactions, initialBudgets, initialCategories, initialAccounts])
 
@@ -377,7 +394,7 @@ export function DashboardClient({
 
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1fr_360px]">
         <div className="space-y-4">
-           <ChartSection transactions={optimisticTransactions} />
+           <ChartSection transactions={cleanTransactions} />
            
            {/* Budget Progress Widget (BARU) */}
            {budgetProgress.length > 0 && (
@@ -417,12 +434,12 @@ export function DashboardClient({
            )}
         </div>
         
-        <CategoryDistribution transactions={optimisticTransactions} />
+        <CategoryDistribution transactions={cleanTransactions} />
         <AccountSummary accounts={accountBalances} onEditAccount={openEditAccountDialog} />
       </div>
 
       <TransactionsTable
-        transactions={optimisticTransactions}
+        transactions={cleanTransactions}
         onDelete={(id) => startTransition(async () => {
           addOptimisticAction({ type: "DELETE", id })
           const result = await deleteTransaction(id)

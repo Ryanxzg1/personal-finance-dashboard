@@ -9,12 +9,12 @@ import { TransactionsTable, type Transaction as UITransaction } from "@component
 export const dynamic = "force-dynamic";
 
 export default async function HistoryPage() {
-  const result = await getTransactions();
+  const result: any = await getTransactions();
   
   let transactions: UITransaction[] = [];
   
   if (result.success && result.data) {
-    transactions = result.data.map((tx) => {
+    transactions = result.data.map((tx: any) => {
       const d = new Date(tx.date);
       const formattedDate = `${String(d.getDate()).padStart(2, "0")} ${d.toLocaleString("id-ID", {
         month: "short",
@@ -24,11 +24,16 @@ export default async function HistoryPage() {
         id: tx.id.toString(),
         date: formattedDate,
         rawDate: d.toISOString(),
-        type: tx.type === "income" ? "Pemasukan" : "Pengeluaran",
+        type: (tx.type === "income" ? "Pemasukan" : "Pengeluaran") as any,
         category: tx.category,
         note: tx.description,
         amount: tx.type === "income" ? Math.abs(Number(tx.amount)) : -Math.abs(Number(tx.amount)),
       };
+    }).filter((t: any) => {
+      const isTechnical = t.category.startsWith("Transfer") || 
+                         t.category === "Saldo Awal" || 
+                         t.category === "Penyesuaian Saldo"
+      return !isTechnical
     });
   }
 
