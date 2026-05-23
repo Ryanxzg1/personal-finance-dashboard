@@ -1,4 +1,4 @@
-import { pgTable, serial, text, numeric, timestamp, varchar, integer, boolean } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, numeric, timestamp, varchar, integer, boolean, index } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 
 export const transactions = pgTable("transactions", {
@@ -7,27 +7,37 @@ export const transactions = pgTable("transactions", {
   description: text("description").notNull(),
   amount: numeric("amount", { precision: 12, scale: 2 }).notNull(),
   category: varchar("category", { length: 100 }).notNull(),
-  accountId: integer("account_id").references(() => accounts.id), // Optional for backward compatibility or global tracking
+  accountId: integer("account_id").references(() => accounts.id, { onDelete: "cascade" }), // Optional for backward compatibility or global tracking
   type: varchar("type", { length: 20 }).notNull(), // 'income' or 'expense'
   date: timestamp("date").defaultNow().notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+}, (table) => [
+  index("transactions_user_id_idx").on(table.userId),
+  index("transactions_date_idx").on(table.date),
+  index("transactions_account_id_idx").on(table.accountId),
+  index("transactions_category_idx").on(table.category),
+]);
 
 export const categories = pgTable("categories", {
   id: serial("id").primaryKey(),
   userId: varchar("user_id", { length: 255 }).notNull(),
   name: varchar("name", { length: 100 }).notNull(),
   type: varchar("type", { length: 20 }).notNull(), // 'income' or 'expense'
-});
+}, (table) => [
+  index("categories_user_id_idx").on(table.userId),
+]);
 
 export const budgets = pgTable("personal_budgets", {
   id: serial("id").primaryKey(),
   userId: varchar("user_id", { length: 255 }).notNull(),
-  categoryId: integer("category_id").references(() => categories.id).notNull(),
-  limitAmount: numeric("limit_amount").notNull(),
+  categoryId: integer("category_id").references(() => categories.id, { onDelete: "cascade" }).notNull(),
+  limitAmount: numeric("limit_amount", { precision: 12, scale: 2 }).notNull(),
   month: integer("month").notNull(),
   year: integer("year").notNull(),
-});
+}, (table) => [
+  index("personal_budgets_user_id_idx").on(table.userId),
+  index("personal_budgets_category_id_idx").on(table.categoryId),
+]);
 
 export const accounts = pgTable("accounts", {
   id: serial("id").primaryKey(),
@@ -37,7 +47,9 @@ export const accounts = pgTable("accounts", {
   initialBalance: numeric("initial_balance", { precision: 12, scale: 2 }).default("0").notNull(),
   color: varchar("color", { length: 50 }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+}, (table) => [
+  index("accounts_user_id_idx").on(table.userId),
+]);
 
 export const savingsGoals = pgTable("savings_goals", {
   id: serial("id").primaryKey(),
@@ -48,7 +60,9 @@ export const savingsGoals = pgTable("savings_goals", {
   monthlyTarget: numeric("monthly_target", { precision: 12, scale: 2 }),
   deadline: timestamp("deadline"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+}, (table) => [
+  index("savings_goals_user_id_idx").on(table.userId),
+]);
 
 export type Transaction = typeof transactions.$inferSelect;
 export type NewTransaction = typeof transactions.$inferInsert;
@@ -66,7 +80,9 @@ export const blueprintPlans = pgTable("blueprint_plans", {
   startDate: timestamp("start_date"),
   endDate: timestamp("end_date"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+}, (table) => [
+  index("blueprint_plans_user_id_idx").on(table.userId),
+]);
 
 export const blueprintItems = pgTable("blueprint_items", {
   id: serial("id").primaryKey(),
@@ -75,7 +91,9 @@ export const blueprintItems = pgTable("blueprint_items", {
   amount: numeric("amount", { precision: 12, scale: 2 }).notNull(),
   isEssential: boolean("is_essential").default(false),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+}, (table) => [
+  index("blueprint_items_plan_id_idx").on(table.planId),
+]);
 
 export const blueprintPlansRelations = relations(blueprintPlans, ({ many }) => ({
   items: many(blueprintItems),

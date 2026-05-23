@@ -3,6 +3,11 @@ import { sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
 export async function GET() {
+  // Hanya ijinkan di environment development untuk mencegah eksploitasi di production
+  if (process.env.NODE_ENV !== "development") {
+    return NextResponse.json({ error: "Forbidden in production" }, { status: 403 });
+  }
+
   try {
     console.log("Memulai perbaikan database manual...");
     

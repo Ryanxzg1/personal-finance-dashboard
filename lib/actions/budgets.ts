@@ -1,7 +1,7 @@
 "use server"
 
 import { db } from "@/lib/db"
-import { budgets } from "@/lib/db/schema"
+import { budgets, categories } from "@/lib/db/schema"
 import { revalidatePath } from "next/cache"
 import { eq, and } from "drizzle-orm"
 import { auth } from "@clerk/nextjs/server"
@@ -30,7 +30,7 @@ export async function getBudgets(month: number, year: number) {
       
     return { success: true, data };
   } catch (error: any) {
-    console.error("DEBUG - Full Budget Error:", error.message, error.stack);
+    console.error("Failed to fetch budgets:", error);
     return { success: false, error: "Gagal mengambil anggaran" };
   }
 }
@@ -45,6 +45,17 @@ export async function upsertBudget(data: z.infer<typeof budgetSchema>) {
 
     // Validasi dengan Zod
     const validatedData = budgetSchema.parse(data);
+
+    // Security check: Pastikan categoryId milik userId yang login (cegah IDOR)
+    const userCategory = await db
+      .select({ id: categories.id })
+      .from(categories)
+      .where(and(eq(categories.id, validatedData.categoryId), eq(categories.userId, userId)))
+      .limit(1);
+
+    if (userCategory.length === 0) {
+      return { success: false, error: "Kategori tidak ditemukan atau bukan milik Anda" };
+    }
 
     // Cek apakah sudah ada budget untuk kategori + bulan ini
     const existing = await db

@@ -1,7 +1,7 @@
 "use server"
 
 import { db } from "@/lib/db"
-import { transactions, NewTransaction } from "@/lib/db/schema"
+import { transactions, accounts, NewTransaction } from "@/lib/db/schema"
 import { revalidatePath } from "next/cache"
 import { eq, desc, and } from "drizzle-orm"
 import { auth } from "@clerk/nextjs/server"
@@ -26,6 +26,19 @@ export async function createTransaction(data: Omit<NewTransaction, "userId">) {
       ...data,
       date: data.date ? new Date(data.date) : new Date(),
     });
+
+    // Security check: Pastikan accountId milik userId yang login (cegah IDOR)
+    if (validatedData.accountId) {
+      const userAccount = await db
+        .select({ id: accounts.id })
+        .from(accounts)
+        .where(and(eq(accounts.id, validatedData.accountId), eq(accounts.userId, userId)))
+        .limit(1);
+
+      if (userAccount.length === 0) {
+        return { success: false, error: "Akun tidak ditemukan atau bukan milik Anda" };
+      }
+    }
 
     // Bug fix: Pastikan amount selalu tersimpan sebagai angka absolut (positif).
     // Tipe "income"/"expense" yang menentukan apakah itu +/-, bukan tanda pada amount.
@@ -115,6 +128,19 @@ export async function updateTransaction(id: string | number, data: Partial<NewTr
       date: data.date ? new Date(data.date) : undefined,
     });
 
+    // Security check: Pastikan accountId yang baru (jika diubah) adalah milik userId yang login (cegah IDOR)
+    if (validatedData.accountId) {
+      const userAccount = await db
+        .select({ id: accounts.id })
+        .from(accounts)
+        .where(and(eq(accounts.id, validatedData.accountId), eq(accounts.userId, userId)))
+        .limit(1);
+
+      if (userAccount.length === 0) {
+        return { success: false, error: "Akun tidak ditemukan atau bukan milik Anda" };
+      }
+    }
+
     // Bug fix: Pastikan amount selalu absolut jika ada perubahan
     const updatePayload: Record<string, any> = { ...validatedData };
     if (updatePayload.amount !== undefined) {
@@ -170,6 +196,23 @@ export async function transferFunds(data: {
     // Bug fix: Validasi tidak boleh transfer ke dompet yang sama
     if (data.fromAccountId === data.toAccountId) {
       return { success: false, error: "Tidak dapat transfer ke dompet yang sama" };
+    }
+
+    // Security check: Verifikasi kepemilikan kedua akun (asal dan tujuan) oleh user yang login (cegah IDOR)
+    const fromAccount = await db
+      .select({ id: accounts.id })
+      .from(accounts)
+      .where(and(eq(accounts.id, data.fromAccountId), eq(accounts.userId, userId)))
+      .limit(1);
+
+    const toAccount = await db
+      .select({ id: accounts.id })
+      .from(accounts)
+      .where(and(eq(accounts.id, data.toAccountId), eq(accounts.userId, userId)))
+      .limit(1);
+
+    if (fromAccount.length === 0 || toAccount.length === 0) {
+      return { success: false, error: "Satu atau kedua akun tidak ditemukan atau bukan milik Anda" };
     }
 
     // 1. Transaksi Keluar dari Dompet Asal (amount selalu absolut, type="expense" menentukan pengurangan)
