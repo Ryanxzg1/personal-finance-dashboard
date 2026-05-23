@@ -177,13 +177,12 @@ export async function hardResetDatabase() {
     // Hapus dari semua tabel terkait secara berurutan
     // Import tabel lain jika perlu (budgets, categories, dll)
     // Untuk amannya, kita import dinamis atau pastikan sudah ada di schema yang diimport
-    const { budgets, categories, savingsGoals, blueprintPlans, blueprintItems } = await import("@/lib/db/schema");
+    const { budgets, categories, savingsGoals, blueprintPlans } = await import("@/lib/db/schema");
 
     await db.delete(transactions).where(eq(transactions.userId, userId));
     await db.delete(budgets).where(eq(budgets.userId, userId));
     await db.delete(savingsGoals).where(eq(savingsGoals.userId, userId));
-    await db.delete(blueprintItems).where(eq(blueprintItems.planId, -1)); // Logika item sedikit beda tapi userId dipake di plan
-    // Sebenarnya cascading delete harusnya handle blueprintItems jika plan dihapus
+    // Cascade delete dari blueprintPlans akan otomatis menghapus blueprintItems
     await db.delete(blueprintPlans).where(eq(blueprintPlans.userId, userId));
     await db.delete(accounts).where(eq(accounts.userId, userId));
     await db.delete(categories).where(eq(categories.userId, userId));

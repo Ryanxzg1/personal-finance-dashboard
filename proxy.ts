@@ -13,7 +13,19 @@ export const proxy = clerkMiddleware(async (auth, req) => {
   // 1. Handle CORS for API routes
   if (req.nextUrl.pathname.startsWith('/api')) {
     const response = NextResponse.next();
-    response.headers.set('Access-Control-Allow-Origin', '*');
+    const origin = req.headers.get('origin') ?? '';
+    const allowedOrigins = process.env.ALLOWED_ORIGINS 
+      ? process.env.ALLOWED_ORIGINS.split(',') 
+      : ['https://your-domain.com'];
+
+    if (process.env.NODE_ENV === 'production') {
+      if (allowedOrigins.includes(origin)) {
+        response.headers.set('Access-Control-Allow-Origin', origin);
+      }
+    } else {
+      response.headers.set('Access-Control-Allow-Origin', '*');
+    }
+
     response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
     response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 

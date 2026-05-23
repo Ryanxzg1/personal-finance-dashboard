@@ -24,7 +24,7 @@ export default async function HistoryPage() {
         id: tx.id.toString(),
         date: formattedDate,
         rawDate: d.toISOString(),
-        type: (tx.type === "income" ? "Pemasukan" : "Pengeluaran") as any,
+        type: (tx.type === "income" ? "Pemasukan" : "Pengeluaran"),
         category: tx.category,
         note: tx.description,
         amount: tx.type === "income" ? Math.abs(Number(tx.amount)) : -Math.abs(Number(tx.amount)),

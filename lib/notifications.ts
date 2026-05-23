@@ -41,16 +41,21 @@ export const sendNotification = (title: string, options?: NotificationOptions) =
     return;
   }
 
+  interface ExtendedNotificationOptions extends NotificationOptions {
+    vibrate?: number[];
+  }
+
   try {
     // 1. Coba gunakan Service Worker (Wajib untuk mobile/PWA agar muncul)
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.ready.then((registration) => {
-        registration.showNotification(title, {
+        const notificationOptions: ExtendedNotificationOptions = {
           icon: "/icon-pwa.png",
           badge: "/icon-pwa.png",
           vibrate: [100, 50, 100],
           ...options,
-        });
+        };
+        registration.showNotification(title, notificationOptions);
       }).catch(() => {
         // Fallback ke standard jika SW gagal
         new Notification(title, options);

@@ -29,10 +29,10 @@ export default async function CategoriesPage() {
 
   return (
     <CategoriesClient 
-      initialCategories={initialCategories as any} 
-      initialBudgets={initialBudgets as any} 
-      initialAccounts={initialAccounts as any}
-      initialTransactions={initialTransactions as any}
+      initialCategories={initialCategories} 
+      initialBudgets={initialBudgets} 
+      initialAccounts={initialAccounts}
+      initialTransactions={initialTransactions}
     />
   );
 }

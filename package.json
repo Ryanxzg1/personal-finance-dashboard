@@ -5,8 +5,12 @@
   "scripts": {
     "dev": "next dev -H 0.0.0.0 --webpack",
     "build": "next build",
-    "start": "next start",
-    "lint": "eslint ."
+    "start": "next start -H 0.0.0.0",
+    "prod": "next build && next start -H 0.0.0.0",
+    "lint": "eslint .",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:push": "drizzle-kit push"
   },
   "dependencies": {
     "@clerk/nextjs": "^7.2.7",

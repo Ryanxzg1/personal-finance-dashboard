@@ -13,7 +13,7 @@ interface MappingItem {
   id: number
   description: string
   amount: string
-  isEssential: boolean
+  isEssential: boolean | null
 }
 
 interface MappingPlan {

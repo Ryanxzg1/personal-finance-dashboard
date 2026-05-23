@@ -22,6 +22,6 @@ export default async function PemetaanDetailPage({
   }
 
   return (
-    <MappingDetailClient plan={result.data as any} />
+    <MappingDetailClient plan={result.data} />
   );
 }

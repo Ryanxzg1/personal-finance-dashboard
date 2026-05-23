@@ -53,9 +53,9 @@ export default async function Page() {
 
   return <DashboardClient 
     initialTransactions={initialTransactions} 
-    initialCategories={initialCategories as any} 
-    initialBudgets={initialBudgets as any}
-    initialAccounts={initialAccounts as any}
+    initialCategories={initialCategories} 
+    initialBudgets={initialBudgets}
+    initialAccounts={initialAccounts}
     userName={userName} 
   />;
 }

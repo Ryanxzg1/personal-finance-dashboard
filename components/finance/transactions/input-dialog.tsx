@@ -11,8 +11,7 @@ export type InputMode = "Pemasukan" | "Pengeluaran"
 interface Category {
   id: number
   name: string
-  type: "income" | "expense"
-  icon: string | null
+  type: string
 }
 
 interface Account {
@@ -213,7 +212,6 @@ export function InputDialog({ open, mode, categories, accounts, initialData, onC
                             : "border-border bg-background text-muted-foreground hover:border-foreground/30 hover:text-foreground",
                         )}
                       >
-                        {c.icon && <span className="mr-1">{c.icon}</span>}
                         {c.name}
                       </button>
                     )

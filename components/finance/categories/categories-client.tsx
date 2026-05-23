@@ -19,8 +19,7 @@ interface Category {
   id: number
   userId: string
   name: string
-  type: "income" | "expense"
-  icon: string | null
+  type: string
 }
 
 interface Budget {
@@ -37,7 +36,6 @@ interface Account {
   name: string
   type: string
   initialBalance: string
-  icon: string | null
   color: string | null
   currentBalance?: number
 }
@@ -46,7 +44,7 @@ interface CategoriesClientProps {
   initialCategories: Category[]
   initialBudgets: Budget[]
   initialAccounts: Account[]
-  initialTransactions: { amount: string; category: string; date: string; accountId: number | null; type: string }[]
+  initialTransactions: { amount: string; category: string; date: Date; accountId: number | null; type: string }[]
 }
 
 export function CategoriesClient({ 

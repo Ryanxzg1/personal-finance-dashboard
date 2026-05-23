@@ -24,8 +24,7 @@ import { requestNotificationPermission, sendNotification, registerServiceWorker 
 interface Category {
   id: number
   name: string
-  type: "income" | "expense"
-  icon: string | null
+  type: string
 }
 
 interface Budget {
@@ -240,7 +239,6 @@ export function DashboardClient({
       
       return {
         name: category?.name || "Unknown",
-        icon: category?.icon || "📁",
         spent,
         limit,
         percentage
@@ -410,8 +408,7 @@ export function DashboardClient({
                   {budgetProgress.map((bp) => (
                     <div key={bp.name} className="space-y-1.5">
                        <div className="flex items-center justify-between font-mono text-[11px] uppercase tracking-wider">
-                          <span className="flex items-center gap-2 text-foreground font-bold">
-                            <span>{bp.icon}</span>
+                          <span className="text-foreground font-bold">
                             {bp.name}
                           </span>
                           <span className="text-muted-foreground">

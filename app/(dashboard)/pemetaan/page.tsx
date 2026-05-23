@@ -14,6 +14,6 @@ export default async function PemetaanPage() {
   const initialPlans = result.success && result.data ? result.data : [];
 
   return (
-    <MappingClient initialPlans={initialPlans as any} />
+    <MappingClient initialPlans={initialPlans} />
   );
 }

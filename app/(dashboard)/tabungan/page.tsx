@@ -17,6 +17,6 @@ export default async function SavingsPage() {
   const initialGoals = result.success && result.data ? result.data : [];
 
   return (
-    <SavingsClient initialGoals={initialGoals as any} />
+    <SavingsClient initialGoals={initialGoals} />
   );
 }

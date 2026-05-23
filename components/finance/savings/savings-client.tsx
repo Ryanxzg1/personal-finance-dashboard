@@ -9,15 +9,14 @@ import { createSavingsGoal, updateSavingsGoal, deleteSavingsGoal } from "@/lib/a
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
 import { motion, AnimatePresence } from "framer-motion"
-
-interface SavingsGoal {
+export interface SavingsGoal {
   id: number
+  userId: string
   name: string
   targetAmount: string
   currentAmount: string
   monthlyTarget: string | null
   deadline: Date | null
-  icon: string | null
 }
 
 interface SavingsClientProps {
