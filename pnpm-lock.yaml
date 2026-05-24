@@ -176,6 +176,9 @@ importers:
       sonner:
         specifier: ^2.0.7
         version: 2.0.7(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
+      svix:
+        specifier: ^1.94.0
+        version: 1.94.0
       tailwind-merge:
         specifier: ^3.6.0
         version: 3.6.0
@@ -4324,6 +4327,9 @@ packages:
 
   svix@1.92.2:
     resolution: {integrity: sha512-ZmuA3UVvlnF9EgxlzmPtF7CKjQb64Z6OFlyfdDfU0sdcC7dJa+3aOYX5B9mA+RS6ch1AxBa4UP/l6KmqfGtWBQ==}
+
+  svix@1.94.0:
+    resolution: {integrity: sha512-FuP5nJez1P/SeK+4zOBI8RrNhtrzMTBSvwuD4yGGsn+Af2yQazid6OwPu3fpZpMifOJxrJua0su/dYB5fe4v9Q==}
 
   tagged-tag@1.0.0:
     resolution: {integrity: sha512-yEFYrVhod+hdNyx7g5Bnkkb0G6si8HJurOoOEgC8B/O0uXLHlaey/65KRv6cuWBNhBgHKAROVpc7QyYqE5gFng==}
@@ -8510,6 +8516,10 @@ snapshots:
     optional: true
 
   svix@1.92.2:
+    dependencies:
+      standardwebhooks: 1.0.0
+
+  svix@1.94.0:
     dependencies:
       standardwebhooks: 1.0.0
 

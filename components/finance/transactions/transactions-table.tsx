@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useMemo, useState, useEffect } from "react"
 import { Calendar, ChevronDown, NotebookPen, Pencil, Tag, Trash2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import dynamic from "next/dynamic"
@@ -68,6 +68,39 @@ export function TransactionsTable({ transactions, onDelete, onEdit }: Transactio
 
   const isEmpty = filtered.length === 0
 
+  const [currentPage, setCurrentPage] = useState(1)
+  const ITEMS_PER_PAGE = 15
+
+  // Reset to first page when filters change
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [selectedMonth, selectedYear, category])
+
+  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE)
+  const currentPageSafe = Math.min(Math.max(1, currentPage), totalPages || 1)
+
+  const paginatedTransactions = useMemo(() => {
+    const start = (currentPageSafe - 1) * ITEMS_PER_PAGE
+    const end = start + ITEMS_PER_PAGE
+    return filtered.slice(start, end)
+  }, [filtered, currentPageSafe])
+
+  const visiblePages = useMemo(() => {
+    const range = []
+    const maxVisible = 5
+    let start = Math.max(1, currentPageSafe - 2)
+    let end = Math.min(totalPages, start + maxVisible - 1)
+    
+    if (end - start + 1 < maxVisible) {
+      start = Math.max(1, end - maxVisible + 1)
+    }
+    
+    for (let i = start; i <= end; i++) {
+      range.push(i)
+    }
+    return range
+  }, [currentPageSafe, totalPages])
+
   return (
     <section className="rounded-sm border border-border bg-card shadow-xs">
       <div className="flex flex-col gap-4 border-b border-border px-6 py-5 lg:flex-row lg:items-end lg:justify-between font-sans">
@@ -112,7 +145,7 @@ export function TransactionsTable({ transactions, onDelete, onEdit }: Transactio
           {/* Card View - Mobile Only */}
           <div className="flex flex-col lg:hidden divide-y divide-border/50">
             <AnimatePresence mode="popLayout">
-            {filtered.map((tx) => {
+            {paginatedTransactions.map((tx) => {
               const isIncome = tx.amount >= 0
               return (
                 <motion.div 
@@ -166,7 +199,7 @@ export function TransactionsTable({ transactions, onDelete, onEdit }: Transactio
               </thead>
               <tbody>
                 <AnimatePresence mode="popLayout">
-                {filtered.map((tx) => {
+                {paginatedTransactions.map((tx) => {
                   const isIncome = tx.amount >= 0
                   return (
                     <motion.tr 
@@ -203,6 +236,59 @@ export function TransactionsTable({ transactions, onDelete, onEdit }: Transactio
               </tbody>
             </table>
           </div>
+
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-border px-6 py-4 bg-muted/20 font-sans">
+              <div className="text-xs text-muted-foreground font-serif italic">
+                Menampilkan <span className="font-mono font-semibold text-foreground">{(currentPageSafe - 1) * ITEMS_PER_PAGE + 1}</span>–
+                <span className="font-mono font-semibold text-foreground">{Math.min(currentPageSafe * ITEMS_PER_PAGE, filtered.length)}</span> dari{" "}
+                <span className="font-mono font-semibold text-foreground">{filtered.length}</span> transaksi
+              </div>
+              
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  disabled={currentPageSafe === 1}
+                  onClick={() => setCurrentPage(currentPageSafe - 1)}
+                  className="flex h-9 items-center gap-1 rounded-sm border border-border bg-background px-3 font-mono text-[11px] uppercase tracking-wider text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-40 disabled:hover:bg-background disabled:hover:text-muted-foreground cursor-pointer"
+                >
+                  Sebelumnya
+                </button>
+                
+                {/* Page numbers */}
+                <div className="flex items-center gap-1 mx-2">
+                  {visiblePages.map((p) => {
+                    const isCurrent = p === currentPageSafe
+                    return (
+                      <button
+                        key={p}
+                        type="button"
+                        onClick={() => setCurrentPage(p)}
+                        className={cn(
+                          "flex h-9 w-9 items-center justify-center rounded-sm font-mono text-[13px] transition-colors cursor-pointer",
+                          isCurrent
+                            ? "bg-foreground text-background font-bold"
+                            : "border border-border bg-background text-muted-foreground hover:bg-muted hover:text-foreground"
+                        )}
+                      >
+                        {p}
+                      </button>
+                    )
+                  })}
+                </div>
+
+                <button
+                  type="button"
+                  disabled={currentPageSafe === totalPages}
+                  onClick={() => setCurrentPage(currentPageSafe + 1)}
+                  className="flex h-9 items-center gap-1 rounded-sm border border-border bg-background px-3 font-mono text-[11px] uppercase tracking-wider text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-40 disabled:hover:bg-background disabled:hover:text-muted-foreground cursor-pointer"
+                >
+                  Berikutnya
+                </button>
+              </div>
+            </div>
+          )}
         </>
       )}
     </section>

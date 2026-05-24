@@ -1,35 +1,72 @@
-# personal-finance-dashboard
+# Buku Kas - Personal Finance Dashboard 🚀
 
-This is a [Next.js](https://nextjs.org) project bootstrapped with [v0](https://v0.app).
+Buku Kas adalah aplikasi manajemen keuangan pribadi (*Personal Finance Dashboard*) modern yang dibangun dengan Next.js. Aplikasi ini dirancang untuk keamanan tingkat produksi, performa tinggi, dan pengalaman pengguna yang intuitif.
 
-## Built with v0
+## 🛠️ Tech Stack
+- **Framework**: [Next.js 15 (App Router)](https://nextjs.org/)
+- **Auth**: [Clerk](https://clerk.com/)
+- **Database**: [PostgreSQL (Neon DB)](https://neon.tech/)
+- **ORM**: [Drizzle ORM](https://orm.drizzle.team/)
+- **Styling**: Tailwind CSS & shadcn/ui
+- **Email**: Resend API & React-Email
 
-This repository is linked to a [v0](https://v0.app) project. You can continue developing by visiting the link below -- start new chats to make changes, and v0 will push commits directly to this repo. Every merge to `main` will automatically deploy.
+## 🚀 Persiapan Cepat (Development)
 
-[Continue working on v0 →](https://v0.app/chat/projects/prj_qCpjwMA0BNcmBSwU7vbbJL9Mpa8u)
+1. **Clone repositori**:
+   ```bash
+   git clone <repository-url>
+   cd personal-finance-dashboard
+   ```
 
-## Getting Started
+2. **Instalasi Dependensi**:
+   ```bash
+   pnpm install
+   ```
 
-First, run the development server:
+3. **Konfigurasi Environment**:
+   Salin `.env.example` ke `.env.local` dan isi kredensial yang diperlukan:
+   - `DATABASE_URL`: Koneksi string Neon DB.
+   - `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` & `CLERK_SECRET_KEY`: Kunci API Clerk.
+   - `RESEND_API_KEY`: Kunci API Resend untuk email laporan.
 
+4. **Migrasi Database**:
+   ```bash
+   pnpm db:push
+   ```
+
+5. **Jalankan Server**:
+   ```bash
+   pnpm run dev
+   ```
+
+## 🏗️ Deployment Produksi
+
+Aplikasi ini siap dideploy ke platform seperti Vercel atau VPS mandiri.
+
+**Untuk VPS Mandiri:**
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
+pnpm run build
+pnpm run prod
 ```
+*Perintah `prod` akan menjalankan server pada `0.0.0.0` sehingga dapat diakses dalam jaringan lokal/publik.*
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🗄️ Manajemen Database
+Kami menggunakan Drizzle untuk manajemen skema:
+- `pnpm db:generate`: Menghasilkan file migrasi SQL.
+- `pnpm db:migrate`: Menerapkan migrasi ke database target.
+- `pnpm db:push`: Sinkronisasi skema langsung (disarankan hanya untuk dev).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 🛡️ Keamanan & Optimasi
+- **IDOR Protection**: Verifikasi kepemilikan data pada setiap request.
+- **Rate Limiting**: Pembatasan request untuk mencegah abuse.
+- **Security Headers**: CSP, HSTS, dan X-Frame-Options terkonfigurasi.
+- **Strict Typing**: TypeScript Strict Mode aktif untuk stabilitas kode.
 
-## Learn More
+## 📄 Lisensi & Dokumentasi
+Dokumentasi internal lebih lanjut tersedia di folder `ryan_workspace/docs/`.
+- [Project Documentation](./ryan_workspace/docs/project_documentaion.md)
+- [Incident Runbook](./ryan_workspace/docs/runbook.md)
+- [Backup & Recovery Strategy](./ryan_workspace/docs/backup_strategy.md)
 
-To learn more, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-- [v0 Documentation](https://v0.app/docs) - learn about v0 and how to use it.
-
-<a href="https://v0.app/chat/api/kiro/clone/Ryanxzg1/personal-finance-dashboard" alt="Open in Kiro"><img src="https://pdgvvgmkdvyeydso.public.blob.vercel-storage.com/open%20in%20kiro.svg?sanitize=true" /></a>
+---
+*Dikembangkan dengan oleh Ryan dan dibantu oleh Gemini.*

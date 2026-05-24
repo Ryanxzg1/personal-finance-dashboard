@@ -47,7 +47,7 @@ ehthumbs_vista.db
 
 # TypeScript
 *.tsbuildinfo
-next-env.d.ts
+/next-env.d.ts
 
 # Linter/Formatter
 .eslintcache
