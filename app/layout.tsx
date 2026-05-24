@@ -2,9 +2,6 @@ import type { Metadata } from 'next'
 import { Analytics } from '@vercel/analytics/next'
 import { ClerkProvider } from '@clerk/nextjs'
 import './globals.css'
-import { Libre_Baskerville, IBM_Plex_Mono, Lora } from 'next/font/google'
-
-const _libreBaskerville = Libre_Baskerville({ subsets: ['latin'], weight: ["400","700"] })
 
 export const metadata: Metadata = {
   title: {

@@ -1,7 +1,6 @@
 // Simple ID Obfuscation (Hash-like)
 // Using a basic reversible algorithm to avoid exposing sequential database IDs in URLs.
 
-const SALT = "finance-mapping-secret-2026";
 const ALPHABET = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
 export function encodeId(id: number): string {

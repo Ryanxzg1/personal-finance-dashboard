@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { Home, Tags, History, Plus, BookOpen, User, Target, Compass, TrendingUp } from "lucide-react"
+import { Home, Tags, History, Plus, BookOpen, Target, Compass, TrendingUp } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 import { UserButton, useUser } from "@clerk/nextjs"

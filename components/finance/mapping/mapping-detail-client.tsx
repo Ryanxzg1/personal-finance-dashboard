@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useTransition } from "react"
-import { ArrowLeft, Plus, Trash2, Calculator, CheckCircle2, Circle, AlertTriangle, TrendingUp, LayoutList } from "lucide-react"
+import { ArrowLeft, Plus, Trash2, Calculator, CheckCircle2, LayoutList } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
 import { addMappingItem, deleteMappingItem } from "@/lib/actions/mapping"

@@ -55,7 +55,7 @@ export async function createTransaction(data: Omit<NewTransaction, "userId">) {
     return { success: true, data: result[0] };
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return { success: false, error: error.errors[0].message };
+      return { success: false, error: error.issues[0].message };
     }
     console.error("Failed to create transaction:", error);
     return { success: false, error: "Gagal menambahkan transaksi" };
@@ -142,7 +142,7 @@ export async function updateTransaction(id: string | number, data: Partial<NewTr
     }
 
     // Bug fix: Pastikan amount selalu absolut jika ada perubahan
-    const updatePayload: Record<string, any> = { ...validatedData };
+    const updatePayload: Partial<NewTransaction> = { ...validatedData };
     if (updatePayload.amount !== undefined) {
       updatePayload.amount = Math.abs(parseFloat(updatePayload.amount)).toString();
     }
@@ -166,7 +166,7 @@ export async function updateTransaction(id: string | number, data: Partial<NewTr
     return { success: true };
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return { success: false, error: error.errors[0].message };
+      return { success: false, error: error.issues[0].message };
     }
     console.error("Failed to update transaction:", error);
     return { success: false, error: "Gagal memperbarui transaksi" };

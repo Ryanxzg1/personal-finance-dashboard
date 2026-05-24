@@ -1,10 +1,9 @@
 "use client"
 
 import { useState, useTransition } from "react"
-import { Compass, Plus, Trash2, Calendar, ChevronRight, LayoutList, AlertCircle, Info } from "lucide-react"
+import { Compass, Plus, Trash2, Calendar, ChevronRight, LayoutList, Info } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { cn } from "@/lib/utils"
-import { createMappingPlan, deleteMappingPlan } from "@/lib/actions/mapping"
+import { deleteMappingPlan } from "@/lib/actions/mapping"
 import { useRouter } from "next/navigation"
 import { MappingDialog } from "./mapping-dialog"
 import { encodeId } from "@/lib/id-codec"
@@ -18,7 +17,7 @@ interface MappingPlan {
 }
 
 export function MappingClient({ initialPlans }: { initialPlans: MappingPlan[] }) {
-  const [isPending, startTransition] = useTransition()
+  const [_isPending, startTransition] = useTransition()
   const [plans, setPlans] = useState(initialPlans)
   const router = useRouter()
 

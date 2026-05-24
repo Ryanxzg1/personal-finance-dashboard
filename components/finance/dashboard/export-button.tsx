@@ -10,7 +10,13 @@ import {
 import { exportToExcel, exportToPDF } from "@/lib/export-utils"
 
 interface ExportButtonProps {
-  filteredData: any[]
+  filteredData: {
+    date: string
+    type: string
+    category: string
+    note: string
+    amount: number
+  }[]
   selectedMonthName: string
   selectedYear: number
   disabled?: boolean

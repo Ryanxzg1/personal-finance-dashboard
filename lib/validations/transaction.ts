@@ -8,11 +8,10 @@ export const transactionSchema = z.object({
   category: z.string().min(1, "Kategori harus dipilih"),
   accountId: z.number().optional(),
   type: z.enum(["income", "expense"], {
-    errorMap: () => ({ message: "Tipe transaksi harus 'Pemasukan' atau 'Pengeluaran'" }),
+    message: "Tipe transaksi harus 'Pemasukan' atau 'Pengeluaran'",
   }),
   date: z.date({
-    required_error: "Tanggal harus diisi",
-    invalid_type_error: "Format tanggal tidak valid",
+    message: "Tanggal harus diisi dan berformat valid",
   }),
 });
 

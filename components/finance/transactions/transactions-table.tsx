@@ -1,7 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { Calendar, ChevronDown, NotebookPen, Pencil, Plus, Tag, Trash2 } from "lucide-react"
+import { Calendar, ChevronDown, NotebookPen, Pencil, Tag, Trash2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import dynamic from "next/dynamic"
 import { motion, AnimatePresence } from "framer-motion"
@@ -42,13 +42,12 @@ function formatRupiah(value: number) {
   return `${sign} Rp ${abs}`
 }
 
-export function TransactionsTable({ transactions, onNewEntry, onDelete, onEdit }: TransactionsTableProps) {
+export function TransactionsTable({ transactions, onDelete, onEdit }: TransactionsTableProps) {
   const [selectedMonth, setSelectedMonth] = useState(() => new Date().getMonth())
-  const [selectedYear, setSelectedYear] = useState(() => new Date().getFullYear())
+  const [selectedYear] = useState(() => new Date().getFullYear())
   const [category, setCategory] = useState("Semua Kategori")
 
   const months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"]
-  const years = [2024, 2025, 2026]
 
   const allCategories = useMemo(() => {
     const set = new Set<string>()
@@ -82,14 +81,12 @@ export function TransactionsTable({ transactions, onNewEntry, onDelete, onEdit }
         <div className="grid grid-cols-2 sm:flex sm:items-center gap-2">
            <FilterSelect
             icon={Calendar}
-            label="Bulan"
             value={selectedMonth.toString()}
             onChange={(v) => setSelectedMonth(parseInt(v))}
             options={months.map((m, i) => ({ label: m, value: i.toString() }))}
           />
           <FilterSelect
             icon={Tag}
-            label="Kategori"
             value={category}
             onChange={setCategory}
             options={allCategories.map(c => ({ label: c, value: c }))}
@@ -169,7 +166,7 @@ export function TransactionsTable({ transactions, onNewEntry, onDelete, onEdit }
               </thead>
               <tbody>
                 <AnimatePresence mode="popLayout">
-                {filtered.map((tx, idx) => {
+                {filtered.map((tx) => {
                   const isIncome = tx.amount >= 0
                   return (
                     <motion.tr 
@@ -220,7 +217,7 @@ function Td({ children, className }: { children: React.ReactNode; className?: st
   return <td className={cn("px-4 lg:px-6 py-4 align-top", className)}>{children}</td>
 }
 
-function IconButton({ label, icon: Icon, tone = "default", onClick }: { label: string; icon: any; tone?: string; onClick?: () => void }) {
+function IconButton({ label: _label, icon: Icon, tone = "default", onClick }: { label: string; icon: any; tone?: string; onClick?: () => void }) {
   return (
     <button 
       type="button"
@@ -238,7 +235,7 @@ function IconButton({ label, icon: Icon, tone = "default", onClick }: { label: s
   )
 }
 
-function FilterSelect({ icon: Icon, label, value, options, onChange }: { icon: any; label: string; value: string; options: { label: string; value: string }[]; onChange: (v: string) => void }) {
+function FilterSelect({ icon: Icon, value, options, onChange }: { icon: any; value: string; options: { label: string; value: string }[]; onChange: (v: string) => void }) {
   return (
     <label className="flex items-center gap-2 rounded-sm border border-border bg-background px-3 py-2 text-[13px] shadow-xs focus-within:border-primary/60 transition-colors cursor-pointer">
       <Icon className="h-4 w-4 text-muted-foreground" aria-hidden="true" />

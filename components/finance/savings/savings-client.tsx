@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
-import { Target, Wallet, Plus, Pencil, Trash2, Calendar, Trophy, AlertCircle, TrendingUp } from "lucide-react"
+import { Target, Plus, Pencil, Trash2, Calendar, Trophy, TrendingUp } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { SavingsGoalDialog } from "./savings-goal-dialog"
 import { createSavingsGoal, updateSavingsGoal, deleteSavingsGoal } from "@/lib/actions/savings"
@@ -24,9 +24,8 @@ interface SavingsClientProps {
 }
 
 export function SavingsClient({ initialGoals }: SavingsClientProps) {
-  const [goals, setGoals] = useState(initialGoals)
   const router = useRouter()
-  const [isPending, startTransition] = useTransition()
+  const [_isPending, startTransition] = useTransition()
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingGoal, setEditingGoal] = useState<SavingsGoal | null>(null)
 
@@ -52,7 +51,7 @@ export function SavingsClient({ initialGoals }: SavingsClientProps) {
     })
   }
 
-  const handleSubmit = async (data: any) => {
+  const handleSubmit = async (data: { name: string; targetAmount: string; currentAmount: string; monthlyTarget: string; deadline: string }) => {
     startTransition(async () => {
       let result
       if (editingGoal) {
@@ -284,7 +283,7 @@ export function SavingsClient({ initialGoals }: SavingsClientProps) {
 
       <SavingsGoalDialog
         open={dialogOpen}
-        initialData={editingGoal}
+        initialData={editingGoal || undefined}
         onClose={() => setDialogOpen(false)}
         onSubmit={handleSubmit}
       />

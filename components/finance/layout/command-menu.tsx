@@ -9,8 +9,6 @@ import {
   Tags, 
   Wallet, 
   TrendingUp, 
-  ArrowRight,
-  Calculator,
   LayoutDashboard,
   Compass
 } from "lucide-react"
@@ -18,13 +16,31 @@ import { searchEverything } from "@/lib/actions/search"
 import { cn } from "@/lib/utils"
 import * as Dialog from "@radix-ui/react-dialog"
 
+interface SearchResultTransaction {
+  id: number
+  description: string
+  category: string
+  amount: string
+  type: string
+}
+
+interface SearchResultCategory {
+  id: number
+  name: string
+}
+
+interface SearchResultAccount {
+  id: number
+  name: string
+}
+
 export function CommandMenu() {
   const [open, setOpen] = React.useState(false)
   const [query, setQuery] = React.useState("")
   const [results, setResults] = React.useState<{
-    transactions: any[]
-    categories: any[]
-    accounts: any[]
+    transactions: SearchResultTransaction[]
+    categories: SearchResultCategory[]
+    accounts: SearchResultAccount[]
   }>({ transactions: [], categories: [], accounts: [] })
   const [isSearching, setIsSearching] = React.useState(false)
   const router = useRouter()
@@ -53,7 +69,7 @@ export function CommandMenu() {
       setIsSearching(true)
       const res = await searchEverything(query)
       if (res.success && res.data) {
-        setResults(res.data)
+        setResults(res.data as any)
       }
       setIsSearching(false)
     }, 300)

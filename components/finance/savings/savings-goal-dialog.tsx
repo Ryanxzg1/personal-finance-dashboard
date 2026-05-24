@@ -1,22 +1,33 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { X, Target, Calendar, Trophy, TrendingUp } from "lucide-react"
-import { cn } from "@/lib/utils"
+import { X, TrendingUp } from "lucide-react"
 import { AmountInput } from "@/components/ui/amount-input"
 
 interface SavingsGoalDialogProps {
   open: boolean
-  initialData?: any
+  initialData?: {
+    name: string
+    targetAmount: string
+    currentAmount: string
+    monthlyTarget: string | null
+    deadline: Date | null
+  }
   onClose: () => void
-  onSubmit: (data: any) => void
+  onSubmit: (data: {
+    name: string
+    targetAmount: string
+    currentAmount: string
+    monthlyTarget: string
+    deadline: string
+    icon: string
+  }) => void
 }
 
 export function SavingsGoalDialog({ open, initialData, onClose, onSubmit }: SavingsGoalDialogProps) {
   const [name, setName] = useState("")
   const [targetAmount, setTargetAmount] = useState("")
   const [currentAmount, setCurrentAmount] = useState("0")
-  const [monthlyTarget, setMonthlyTarget] = useState("")
   const [duration, setDuration] = useState("") // Baru: Target Durasi dalam bulan
   const [error, setError] = useState<string | null>(null)
 
@@ -26,7 +37,6 @@ export function SavingsGoalDialog({ open, initialData, onClose, onSubmit }: Savi
         setName(initialData.name)
         setTargetAmount(parseFloat(initialData.targetAmount).toString())
         setCurrentAmount(parseFloat(initialData.currentAmount).toString())
-        setMonthlyTarget(initialData.monthlyTarget ? parseFloat(initialData.monthlyTarget).toString() : "")
         
         // Estimasi durasi dari data yang ada jika ada deadline
         if (initialData.deadline) {
@@ -43,7 +53,6 @@ export function SavingsGoalDialog({ open, initialData, onClose, onSubmit }: Savi
         setName("")
         setTargetAmount("")
         setCurrentAmount("0")
-        setMonthlyTarget("")
         setDuration("12") // Default 1 tahun
       }
       setError(null)

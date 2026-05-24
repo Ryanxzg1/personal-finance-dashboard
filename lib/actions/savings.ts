@@ -56,7 +56,7 @@ export async function createSavingsGoal(data: z.infer<typeof savingsGoalSchema>)
     return { success: true };
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return { success: false, error: error.errors[0].message };
+      return { success: false, error: error.issues[0].message };
     }
     console.error("Failed to create savings goal:", error);
     return { success: false, error: "Gagal membuat target baru" };
@@ -103,7 +103,7 @@ export async function updateSavingsGoal(id: number, data: Partial<z.infer<typeof
     return { success: true };
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return { success: false, error: error.errors[0].message };
+      return { success: false, error: error.issues[0].message };
     }
     console.error("Failed to update savings goal:", error);
     return { success: false, error: "Gagal memperbarui target" };

@@ -25,7 +25,7 @@ interface InputDialogProps {
   mode: InputMode
   categories: Category[]
   accounts: Account[]
-  initialData?: { amount: number; category: string; note: string; date: string; accountId?: number | null }
+  initialData?: { amount: number; category: string; note: string; date: string; accountId?: number | null; rawDate?: string }
   onClose: () => void
   onSubmit: (data: { amount: number; category: string; note: string; date: string; accountId?: number | null }) => void
   isPending?: boolean
@@ -52,7 +52,7 @@ export function InputDialog({ open, mode, categories, accounts, initialData, onC
         setAccountId(initialData.accountId)
         setNote(initialData.note)
         try {
-           const d = new Date((initialData as any).rawDate || initialData.date);
+           const d = new Date(initialData.rawDate || initialData.date);
            if (!isNaN(d.getTime())) {
              setDate(d.toISOString().slice(0, 10))
            } else {

@@ -1,11 +1,11 @@
 "use client"
 
 import { useState, useTransition, useOptimistic, useMemo } from "react"
-import { Plus, Trash2, Tag, Target, Wallet, Landmark, CreditCard, Banknote, Pencil, RefreshCcw } from "lucide-react"
+import { Plus, Trash2, Tag, Target, Wallet, Pencil, RefreshCcw } from "lucide-react"
 import { createCategory, deleteCategory } from "@/lib/actions/categories"
 import { upsertBudget } from "@/lib/actions/budgets"
 import { createAccount, deleteAccount, updateAccount, hardResetDatabase } from "@/lib/actions/accounts"
-import { createTransaction, transferFunds } from "@/lib/actions/transactions"
+import { transferFunds } from "@/lib/actions/transactions"
 import { TransferDialog } from "../accounts/transfer-dialog"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
@@ -61,12 +61,25 @@ export function CategoriesClient({
   const [editingAccount, setEditingAccount] = useState<Account | undefined>(undefined)
   const [accountDialogOpen, setAccountDialogOpen] = useState(false)
 
+  const [optimisticCategories, addOptimisticCategory] = useOptimistic(
+    initialCategories,
+    (state, action: { type: "ADD" | "DELETE"; category?: Category; id?: number }) => {
+      if (action.type === "ADD" && action.category) {
+        return [...state, action.category]
+      }
+      if (action.type === "DELETE" && action.id) {
+        return state.filter((c) => c.id !== action.id)
+      }
+      return state
+    }
+  )
+
   const categoryStats = useMemo(() => {
     const now = new Date()
     const currentMonth = now.getMonth()
     const currentYear = now.getFullYear()
 
-    return initialCategories.map(cat => {
+    return optimisticCategories.map(cat => {
       const catTxs = initialTransactions.filter(t => {
         const txDate = new Date(t.date)
         return t.category === cat.name && 
@@ -83,7 +96,7 @@ export function CategoriesClient({
         txCount: count
       }
     })
-  }, [initialCategories, initialTransactions])
+  }, [optimisticCategories, initialTransactions])
 
 
   const handleEditAccount = (acc: Account) => {
@@ -91,7 +104,7 @@ export function CategoriesClient({
     setAccountDialogOpen(true)
   }
 
-  const handleAccountSubmit = async (data: any) => {
+  const handleAccountSubmit = async (data: { name: string; type: string; initialBalance: string }) => {
     if (!editingAccount) return
     
     startTransition(async () => {
@@ -138,19 +151,6 @@ export function CategoriesClient({
     return initial
   })
 
-  const [optimisticCategories, addOptimisticCategory] = useOptimistic(
-    initialCategories,
-    (state, action: { type: "ADD" | "DELETE"; category?: Category; id?: number }) => {
-      if (action.type === "ADD" && action.category) {
-        return [...state, action.category]
-      }
-      if (action.type === "DELETE" && action.id) {
-        return state.filter((c) => c.id !== action.id)
-      }
-      return state
-    }
-  )
-
   const [optimisticAccounts, addOptimisticAccount] = useOptimistic(
     initialAccounts,
     (state, action: { type: "ADD" | "DELETE"; account?: Account; id?: number }) => {
@@ -174,7 +174,7 @@ export function CategoriesClient({
           const isTechnical = t.category.startsWith("Transfer") || 
                              t.category === "Saldo Awal" || 
                              t.category === "Penyesuaian Saldo"
-          return !isTechnical && (t.type === "income" || (t.type as any) === "Pemasukan")
+          return !isTechnical && (t.type === "income" || t.type === "Pemasukan")
         })
         .reduce((sum, t) => sum + Math.abs(Number(t.amount)), 0)
         
@@ -182,13 +182,13 @@ export function CategoriesClient({
         .filter(t => {
           const isTechnical = t.category.startsWith("Transfer") || 
                              t.category === "Penyesuaian Saldo"
-          return !isTechnical && (t.type === "expense" || (t.type as any) === "Pengeluaran")
+          return !isTechnical && (t.type === "expense" || t.type === "Pengeluaran")
         })
         .reduce((sum, t) => sum + Math.abs(Number(t.amount)), 0)
 
       const txSum = accTxs.reduce((sum, t) => {
         const amt = Math.abs(Number(t.amount))
-        return (t.type === "income" || (t.type as any) === "Pemasukan") ? sum + amt : sum - amt
+        return (t.type === "income" || t.type === "Pemasukan") ? sum + amt : sum - amt
       }, 0)
 
       return {
@@ -627,7 +627,7 @@ export function CategoriesClient({
 
       <TransferDialog
         open={transferDialogOpen}
-        accounts={accountBalances as any}
+        accounts={accountBalances}
         onClose={() => setTransferDialogOpen(false)}
         onSubmit={handleTransferSubmit}
       />

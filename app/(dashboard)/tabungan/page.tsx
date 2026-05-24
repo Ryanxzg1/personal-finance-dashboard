@@ -1,6 +1,4 @@
 import { Metadata } from "next"
-import { Target, TrendingUp, Wallet, ArrowRight, Plus } from "lucide-react"
-import { Button } from "@/components/ui/button"
 
 export const metadata: Metadata = {
   title: "Tabungan Berencana",

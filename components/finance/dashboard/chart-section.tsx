@@ -161,7 +161,7 @@ export function ChartSection({ transactions }: ChartSectionProps) {
             />
             <Tooltip 
               cursor={{ fill: 'var(--muted)', fillOpacity: 0.4 }}
-              formatter={(value: number) => `Rp ${value.toLocaleString("id-ID")}`}
+              formatter={(value: any) => `Rp ${Number(value).toLocaleString("id-ID")}`}
               contentStyle={{ 
                 backgroundColor: 'var(--card)', 
                 border: '1px solid var(--border)',

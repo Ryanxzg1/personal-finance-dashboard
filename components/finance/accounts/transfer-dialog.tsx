@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react"
 import { X, ArrowRight } from "lucide-react"
-import { cn } from "@/lib/utils"
 import { AmountInput } from "@/components/ui/amount-input"
 
 interface Account {

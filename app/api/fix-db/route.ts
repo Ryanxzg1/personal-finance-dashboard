@@ -9,7 +9,7 @@ export async function GET() {
   }
 
   try {
-    console.log("Memulai perbaikan database manual...");
+    console.warn("Memulai perbaikan database manual...");
     
     // Gunakan nama tabel yang baru agar bersih
     await db.execute(sql`
@@ -27,11 +27,11 @@ export async function GET() {
       success: true, 
       message: "Tabel personal_budgets berhasil dibuat secara manual!" 
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Gagal perbaikan manual:", error);
     return NextResponse.json({ 
       success: false, 
-      error: error.message 
+      error: error instanceof Error ? error.message : "Unknown error" 
     }, { status: 500 });
   }
 }

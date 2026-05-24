@@ -69,7 +69,7 @@ export async function createMappingPlan(values: z.infer<typeof planSchema>) {
 
     const validatedFields = planSchema.safeParse(values);
     if (!validatedFields.success) {
-      return { success: false, error: validatedFields.error.errors[0].message };
+      return { success: false, error: validatedFields.error.issues[0].message };
     }
 
     await db.insert(blueprintPlans).values({
@@ -115,7 +115,7 @@ export async function addMappingItem(values: z.infer<typeof itemSchema>) {
 
     const validatedFields = itemSchema.safeParse(values);
     if (!validatedFields.success) {
-      return { success: false, error: validatedFields.error.errors[0].message };
+      return { success: false, error: validatedFields.error.issues[0].message };
     }
 
     // Bug fix: Verifikasi bahwa plan milik user yang sedang login

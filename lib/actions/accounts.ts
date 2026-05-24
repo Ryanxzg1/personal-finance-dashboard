@@ -67,7 +67,7 @@ export async function createAccount(data: z.infer<typeof accountSchema>) {
     return { success: true };
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return { success: false, error: error.errors[0].message };
+      return { success: false, error: error.issues[0].message };
     }
     console.error("Failed to create account:", error);
     return { success: false, error: "Gagal membuat akun" };
@@ -159,7 +159,7 @@ export async function updateAccount(id: number, data: z.infer<typeof accountSche
     return { success: true };
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return { success: false, error: error.errors[0].message };
+      return { success: false, error: error.issues[0].message };
     }
     console.error("Failed to update account:", error);
     return { success: false, error: "Gagal memperbarui akun" };

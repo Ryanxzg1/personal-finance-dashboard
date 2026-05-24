@@ -2,7 +2,6 @@
 
 import { useMemo, useState, useOptimistic, useTransition, useEffect } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
-import { SummarySection } from "./summary-section"
 import { ChartSection } from "./chart-section"
 import {
   TransactionsTable,
@@ -57,7 +56,7 @@ export function DashboardClient({
   initialCategories, 
   initialBudgets, 
   initialAccounts,
-  userName 
+  userName: _userName 
 }: DashboardClientProps) {
   const [isPending, startTransition] = useTransition()
   const searchParams = useSearchParams()
@@ -252,12 +251,6 @@ export function DashboardClient({
       cleanTransactions
     }
   }, [optimisticTransactions, initialBudgets, initialCategories, initialAccounts])
-
-  const openAddDialog = (mode: InputMode) => {
-    setEditingTx(null)
-    setDialogMode(mode)
-    setDialogOpen(true)
-  }
 
   const openEditDialog = (tx: UITransaction) => {
     setEditingTx(tx)

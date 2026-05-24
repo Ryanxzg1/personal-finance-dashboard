@@ -29,7 +29,7 @@ export async function getBudgets(month: number, year: number) {
       );
       
     return { success: true, data };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Failed to fetch budgets:", error);
     return { success: false, error: "Gagal mengambil anggaran" };
   }
@@ -92,7 +92,7 @@ export async function upsertBudget(data: z.infer<typeof budgetSchema>) {
     return { success: true };
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return { success: false, error: error.errors[0].message };
+      return { success: false, error: error.issues[0].message };
     }
     console.error("Failed to upsert budget:", error);
     return { success: false, error: "Gagal menyimpan anggaran" };
