@@ -44,10 +44,15 @@ function formatRupiah(value: number) {
 
 export function TransactionsTable({ transactions, onDelete, onEdit }: TransactionsTableProps) {
   const [selectedMonth, setSelectedMonth] = useState(() => new Date().getMonth())
-  const [selectedYear] = useState(() => new Date().getFullYear())
+  const [selectedYear, setSelectedYear] = useState(() => new Date().getFullYear())
   const [category, setCategory] = useState("Semua Kategori")
 
   const months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"]
+
+  const years = useMemo(() => {
+    const current = new Date().getFullYear()
+    return Array.from({ length: 5 }, (_, i) => (current - i).toString())
+  }, [])
 
   const allCategories = useMemo(() => {
     const set = new Set<string>()
@@ -119,6 +124,12 @@ export function TransactionsTable({ transactions, onDelete, onEdit }: Transactio
             options={months.map((m, i) => ({ label: m, value: i.toString() }))}
           />
           <FilterSelect
+            icon={Calendar}
+            value={selectedYear.toString()}
+            onChange={(v) => setSelectedYear(parseInt(v))}
+            options={years.map((y) => ({ label: y, value: y }))}
+          />
+          <FilterSelect
             icon={Tag}
             value={category}
             onChange={setCategory}
@@ -155,7 +166,18 @@ export function TransactionsTable({ transactions, onDelete, onEdit }: Transactio
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: 20 }}
                   transition={{ duration: 0.2 }}
-                  className="p-4 flex flex-col gap-3 active:bg-muted/30 transition-colors"
+                  drag="x"
+                  dragConstraints={{ left: 0, right: 0 }}
+                  dragElastic={0.2}
+                  onDragEnd={(e, info) => {
+                    if (info.offset.x > 80) {
+                      onEdit?.(tx)
+                    } else if (info.offset.x < -80) {
+                      onDelete?.(tx.id)
+                    }
+                  }}
+                  whileDrag={{ scale: 0.98, opacity: 0.8 }}
+                  className="p-4 flex flex-col gap-3 active:bg-muted/30 transition-colors cursor-grab active:cursor-grabbing relative overflow-hidden"
                 >
                   <div className="flex justify-between items-start">
                      <div className="flex flex-col gap-1.5">
@@ -251,7 +273,7 @@ export function TransactionsTable({ transactions, onDelete, onEdit }: Transactio
                   type="button"
                   disabled={currentPageSafe === 1}
                   onClick={() => setCurrentPage(currentPageSafe - 1)}
-                  className="flex h-9 items-center gap-1 rounded-sm border border-border bg-background px-3 font-mono text-[11px] uppercase tracking-wider text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-40 disabled:hover:bg-background disabled:hover:text-muted-foreground cursor-pointer"
+                  className="flex min-h-[44px] lg:min-h-0 lg:h-9 items-center gap-1 rounded-sm border border-border bg-background px-3 font-mono text-[11px] uppercase tracking-wider text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-40 disabled:hover:bg-background disabled:hover:text-muted-foreground cursor-pointer"
                 >
                   Sebelumnya
                 </button>
@@ -266,7 +288,7 @@ export function TransactionsTable({ transactions, onDelete, onEdit }: Transactio
                         type="button"
                         onClick={() => setCurrentPage(p)}
                         className={cn(
-                          "flex h-9 w-9 items-center justify-center rounded-sm font-mono text-[13px] transition-colors cursor-pointer",
+                          "flex h-11 w-11 lg:h-9 lg:w-9 items-center justify-center rounded-sm font-mono text-[13px] transition-colors cursor-pointer",
                           isCurrent
                             ? "bg-foreground text-background font-bold"
                             : "border border-border bg-background text-muted-foreground hover:bg-muted hover:text-foreground"
@@ -282,7 +304,7 @@ export function TransactionsTable({ transactions, onDelete, onEdit }: Transactio
                   type="button"
                   disabled={currentPageSafe === totalPages}
                   onClick={() => setCurrentPage(currentPageSafe + 1)}
-                  className="flex h-9 items-center gap-1 rounded-sm border border-border bg-background px-3 font-mono text-[11px] uppercase tracking-wider text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-40 disabled:hover:bg-background disabled:hover:text-muted-foreground cursor-pointer"
+                  className="flex min-h-[44px] lg:min-h-0 lg:h-9 items-center gap-1 rounded-sm border border-border bg-background px-3 font-mono text-[11px] uppercase tracking-wider text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-40 disabled:hover:bg-background disabled:hover:text-muted-foreground cursor-pointer"
                 >
                   Berikutnya
                 </button>
@@ -312,7 +334,7 @@ function IconButton({ label: _label, icon: Icon, tone = "default", onClick }: { 
         onClick?.();
       }} 
       className={cn(
-        "flex h-9 w-9 items-center justify-center rounded-sm transition-colors cursor-pointer", 
+        "flex h-11 w-11 lg:h-9 lg:w-9 items-center justify-center rounded-sm transition-colors cursor-pointer", 
         tone === "destructive" ? "text-muted-foreground hover:bg-destructive/10 hover:text-destructive" : "text-muted-foreground hover:bg-muted hover:text-foreground"
       )}
     >
@@ -323,7 +345,7 @@ function IconButton({ label: _label, icon: Icon, tone = "default", onClick }: { 
 
 function FilterSelect({ icon: Icon, value, options, onChange }: { icon: any; value: string; options: { label: string; value: string }[]; onChange: (v: string) => void }) {
   return (
-    <label className="flex items-center gap-2 rounded-sm border border-border bg-background px-3 py-2 text-[13px] shadow-xs focus-within:border-primary/60 transition-colors cursor-pointer">
+    <label className="flex items-center gap-2 rounded-sm border border-border bg-background px-3 min-h-[44px] text-[13px] shadow-xs focus-within:border-primary/60 transition-colors cursor-pointer">
       <Icon className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
       <select value={value} onChange={(e) => onChange(e.target.value)} className="appearance-none bg-transparent pr-4 font-serif text-foreground focus:outline-none">
         {options.map((opt) => <option key={opt.value} value={opt.value}>{opt.label}</option>)}

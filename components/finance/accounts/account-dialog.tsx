@@ -73,10 +73,10 @@ export function AccountDialog({ open, initialData, onClose, onSubmit, isPending 
           >
             <div className="flex items-start justify-between gap-4 border-b border-dashed border-border pb-4">
               <div>
-                <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+                <p className="font-mono text-xs uppercase tracking-[0.18em] text-muted-foreground">
                   Sunting Dompet
                 </p>
-                <h2 className="mt-1 font-sans text-xl font-bold tracking-tight">
+                <h2 className="mt-1 font-sans text-2xl font-bold tracking-tight">
                   Edit {initialData?.name}
                 </h2>
               </div>
@@ -85,25 +85,25 @@ export function AccountDialog({ open, initialData, onClose, onSubmit, isPending 
                 onClick={onClose}
                 className="rounded-sm p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
               >
-                <X className="h-4 w-4" />
+                <X className="h-5 w-5" />
               </button>
             </div>
 
             <div className="mt-5 flex flex-col gap-5">
               <div className="space-y-1.5">
-                <label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Nama Dompet</label>
+                <label className="font-mono text-xs uppercase tracking-wider text-muted-foreground">Nama Dompet</label>
                 <input 
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full rounded-sm border border-input bg-background px-3 py-2 font-serif text-sm focus:border-primary focus:outline-none"
+                  className="w-full rounded-sm border border-input bg-background px-3 py-2 font-serif text-base focus:border-primary focus:outline-none"
                   placeholder="Mis. BCA, GoPay..."
                   required
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Jenis Dompet</label>
+                <label className="font-mono text-xs uppercase tracking-wider text-muted-foreground">Jenis Dompet</label>
                 <div className="grid grid-cols-2 gap-2">
                   {[
                     { id: "bank", label: "Bank", icon: Landmark },
@@ -116,13 +116,13 @@ export function AccountDialog({ open, initialData, onClose, onSubmit, isPending 
                       type="button"
                       onClick={() => setType(item.id)}
                       className={cn(
-                        "flex items-center gap-2 p-2 rounded-sm border font-mono text-[10px] uppercase tracking-wider transition-colors",
+                        "flex items-center gap-2 p-2.5 rounded-sm border font-mono text-xs uppercase tracking-wider transition-colors",
                         type === item.id 
                           ? "border-primary bg-primary/5 text-primary font-bold" 
                           : "border-border bg-background text-muted-foreground hover:border-foreground/30 hover:text-foreground"
                       )}
                     >
-                      <item.icon className="h-3.5 w-3.5" />
+                      <item.icon className="h-4 w-4" />
                       {item.label}
                     </button>
                   ))}
@@ -137,7 +137,7 @@ export function AccountDialog({ open, initialData, onClose, onSubmit, isPending 
               />
 
               {error && (
-                <div className="rounded-sm border border-destructive/30 bg-destructive/10 px-3 py-2 font-serif text-xs text-destructive">
+                <div className="rounded-sm border border-destructive/30 bg-destructive/10 px-3 py-2 font-serif text-sm text-destructive">
                   {error}
                 </div>
               )}

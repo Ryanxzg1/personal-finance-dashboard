@@ -51,16 +51,23 @@ export function InputDialog({ open, mode, categories, accounts, initialData, onC
         setCategory(initialData.category)
         setAccountId(initialData.accountId)
         setNote(initialData.note)
+        
+        let dateToSet = new Date()
         try {
-           const d = new Date(initialData.rawDate || initialData.date);
-           if (!isNaN(d.getTime())) {
-             setDate(d.toISOString().slice(0, 10))
+           // Prioritaskan rawDate (ISO string), lalu date string
+           const sourceDate = initialData.rawDate || initialData.date
+           const parsedDate = new Date(sourceDate)
+           
+           if (!isNaN(parsedDate.getTime())) {
+             dateToSet = parsedDate
            } else {
-             setDate(new Date().toISOString().slice(0, 10))
+             // Jika masih invalid (misal format "15 Okt"), coba parsing manual jika memungkinkan
+             // Namun default ke hari ini lebih aman daripada UI pecah
            }
-        } catch {
-           setDate(new Date().toISOString().slice(0, 10))
+        } catch (e) {
+           console.error("Date parsing failed", e)
         }
+        setDate(dateToSet.toISOString().slice(0, 10))
       } else {
         setAmount("")
         setCategory("")
@@ -158,7 +165,7 @@ export function InputDialog({ open, mode, categories, accounts, initialData, onC
                   type="date"
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
-                  className="w-full rounded-sm border border-input bg-background px-3 py-2 font-serif text-sm focus:border-primary focus:outline-none"
+                  className="w-full rounded-sm border border-input bg-background px-3 min-h-[44px] font-serif text-sm focus:border-primary focus:outline-none"
                   required
                 />
               </Field>
@@ -175,7 +182,7 @@ export function InputDialog({ open, mode, categories, accounts, initialData, onC
                   id="tx-account"
                   value={accountId || ""}
                   onChange={(e) => setAccountId(Number(e.target.value))}
-                  className="w-full rounded-sm border border-input bg-background px-3 py-2 font-serif text-sm focus:border-primary focus:outline-none"
+                  className="w-full rounded-sm border border-input bg-background px-3 min-h-[44px] font-serif text-sm focus:border-primary focus:outline-none"
                   required
                 >
                   <option value="" disabled>Pilih Dompet...</option>
@@ -204,7 +211,7 @@ export function InputDialog({ open, mode, categories, accounts, initialData, onC
                         aria-checked={active}
                         onClick={() => setCategory(c.name)}
                         className={cn(
-                          "rounded-sm border px-3 py-1.5 font-mono text-[11px] uppercase tracking-wider transition-colors",
+                          "rounded-sm border px-4 min-h-[44px] flex items-center justify-center font-mono text-[11px] uppercase tracking-wider transition-colors",
                           active
                             ? tone === "income"
                               ? "border-[#5a6b3b] bg-[#5a6b3b] text-white"
@@ -226,7 +233,7 @@ export function InputDialog({ open, mode, categories, accounts, initialData, onC
                   value={note}
                   onChange={(e) => setNote(e.target.value)}
                   placeholder="Mis. Gaji bulanan, Belanja mingguan…"
-                  className="w-full rounded-sm border border-input bg-background px-3 py-2 font-serif text-sm focus:border-primary focus:outline-none"
+                  className="w-full rounded-sm border border-input bg-background px-3 min-h-[44px] font-serif text-sm focus:border-primary focus:outline-none"
                 />
               </Field>
 
@@ -244,7 +251,7 @@ export function InputDialog({ open, mode, categories, accounts, initialData, onC
               <button
                 type="button"
                 onClick={onClose}
-                className="rounded-sm px-4 py-2 font-serif text-sm text-muted-foreground hover:text-foreground"
+                className="rounded-sm px-4 min-h-[44px] font-serif text-sm text-muted-foreground hover:text-foreground"
               >
                 Batal
               </button>
@@ -252,7 +259,7 @@ export function InputDialog({ open, mode, categories, accounts, initialData, onC
                 type="submit"
                 disabled={isPending}
                 className={cn(
-                  "rounded-sm px-4 py-2 font-sans text-sm font-bold text-white shadow-xs transition-colors flex items-center gap-2 disabled:opacity-50",
+                  "rounded-sm px-4 min-h-[44px] font-sans text-sm font-bold text-white shadow-xs transition-colors flex items-center justify-center gap-2 disabled:opacity-50",
                   tone === "income"
                     ? "bg-[#5a6b3b] hover:bg-[#4d5c32]"
                     : "bg-destructive hover:bg-destructive/90",

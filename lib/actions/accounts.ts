@@ -166,37 +166,5 @@ export async function updateAccount(id: number, data: z.infer<typeof accountSche
   }
 }
 
-/**
- * HARD RESET: Menghapus SEMUA data user dari database
- */
-export async function hardResetDatabase() {
-  try {
-    const { userId } = await auth();
-    if (!userId) return { success: false, error: "Unauthorized" };
 
-    // Hapus dari semua tabel terkait secara berurutan
-    // Import tabel lain jika perlu (budgets, categories, dll)
-    // Untuk amannya, kita import dinamis atau pastikan sudah ada di schema yang diimport
-    const { budgets, categories, savingsGoals, blueprintPlans } = await import("@/lib/db/schema");
-
-    await db.delete(transactions).where(eq(transactions.userId, userId));
-    await db.delete(budgets).where(eq(budgets.userId, userId));
-    await db.delete(savingsGoals).where(eq(savingsGoals.userId, userId));
-    // Cascade delete dari blueprintPlans akan otomatis menghapus blueprintItems
-    await db.delete(blueprintPlans).where(eq(blueprintPlans.userId, userId));
-    await db.delete(accounts).where(eq(accounts.userId, userId));
-    await db.delete(categories).where(eq(categories.userId, userId));
-
-    revalidatePath("/");
-    revalidatePath("/kategori");
-    revalidatePath("/riwayat");
-    revalidatePath("/tabungan");
-    revalidatePath("/pemetaan");
-
-    return { success: true };
-  } catch (error) {
-    console.error("Failed to hard reset database:", error);
-    return { success: false, error: "Gagal mereset total database" };
-  }
-}
 

@@ -3,7 +3,7 @@
 Buku Kas adalah aplikasi manajemen keuangan pribadi (*Personal Finance Dashboard*) modern yang dibangun dengan Next.js. Aplikasi ini dirancang untuk keamanan tingkat produksi, performa tinggi, dan pengalaman pengguna yang intuitif.
 
 ## 🛠️ Tech Stack
-- **Framework**: [Next.js 15 (App Router)](https://nextjs.org/)
+- **Framework**: [Next.js 16 (App Router)](https://nextjs.org/)
 - **Auth**: [Clerk](https://clerk.com/)
 - **Database**: [PostgreSQL (Neon DB)](https://neon.tech/)
 - **ORM**: [Drizzle ORM](https://orm.drizzle.team/)
@@ -64,9 +64,7 @@ Kami menggunakan Drizzle untuk manajemen skema:
 
 ## 📄 Lisensi & Dokumentasi
 Dokumentasi internal lebih lanjut tersedia di folder `ryan_workspace/docs/`.
-- [Project Documentation](./ryan_workspace/docs/project_documentaion.md)
-- [Incident Runbook](./ryan_workspace/docs/runbook.md)
-- [Backup & Recovery Strategy](./ryan_workspace/docs/backup_strategy.md)
+- [Project Documentation](./ryan_workspace/docs/project_documentation.md) (mencakup detail arsitektur, skema DB, API, strategi backup, serta panduan penanganan gangguan/troubleshooting)
 
 ---
 *Dikembangkan dengan oleh Ryan dan dibantu oleh Gemini.*

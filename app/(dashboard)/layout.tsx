@@ -44,7 +44,7 @@ export default async function DashboardLayout({
         </header>
 
         {/* Isi Halaman */}
-        <div className="flex-1 pb-20 lg:pb-0">
+        <div className="flex-1 pb-[calc(5rem+env(safe-area-inset-bottom))] lg:pb-0">
           {children}
         </div>
 

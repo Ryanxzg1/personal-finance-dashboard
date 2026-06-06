@@ -148,6 +148,21 @@ export function DashboardClient({
 
   const handleTransferSubmit = async (data: { fromAccountId: number; toAccountId: number; fromAccountName: string; toAccountName: string; amount: string; date: Date }) => {
     startTransition(async () => {
+       // Optimistic Update: Tambahkan satu entri dulu agar saldo segera berubah
+       addOptimisticAction({
+        type: "ADD",
+        transaction: {
+          id: `temp-transfer-${Date.now()}`,
+          date: `${String(data.date.getDate()).padStart(2, "0")} ${data.date.toLocaleString("id-ID", { month: "short" })}`.replace(".", ""),
+          rawDate: data.date.toISOString(),
+          type: "Pengeluaran",
+          category: "Transfer Keluar",
+          note: `Transfer ke ${data.toAccountName}`,
+          amount: -Math.abs(Number(data.amount)),
+          accountId: data.fromAccountId
+        } as any
+      })
+
       const result = await transferFunds(data)
       if (result.success) {
         toast.success("Transfer berhasil dilakukan")
@@ -207,7 +222,7 @@ export function DashboardClient({
     
     // Calculate individual account balances - USE ALL TRANSACTIONS (including technical)
     const accountBalances = initialAccounts.map(acc => {
-      const accTxs = optimisticTransactions.filter(t => t.accountId === acc.id)
+      const accTxs = optimisticTransactions.filter(t => Number(t.accountId) === Number(acc.id))
       const txSum = accTxs.reduce((sum, t) => sum + Number(t.amount), 0)
       return {
         ...acc,

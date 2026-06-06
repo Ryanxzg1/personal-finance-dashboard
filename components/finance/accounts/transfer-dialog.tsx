@@ -89,70 +89,78 @@ export function TransferDialog({ open, accounts, onClose, onSubmit }: TransferDi
       >
         <div className="flex items-start justify-between border-b border-dashed border-border pb-4">
           <div>
-            <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Transaksi Baru</p>
-            <h2 className="mt-1 font-sans text-xl font-bold tracking-tight text-primary">Transfer Saldo</h2>
+            <p className="font-mono text-xs uppercase tracking-[0.18em] text-muted-foreground">Transaksi Baru</p>
+            <h2 className="mt-1 font-sans text-2xl font-bold tracking-tight text-primary">Transfer Saldo</h2>
           </div>
           <button
             type="button"
             onClick={onClose}
             className="rounded-sm p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
           >
-            <X className="h-4 w-4" />
+            <X className="h-5 w-5" />
           </button>
         </div>
 
         <div className="mt-5 space-y-5">
-          <div className="space-y-1.5">
-            <label className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Tanggal</label>
-            <input
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              className="w-full rounded-sm border border-input bg-background px-3 py-2 font-serif text-sm focus:border-primary focus:outline-none"
-              required
-            />
-          </div>
-
-          <AmountInput 
-            label="Nominal Transfer (Rp)"
-            value={amount}
-            onChange={setAmount}
-          />
-
-          <div className="grid grid-cols-[1fr_40px_1fr] items-center gap-2">
-            <div className="space-y-1.5">
-              <label className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Dari</label>
-              <select
-                value={fromAccountId}
-                onChange={(e) => setFromAccountId(Number(e.target.value))}
-                className="w-full rounded-sm border border-input bg-background px-2 py-2 font-serif text-xs focus:border-primary focus:outline-none"
-              >
-                {accounts.map(acc => (
-                  <option key={acc.id} value={acc.id}>{acc.name}</option>
-                ))}
-              </select>
+          {accounts.length < 2 ? (
+            <div className="rounded-sm border border-[#8a6b3b]/30 bg-[#8a6b3b]/10 px-4 py-4 font-serif text-sm text-[#8a6b3b] leading-relaxed italic text-center">
+              ⚠️ Kamu memerlukan minimal 2 dompet aktif untuk melakukan transfer saldo. Silakan tambah dompet baru terlebih dahulu.
             </div>
-            
-            <div className="flex justify-center mt-4">
-              <ArrowRight className="h-4 w-4 text-muted-foreground" />
-            </div>
+          ) : (
+            <>
+              <div className="space-y-1.5">
+                <label className="font-mono text-xs uppercase tracking-[0.18em] text-muted-foreground">Tanggal</label>
+                <input
+                  type="date"
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
+                  className="w-full rounded-sm border border-input bg-background px-3 py-2 font-serif text-base focus:border-primary focus:outline-none"
+                  required
+                />
+              </div>
 
-            <div className="space-y-1.5">
-              <label className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Ke</label>
-              <select
-                value={toAccountId}
-                onChange={(e) => setToAccountId(Number(e.target.value))}
-                className="w-full rounded-sm border border-input bg-background px-2 py-2 font-serif text-xs focus:border-primary focus:outline-none"
-              >
-                {accounts.map(acc => (
-                  <option key={acc.id} value={acc.id}>{acc.name}</option>
-                ))}
-              </select>
-            </div>
-          </div>
+              <AmountInput 
+                label="Nominal Transfer (Rp)"
+                value={amount}
+                onChange={setAmount}
+              />
+
+              <div className="grid grid-cols-[1fr_40px_1fr] items-center gap-2">
+                <div className="space-y-1.5">
+                  <label className="font-mono text-xs uppercase tracking-[0.18em] text-muted-foreground">Dari</label>
+                  <select
+                    value={fromAccountId}
+                    onChange={(e) => setFromAccountId(Number(e.target.value))}
+                    className="w-full rounded-sm border border-input bg-background px-2 py-2 font-serif text-sm focus:border-primary focus:outline-none"
+                  >
+                    {accounts.map(acc => (
+                      <option key={acc.id} value={acc.id}>{acc.name}</option>
+                    ))}
+                  </select>
+                </div>
+                
+                <div className="flex justify-center mt-4">
+                  <ArrowRight className="h-5 w-5 text-muted-foreground" />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="font-mono text-xs uppercase tracking-[0.18em] text-muted-foreground">Ke</label>
+                  <select
+                    value={toAccountId}
+                    onChange={(e) => setToAccountId(Number(e.target.value))}
+                    className="w-full rounded-sm border border-input bg-background px-2 py-2 font-serif text-sm focus:border-primary focus:outline-none"
+                  >
+                    {accounts.map(acc => (
+                      <option key={acc.id} value={acc.id}>{acc.name}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </>
+          )}
 
           {error && (
-            <div className="rounded-sm border border-destructive/30 bg-destructive/10 px-3 py-2 font-serif text-xs text-destructive">
+            <div className="rounded-sm border border-destructive/30 bg-destructive/10 px-3 py-2 font-serif text-sm text-destructive">
               {error}
             </div>
           )}
@@ -168,7 +176,8 @@ export function TransferDialog({ open, accounts, onClose, onSubmit }: TransferDi
           </button>
           <button
             type="submit"
-            className="rounded-sm bg-primary px-4 py-2 font-sans text-sm font-bold text-primary-foreground shadow-xs hover:bg-primary/90 transition-colors uppercase tracking-widest"
+            disabled={accounts.length < 2}
+            className="rounded-sm bg-primary px-4 py-2 font-sans text-sm font-bold text-primary-foreground shadow-xs hover:bg-primary/90 transition-colors uppercase tracking-widest disabled:opacity-40 disabled:cursor-not-allowed"
           >
             Lakukan Transfer
           </button>
