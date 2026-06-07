@@ -46,7 +46,7 @@ export function PageTitle({ userName }: { userName: string }) {
       <h1 className="font-sans text-xl font-bold tracking-tight text-foreground lg:text-3xl text-pretty">
         {getTitle()}
       </h1>
-      <p className="hidden lg:block font-serif text-[11px] italic text-muted-foreground mt-0.5">
+      <p className="hidden lg:block font-serif text-xs italic text-muted-foreground mt-0.5">
         {getSubTitle()}
       </p>
     </div>

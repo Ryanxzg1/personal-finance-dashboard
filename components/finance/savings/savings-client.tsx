@@ -82,7 +82,7 @@ export function SavingsClient({ initialGoals }: SavingsClientProps) {
           </div>
           <Button 
             onClick={handleAddClick}
-            className="rounded-sm bg-primary px-6 font-sans text-xs font-bold uppercase tracking-widest shadow-xs hover:bg-primary/90"
+            className="rounded-sm bg-primary px-6 font-sans text-sm font-bold uppercase tracking-widest shadow-xs hover:bg-primary/90"
           >
             <Plus className="mr-2 h-4 w-4" />
             Target Baru
@@ -100,7 +100,7 @@ export function SavingsClient({ initialGoals }: SavingsClientProps) {
             <p className="mt-2 max-w-md text-center font-serif text-sm text-muted-foreground">
               Belum ada target tabungan. Klik tombol "Target Baru" untuk mencatat rencana menabung Anda.
             </p>
-            <Button variant="outline" onClick={handleAddClick} className="mt-6 font-mono text-[10px] uppercase tracking-widest shadow-xs">
+            <Button variant="outline" onClick={handleAddClick} className="mt-6 font-mono text-xs uppercase tracking-widest shadow-xs">
               Buat Target Pertama
             </Button>
           </div>
@@ -117,7 +117,7 @@ export function SavingsClient({ initialGoals }: SavingsClientProps) {
                   <div className="flex h-12 w-12 items-center justify-center rounded-sm bg-primary/10 text-primary">
                     <Target className="h-6 w-6" />
                   </div>
-                  <span className="font-mono text-[10px] font-bold px-2 py-1 rounded-sm uppercase tracking-wider bg-muted text-muted-foreground">
+                  <span className="font-mono text-xs font-bold px-2 py-1 rounded-sm uppercase tracking-wider bg-muted text-muted-foreground">
                     {sample.percent}% Contoh
                   </span>
                 </div>
@@ -126,7 +126,7 @@ export function SavingsClient({ initialGoals }: SavingsClientProps) {
                   <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
                     <div className="h-full bg-muted-foreground/30" style={{ width: `${sample.percent}%` }} />
                   </div>
-                  <div className="flex justify-between font-mono text-[11px] uppercase text-muted-foreground">
+                  <div className="flex justify-between font-mono text-xs uppercase text-muted-foreground">
                     <span>Rp {sample.current.toLocaleString()}</span>
                     <span>Rp {sample.target.toLocaleString()}</span>
                   </div>
@@ -173,13 +173,13 @@ export function SavingsClient({ initialGoals }: SavingsClientProps) {
                   </div>
                   <div className="flex flex-col items-end gap-1">
                     <span className={cn(
-                      "font-mono text-[10px] font-bold px-2 py-1 rounded-sm uppercase tracking-wider",
+                      "font-mono text-xs font-bold px-2 py-1 rounded-sm uppercase tracking-wider",
                       isCompleted ? "bg-[#5a6b3b]/10 text-[#5a6b3b]" : "bg-primary/10 text-primary"
                     )}>
                       {percent}% Selesai
                     </span>
                     {goal.deadline && (
-                      <span className="font-mono text-[9px] text-muted-foreground uppercase flex items-center gap-1">
+                      <span className="font-mono text-xs text-muted-foreground uppercase flex items-center gap-1">
                         <Calendar className="h-3 w-3" />
                         {new Date(goal.deadline).toLocaleDateString("id-ID", { month: "short", year: "numeric" })}
                       </span>
@@ -190,8 +190,8 @@ export function SavingsClient({ initialGoals }: SavingsClientProps) {
                 <h4 className="font-sans text-lg font-bold truncate">{goal.name}</h4>
                 
                 <div className="mt-5 space-y-3">
-                  <div className="flex justify-between font-mono text-[11px] uppercase">
-                    <span className="text-muted-foreground text-[10px]">Terkumpul</span>
+                  <div className="flex justify-between font-mono text-xs uppercase">
+                    <span className="text-muted-foreground">Terkumpul</span>
                     <span className="font-bold">Rp {current.toLocaleString("id-ID")}</span>
                   </div>
                   
@@ -205,8 +205,8 @@ export function SavingsClient({ initialGoals }: SavingsClientProps) {
                     />
                   </div>
 
-                  <div className="flex justify-between font-mono text-[11px] uppercase">
-                    <span className="text-muted-foreground text-[10px]">Target</span>
+                  <div className="flex justify-between font-mono text-xs uppercase">
+                    <span className="text-muted-foreground">Target</span>
                     <span className="text-muted-foreground">Rp {target.toLocaleString("id-ID")}</span>
                   </div>
                 </div>
@@ -214,20 +214,20 @@ export function SavingsClient({ initialGoals }: SavingsClientProps) {
                 {!isCompleted && monthly > 0 && (
                   <div className="mt-5 pt-4 border-t border-dashed border-border flex flex-col gap-3">
                     <div className="flex justify-between items-center">
-                      <span className="font-mono text-[9px] uppercase tracking-wider text-muted-foreground">Sisa Kekurangan</span>
+                      <span className="font-mono text-xs uppercase tracking-wider text-muted-foreground">Sisa Kekurangan</span>
                       <span className="font-mono text-xs font-bold text-destructive">
                         Rp {remaining.toLocaleString("id-ID")}
                       </span>
                     </div>
 
                     <div className="flex justify-between items-center">
-                      <span className="font-mono text-[9px] uppercase tracking-wider text-muted-foreground">Tabungan/Bulan</span>
+                      <span className="font-mono text-xs uppercase tracking-wider text-muted-foreground">Tabungan/Bulan</span>
                       <span className="font-mono text-xs font-bold text-[#5a6b3b]">Rp {monthly.toLocaleString("id-ID")}</span>
                     </div>
 
                     {goal.deadline && (
                       <div className="flex justify-between items-center">
-                        <span className="font-mono text-[9px] uppercase tracking-wider text-muted-foreground">Target Selesai</span>
+                        <span className="font-mono text-xs uppercase tracking-wider text-muted-foreground">Target Selesai</span>
                         <span className="font-mono text-xs font-bold text-foreground">
                           {new Date(goal.deadline).toLocaleDateString("id-ID", { month: "long", year: "numeric" })}
                         </span>
@@ -237,8 +237,8 @@ export function SavingsClient({ initialGoals }: SavingsClientProps) {
                     <div className="flex items-center gap-2 rounded-sm px-3 py-2 border bg-primary/5 text-primary border-primary/10 transition-colors">
                       <TrendingUp className="h-4 w-4" />
                       <div className="flex flex-col">
-                        <span className="font-mono text-[9px] uppercase tracking-tighter opacity-70">Estimasi Selesai</span>
-                        <span className="font-sans text-[11px] font-bold leading-tight">{estimationText}</span>
+                        <span className="font-mono text-xs uppercase tracking-tight opacity-70">Estimasi Selesai</span>
+                        <span className="font-sans text-xs font-bold leading-tight">{estimationText}</span>
                       </div>
                     </div>
                   </div>
@@ -247,7 +247,7 @@ export function SavingsClient({ initialGoals }: SavingsClientProps) {
                 {isCompleted && (
                   <div className="mt-4 flex items-center gap-2 rounded-sm bg-[#5a6b3b]/5 px-3 py-2 text-[#5a6b3b]">
                     <Trophy className="h-4 w-4" />
-                    <span className="font-serif text-[11px] italic font-bold tracking-tight">Impian Tercapai!</span>
+                    <span className="font-serif text-xs italic font-bold tracking-tight">Impian Tercapai!</span>
                   </div>
                 )}
 

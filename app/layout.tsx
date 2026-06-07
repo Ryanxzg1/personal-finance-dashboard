@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Analytics } from '@vercel/analytics/next'
 import { ClerkProvider } from '@clerk/nextjs'
+import { PwaRegistrar } from '@/components/pwa-registrar'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -28,7 +29,6 @@ export const viewport = {
   themeColor: "#5a6b3b",
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
 }
 
 export default function RootLayout({
@@ -45,6 +45,7 @@ export default function RootLayout({
         </head>
         <body className="font-serif antialiased bg-background text-foreground">
           {children}
+          <PwaRegistrar />
           {process.env.NODE_ENV === 'production' && <Analytics />}
         </body>
       </html>

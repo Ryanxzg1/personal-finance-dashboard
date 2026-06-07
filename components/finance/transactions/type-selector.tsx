@@ -48,7 +48,7 @@ export function TypeSelector({ open, onClose, onSelect }: TypeSelectorProps) {
           </button>
         </div>
 
-        <p className="mt-6 text-center font-serif text-[11px] italic text-muted-foreground">
+        <p className="mt-6 text-center font-serif text-xs italic text-muted-foreground">
           Pilih salah satu untuk melanjutkan pencatatan.
         </p>
       </div>

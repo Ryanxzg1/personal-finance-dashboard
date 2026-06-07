@@ -39,7 +39,7 @@ export function BottomNav() {
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg active:scale-90 transition-transform">
                 <Plus className="h-6 w-6" />
               </div>
-              <span className="font-mono text-[9px] uppercase tracking-wider text-muted-foreground mt-1">
+              <span className="mt-1 max-w-14 truncate font-mono text-xs uppercase leading-tight tracking-wider text-muted-foreground">
                 {item.label}
               </span>
             </button>
@@ -57,7 +57,7 @@ export function BottomNav() {
           >
             <Icon className={cn("h-5 w-5", isActive && "stroke-[2.5px]")} />
             <span className={cn(
-              "font-mono text-[9px] uppercase tracking-wider",
+              "max-w-14 truncate font-mono text-xs uppercase leading-tight tracking-wider",
               isActive ? "font-bold" : "font-normal"
             )}>
               {item.label}

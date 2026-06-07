@@ -49,7 +49,7 @@ export default function ExportButton({ filteredData, selectedMonthName, selected
       <DropdownMenuTrigger asChild>
         <button
           disabled={disabled}
-          className="flex h-9 items-center gap-2 rounded-sm border border-border bg-background px-3 font-serif text-[13px] text-muted-foreground hover:bg-muted transition-colors disabled:opacity-50"
+          className="flex h-9 items-center gap-2 rounded-sm border border-border bg-background px-3 font-serif text-sm text-muted-foreground hover:bg-muted transition-colors disabled:opacity-50"
         >
           <Download className="h-4 w-4" />
           Ekspor

@@ -113,13 +113,13 @@ export function ChartSection({ transactions }: ChartSectionProps) {
   ]
 
   return (
-    <section className="rounded-sm border border-border bg-card p-3 sm:p-6 shadow-xs">
+    <section className="min-w-0 rounded-sm border border-border bg-card p-3 shadow-xs sm:p-6">
       <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
           <h3 className="font-sans text-sm font-bold uppercase tracking-[0.1em] text-foreground">
             Tren Keuangan
           </h3>
-          <p className="font-serif text-[13px] italic text-muted-foreground">
+          <p className="font-serif text-sm italic text-muted-foreground">
             Perbandingan arus kas berdasarkan periode pilihan.
           </p>
         </div>
@@ -130,7 +130,7 @@ export function ChartSection({ transactions }: ChartSectionProps) {
               key={r.id}
               onClick={() => setRange(r.id)}
               className={cn(
-                "rounded-[2px] px-2 py-2 text-center font-mono text-[11px] font-bold uppercase tracking-wider transition-all sm:px-3 sm:py-1",
+                "rounded-[2px] px-2 py-2 text-center font-mono text-xs font-bold uppercase tracking-wider transition-all sm:px-3 sm:py-1",
                 range === r.id 
                   ? "bg-card text-foreground shadow-sm ring-1 ring-border/50" 
                   : "text-muted-foreground hover:text-foreground"
@@ -142,21 +142,21 @@ export function ChartSection({ transactions }: ChartSectionProps) {
         </div>
       </div>
 
-      <div className="h-[300px] w-full">
-        <ResponsiveContainer width="100%" height="100%">
+      <div className="h-[300px] min-w-0 w-full">
+        <ResponsiveContainer width="100%" height="100%" minWidth={0}>
           <BarChart data={data} margin={{ top: 20, right: 0, left: -20, bottom: 5 }}>
             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
             <XAxis 
               dataKey="name" 
               axisLine={false} 
               tickLine={false} 
-              tick={{ fontSize: 11, fontFamily: 'var(--font-mono)', fill: 'var(--muted-foreground)' }}
+              tick={{ fontSize: 12, fontFamily: 'var(--font-mono)', fill: 'var(--muted-foreground)' }}
               dy={10}
             />
             <YAxis 
               axisLine={false} 
               tickLine={false} 
-              tick={{ fontSize: 11, fontFamily: 'var(--font-mono)', fill: 'var(--muted-foreground)' }}
+              tick={{ fontSize: 12, fontFamily: 'var(--font-mono)', fill: 'var(--muted-foreground)' }}
               tickFormatter={(value) => value >= 1000 ? `${(value/1000).toFixed(0)}k` : value}
             />
             <Tooltip 
@@ -166,7 +166,7 @@ export function ChartSection({ transactions }: ChartSectionProps) {
                 backgroundColor: 'var(--card)', 
                 border: '1px solid var(--border)',
                 borderRadius: '4px',
-                fontSize: '13px',
+                fontSize: '14px',
                 fontFamily: 'var(--font-serif)',
                 padding: '12px'
               }}
@@ -192,11 +192,11 @@ export function ChartSection({ transactions }: ChartSectionProps) {
       <div className="mt-4 flex items-center justify-center gap-6 border-t border-dashed border-border pt-4">
         <div className="flex items-center gap-2">
           <div className="h-2 w-2 rounded-full bg-[#5a6b3b]" />
-          <span className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground">Pemasukan</span>
+          <span className="font-mono text-xs uppercase tracking-wider text-muted-foreground">Pemasukan</span>
         </div>
         <div className="flex items-center gap-2">
           <div className="h-2 w-2 rounded-full bg-destructive" />
-          <span className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground">Pengeluaran</span>
+          <span className="font-mono text-xs uppercase tracking-wider text-muted-foreground">Pengeluaran</span>
         </div>
       </div>
     </section>

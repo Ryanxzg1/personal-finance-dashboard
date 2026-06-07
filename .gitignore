@@ -70,6 +70,9 @@ ehthumbs_vista.db
 # Workspace & AI Context (Internal Documentation)
 ryan_workspace/
 
+# Local editor / agent files
+.instructions.md
+
 # Scratch & Temporary Files
 scratch/
 *.js.map

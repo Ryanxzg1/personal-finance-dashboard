@@ -48,8 +48,8 @@ export function AccountSummary({ accounts, onEditAccount }: AccountSummaryProps)
                 {acc.type === "credit_card" && <CreditCard className="h-4 w-4 text-destructive" />}
               </div>
               <div>
-                <p className="font-sans text-[13px] font-bold leading-none">{acc.name}</p>
-                <p className="mt-1 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                <p className="font-sans text-sm font-bold leading-none">{acc.name}</p>
+                <p className="mt-1 font-mono text-xs uppercase tracking-wider text-muted-foreground">
                   {acc.type.replace("_", " ")}
                 </p>
               </div>
@@ -64,7 +64,7 @@ export function AccountSummary({ accounts, onEditAccount }: AccountSummaryProps)
         ))}
       </div>
       
-      <p className="mt-4 font-serif text-[11px] italic text-muted-foreground text-center">
+      <p className="mt-4 font-serif text-xs italic text-muted-foreground text-center">
         Saldo dihitung otomatis dari transaksi terhubung.
       </p>
     </div>

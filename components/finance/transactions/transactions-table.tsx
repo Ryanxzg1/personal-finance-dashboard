@@ -94,7 +94,7 @@ export function TransactionsTable({ transactions, onDelete, onEdit }: Transactio
     const range = []
     const maxVisible = 5
     let start = Math.max(1, currentPageSafe - 2)
-    let end = Math.min(totalPages, start + maxVisible - 1)
+    const end = Math.min(totalPages, start + maxVisible - 1)
     
     if (end - start + 1 < maxVisible) {
       start = Math.max(1, end - maxVisible + 1)
@@ -182,11 +182,11 @@ export function TransactionsTable({ transactions, onDelete, onEdit }: Transactio
                   <div className="flex justify-between items-start">
                      <div className="flex flex-col gap-1.5">
                         <div className="flex items-center gap-2">
-                          <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">{tx.date}</span>
+                          <span className="font-mono text-xs uppercase tracking-wider text-muted-foreground">{tx.date}</span>
                           <span className={cn("h-1 w-1 rounded-full bg-border")} />
                           <span className={cn("font-serif text-xs italic", isIncome ? "text-[#5a6b3b]" : "text-destructive")}>{tx.type}</span>
                         </div>
-                        <span className={cn("inline-flex w-fit items-center gap-1.5 rounded-sm border px-2 py-0.5 font-mono text-[10px] font-medium uppercase tracking-wider", CATEGORY_STYLES[tx.category] ?? "border-border bg-secondary text-secondary-foreground")}>
+                        <span className={cn("inline-flex w-fit items-center gap-1.5 rounded-sm border px-2 py-0.5 font-mono text-xs font-medium uppercase tracking-wider", CATEGORY_STYLES[tx.category] ?? "border-border bg-secondary text-secondary-foreground")}>
                           {tx.category}
                         </span>
                      </div>
@@ -196,7 +196,7 @@ export function TransactionsTable({ transactions, onDelete, onEdit }: Transactio
                      </div>
                   </div>
                   <div className="flex justify-between items-end">
-                     <span className="font-serif text-[13px] text-muted-foreground line-clamp-1 flex-1 mr-4">{tx.note}</span>
+                     <span className="font-serif text-sm text-muted-foreground line-clamp-1 flex-1 mr-4">{tx.note}</span>
                      <span className={cn("font-mono text-base font-bold tabular-nums shrink-0", isIncome ? "text-[#5a6b3b]" : "text-destructive")}>
                        {formatRupiah(tx.amount)}
                      </span>
@@ -233,18 +233,18 @@ export function TransactionsTable({ transactions, onDelete, onEdit }: Transactio
                       transition={{ duration: 0.2 }}
                       className="group border-b border-border/70 transition-colors hover:bg-muted/40"
                     >
-                      <Td><span className="font-mono text-[13px] uppercase tracking-wider text-muted-foreground">{tx.date}</span></Td>
-                      <Td><span className={cn("font-serif text-[15px] italic", isIncome ? "text-[#5a6b3b]" : "text-destructive")}>{tx.type}</span></Td>
+                      <Td><span className="font-mono text-sm uppercase tracking-wider text-muted-foreground">{tx.date}</span></Td>
+                      <Td><span className={cn("font-serif text-base italic", isIncome ? "text-[#5a6b3b]" : "text-destructive")}>{tx.type}</span></Td>
                       <Td>
                         <div className="flex flex-col gap-1.5">
-                          <span className={cn("inline-flex w-fit items-center gap-1.5 rounded-sm border px-2 py-0.5 font-mono text-[11px] font-medium uppercase tracking-wider", CATEGORY_STYLES[tx.category] ?? "border-border bg-secondary text-secondary-foreground")}>
+                          <span className={cn("inline-flex w-fit items-center gap-1.5 rounded-sm border px-2 py-0.5 font-mono text-xs font-medium uppercase tracking-wider", CATEGORY_STYLES[tx.category] ?? "border-border bg-secondary text-secondary-foreground")}>
                             <span className="h-1.5 w-1.5 rounded-full bg-current" aria-hidden="true" />
                             {tx.category}
                           </span>
-                          <span className="font-serif text-[13px] text-muted-foreground">{tx.note}</span>
+                          <span className="font-serif text-sm text-muted-foreground">{tx.note}</span>
                         </div>
                       </Td>
-                      <Td className="text-right"><span className={cn("font-mono text-[15px] font-bold tabular-nums", isIncome ? "text-[#5a6b3b]" : "text-destructive")}>{formatRupiah(tx.amount)}</span></Td>
+                      <Td className="text-right"><span className={cn("font-mono text-base font-bold tabular-nums", isIncome ? "text-[#5a6b3b]" : "text-destructive")}>{formatRupiah(tx.amount)}</span></Td>
                       <Td className="text-right">
                         <div className="flex items-center justify-end gap-1 lg:opacity-60 transition-opacity lg:group-hover:opacity-100">
                           <IconButton label="Edit" icon={Pencil} onClick={() => onEdit?.(tx)} />
@@ -273,7 +273,7 @@ export function TransactionsTable({ transactions, onDelete, onEdit }: Transactio
                   type="button"
                   disabled={currentPageSafe === 1}
                   onClick={() => setCurrentPage(currentPageSafe - 1)}
-                  className="flex min-h-[44px] lg:min-h-0 lg:h-9 items-center gap-1 rounded-sm border border-border bg-background px-3 font-mono text-[11px] uppercase tracking-wider text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-40 disabled:hover:bg-background disabled:hover:text-muted-foreground cursor-pointer"
+                  className="flex min-h-[44px] lg:min-h-0 lg:h-9 items-center gap-1 rounded-sm border border-border bg-background px-3 font-mono text-xs uppercase tracking-wider text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-40 disabled:hover:bg-background disabled:hover:text-muted-foreground cursor-pointer"
                 >
                   Sebelumnya
                 </button>
@@ -288,7 +288,7 @@ export function TransactionsTable({ transactions, onDelete, onEdit }: Transactio
                         type="button"
                         onClick={() => setCurrentPage(p)}
                         className={cn(
-                          "flex h-11 w-11 lg:h-9 lg:w-9 items-center justify-center rounded-sm font-mono text-[13px] transition-colors cursor-pointer",
+                          "flex h-11 w-11 lg:h-9 lg:w-9 items-center justify-center rounded-sm font-mono text-sm transition-colors cursor-pointer",
                           isCurrent
                             ? "bg-foreground text-background font-bold"
                             : "border border-border bg-background text-muted-foreground hover:bg-muted hover:text-foreground"
@@ -304,7 +304,7 @@ export function TransactionsTable({ transactions, onDelete, onEdit }: Transactio
                   type="button"
                   disabled={currentPageSafe === totalPages}
                   onClick={() => setCurrentPage(currentPageSafe + 1)}
-                  className="flex min-h-[44px] lg:min-h-0 lg:h-9 items-center gap-1 rounded-sm border border-border bg-background px-3 font-mono text-[11px] uppercase tracking-wider text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-40 disabled:hover:bg-background disabled:hover:text-muted-foreground cursor-pointer"
+                  className="flex min-h-[44px] lg:min-h-0 lg:h-9 items-center gap-1 rounded-sm border border-border bg-background px-3 font-mono text-xs uppercase tracking-wider text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-40 disabled:hover:bg-background disabled:hover:text-muted-foreground cursor-pointer"
                 >
                   Berikutnya
                 </button>
@@ -318,7 +318,7 @@ export function TransactionsTable({ transactions, onDelete, onEdit }: Transactio
 }
 
 function Th({ children, className }: { children: React.ReactNode; className?: string }) {
-  return <th className={cn("px-4 lg:px-6 py-4 font-mono text-[13px] uppercase tracking-[0.15em] text-muted-foreground/80", className)}>{children}</th>
+  return <th className={cn("px-4 lg:px-6 py-4 font-mono text-sm uppercase tracking-[0.15em] text-muted-foreground/80", className)}>{children}</th>
 }
 
 function Td({ children, className }: { children: React.ReactNode; className?: string }) {
@@ -345,7 +345,7 @@ function IconButton({ label: _label, icon: Icon, tone = "default", onClick }: { 
 
 function FilterSelect({ icon: Icon, value, options, onChange }: { icon: any; value: string; options: { label: string; value: string }[]; onChange: (v: string) => void }) {
   return (
-    <label className="flex items-center gap-2 rounded-sm border border-border bg-background px-3 min-h-[44px] text-[13px] shadow-xs focus-within:border-primary/60 transition-colors cursor-pointer">
+    <label className="flex items-center gap-2 rounded-sm border border-border bg-background px-3 min-h-[44px] text-sm shadow-xs focus-within:border-primary/60 transition-colors cursor-pointer">
       <Icon className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
       <select value={value} onChange={(e) => onChange(e.target.value)} className="appearance-none bg-transparent pr-4 font-serif text-foreground focus:outline-none">
         {options.map((opt) => <option key={opt.value} value={opt.value}>{opt.label}</option>)}

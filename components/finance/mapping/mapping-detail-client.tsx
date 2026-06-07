@@ -77,7 +77,7 @@ export function MappingDetailClient({ plan }: { plan: MappingPlan }) {
         className="group gap-2 pl-0 hover:bg-transparent"
       >
         <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
-        <span className="font-mono text-[10px] uppercase tracking-widest">Kembali ke Daftar</span>
+        <span className="font-mono text-xs uppercase tracking-widest">Kembali ke Daftar</span>
       </Button>
 
       {/* Header Card */}
@@ -89,7 +89,7 @@ export function MappingDetailClient({ plan }: { plan: MappingPlan }) {
           <h2 className="font-sans text-3xl font-bold tracking-tight mb-2">{plan.name}</h2>
           <div className="flex items-center gap-4 text-muted-foreground">
              <div className="flex items-center gap-1">
-               <span className="font-mono text-[10px] uppercase tracking-wider">Total Rencana:</span>
+               <span className="font-mono text-xs uppercase tracking-wider">Total Rencana:</span>
                <span className="font-sans font-bold text-foreground">Rp {totalBudget.toLocaleString("id-ID")}</span>
              </div>
           </div>
@@ -107,7 +107,7 @@ export function MappingDetailClient({ plan }: { plan: MappingPlan }) {
             
             <form onSubmit={handleAddItem} className="space-y-4">
               <div className="space-y-1.5">
-                <label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Deskripsi Kebutuhan</label>
+                <label className="font-mono text-xs uppercase tracking-wider text-muted-foreground">Deskripsi Kebutuhan</label>
                 <input 
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
@@ -145,7 +145,7 @@ export function MappingDetailClient({ plan }: { plan: MappingPlan }) {
 
           {/* Quick Analytics */}
           <div className="bg-[#5a6b3b]/5 border border-[#5a6b3b]/10 p-6 rounded-sm">
-             <h4 className="font-mono text-[11px] uppercase tracking-widest text-[#5a6b3b] mb-4">Analisis Pemetaan</h4>
+             <h4 className="font-mono text-xs uppercase tracking-widest text-[#5a6b3b] mb-4">Analisis Pemetaan</h4>
              <div className="space-y-4">
                <div className="flex justify-between items-center text-sm sm:text-base font-serif">
                  <span className="opacity-70">Wajib Dipenuhi:</span>
@@ -162,7 +162,7 @@ export function MappingDetailClient({ plan }: { plan: MappingPlan }) {
         {/* Right: Items List */}
         <div className="lg:col-span-2 space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+            <h3 className="font-mono text-xs uppercase tracking-widest text-muted-foreground flex items-center gap-2">
               <LayoutList className="h-4 w-4" />
               Daftar Pemetaan Pengeluaran ({plan.items.length})
             </h3>
@@ -184,7 +184,7 @@ export function MappingDetailClient({ plan }: { plan: MappingPlan }) {
                     <div className="flex flex-col">
                       <span className="font-sans font-bold">{item.description}</span>
                       {item.isEssential && (
-                        <span className="font-mono text-[8px] text-[#5a6b3b] uppercase tracking-tighter font-bold">Wajib</span>
+                        <span className="font-mono text-xs text-[#5a6b3b] uppercase tracking-tight font-bold">Wajib</span>
                       )}
                     </div>
                   </div>

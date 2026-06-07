@@ -32,7 +32,7 @@ export function AmountInput({
   return (
     <div className={cn("space-y-1.5", className)}>
       {label && (
-        <label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+        <label className="font-mono text-xs uppercase tracking-wider text-muted-foreground">
           {label}
         </label>
       )}
@@ -58,7 +58,7 @@ export function AmountInput({
         )}
       </div>
       {helperText && (
-        <p className="font-serif text-[10px] italic text-muted-foreground mt-1">
+        <p className="font-serif text-xs italic text-muted-foreground mt-1">
           {helperText}
         </p>
       )}

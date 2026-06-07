@@ -93,7 +93,7 @@ export function MappingClient({ initialPlans }: { initialPlans: MappingPlan[] })
                 <div>
                   <div className="flex items-center gap-2 mb-2">
                     <Calendar className="h-3 w-3 text-muted-foreground" />
-                    <span className="font-mono text-[10px] uppercase text-muted-foreground tracking-widest">
+                    <span className="font-mono text-xs uppercase text-muted-foreground tracking-widest">
                       {plan.startDate ? new Date(plan.startDate).toLocaleDateString("id-ID", { month: "short", year: "numeric" }) : "Tanpa Periode"}
                     </span>
                   </div>
@@ -102,7 +102,7 @@ export function MappingClient({ initialPlans }: { initialPlans: MappingPlan[] })
 
                 <div className="mt-8 flex items-center justify-between">
                   <div className="flex flex-col">
-                    <span className="font-mono text-[9px] uppercase text-muted-foreground">Status</span>
+                    <span className="font-mono text-xs uppercase text-muted-foreground">Status</span>
                     <span className="text-xs font-serif italic text-primary">Draf Perencanaan</span>
                   </div>
                   <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:translate-x-1 transition-transform" />

@@ -18,7 +18,7 @@ import { TypeSelector } from "../transactions/type-selector"
 import { CategoryDistribution } from "./category-distribution"
 import { AccountSummary } from "../accounts/account-summary"
 import { AccountDialog } from "../accounts/account-dialog"
-import { requestNotificationPermission, sendNotification, registerServiceWorker } from "@/lib/notifications"
+import { requestNotificationPermission, sendNotification } from "@/lib/notifications"
 
 interface Category {
   id: number
@@ -76,8 +76,6 @@ export function DashboardClient({
     if ("Notification" in window) {
       setNotifGranted(Notification.permission === "granted")
     }
-    // Registrasi Service Worker untuk notifikasi mobile
-    registerServiceWorker()
   }, [])
 
   const handleRequestNotif = async () => {
@@ -87,7 +85,7 @@ export function DashboardClient({
       toast.success("Notifikasi diaktifkan")
       sendNotification("🔔 Notifikasi Aktif", {
         body: "Anda akan menerima peringatan jika pengeluaran melebihi anggaran.",
-        icon: "/icon-192x192.png"
+        icon: "/icon-192.png"
       })
     }
   }
@@ -377,7 +375,7 @@ export function DashboardClient({
          <button 
            onClick={handleRequestNotif}
            className={cn(
-             "flex items-center gap-2 rounded-full px-3 py-1 text-[11px] font-mono uppercase tracking-wider transition-colors",
+             "flex items-center gap-2 rounded-full px-3 py-1 text-xs font-mono uppercase tracking-wider transition-colors",
              notifGranted ? "text-[#5a6b3b] bg-[#5a6b3b]/10" : "text-muted-foreground bg-muted hover:bg-muted/80"
            )}
          >
@@ -407,7 +405,7 @@ export function DashboardClient({
              <div className="rounded-sm border border-border bg-card p-5 shadow-xs">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="font-sans text-sm font-bold uppercase tracking-[0.1em] text-foreground">Pantauan Anggaran</h3>
-                  <div className="flex items-center gap-1 text-[11px] uppercase font-mono text-muted-foreground">
+                  <div className="flex items-center gap-1 text-xs uppercase font-mono text-muted-foreground">
                     <AlertCircle className="h-3.5 w-3.5" />
                     Real-time
                   </div>
@@ -415,7 +413,7 @@ export function DashboardClient({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
                   {budgetProgress.map((bp) => (
                     <div key={bp.name} className="space-y-1.5">
-                       <div className="flex items-center justify-between font-mono text-[11px] uppercase tracking-wider">
+                       <div className="flex items-center justify-between font-mono text-xs uppercase tracking-wider">
                           <span className="text-foreground font-bold">
                             {bp.name}
                           </span>
@@ -495,13 +493,13 @@ function StatCard({ label, amount, icon: Icon, color, trend, subLabel }: { label
     <div className="rounded-sm border border-border bg-card p-4 shadow-xs transition-all hover:shadow-md group">
       <div className="flex items-center justify-between gap-4">
         <div>
-          <p className="font-mono text-[13px] uppercase tracking-wider text-muted-foreground">{label}</p>
+          <p className="font-mono text-sm uppercase tracking-wider text-muted-foreground">{label}</p>
           <p className={cn("mt-1 font-mono text-2xl font-bold tracking-tight lg:text-3xl", color)}>
             {amount < 0 ? "-" : ""}Rp {Math.abs(amount).toLocaleString("id-ID")}
           </p>
           
           {subLabel && (
-            <p className="mt-2 font-serif text-[11px] italic text-muted-foreground lowercase">
+            <p className="mt-2 font-serif text-xs italic text-muted-foreground lowercase">
               {subLabel}
             </p>
           )}
@@ -509,14 +507,14 @@ function StatCard({ label, amount, icon: Icon, color, trend, subLabel }: { label
           {trend !== undefined && (
             <div className="mt-3 flex items-center gap-2">
               <span className={cn(
-                "font-mono text-[11px] font-bold px-2 py-0.5 rounded-full border",
+                "font-mono text-xs font-bold px-2 py-0.5 rounded-full border",
                 trend > 0 ? "text-[#5a6b3b] border-[#5a6b3b]/20 bg-[#5a6b3b]/10" : 
                 trend < 0 ? "text-destructive border-destructive/20 bg-destructive/10" : 
                 "text-muted-foreground border-border bg-muted"
               )}>
                 {trend > 0 ? "+" : ""}{trend.toFixed(1)}%
               </span>
-              <span className="font-serif text-[11px] italic text-muted-foreground lowercase">vs bulan lalu</span>
+              <span className="font-serif text-xs italic text-muted-foreground lowercase">vs bulan lalu</span>
             </div>
           )}
         </div>

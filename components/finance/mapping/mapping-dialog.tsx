@@ -58,7 +58,7 @@ export function MappingDialog({ children }: { children: React.ReactNode }) {
 
         <form onSubmit={handleSubmit} className="space-y-6 pt-4">
           <div className="space-y-1.5">
-            <label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Nama Rencana</label>
+            <label className="font-mono text-xs uppercase tracking-wider text-muted-foreground">Nama Rencana</label>
             <Input 
               placeholder="Contoh: Rencana Hidup Agustus 2026"
               value={name}
@@ -69,7 +69,7 @@ export function MappingDialog({ children }: { children: React.ReactNode }) {
           </div>
 
           <div className="space-y-1.5">
-            <label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Mulai Dari (Opsional)</label>
+            <label className="font-mono text-xs uppercase tracking-wider text-muted-foreground">Mulai Dari (Opsional)</label>
             <div className="relative">
               <CalendarIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input 

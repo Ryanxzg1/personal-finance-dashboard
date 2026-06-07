@@ -50,8 +50,8 @@ export const sendNotification = (title: string, options?: NotificationOptions) =
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.ready.then((registration) => {
         const notificationOptions: ExtendedNotificationOptions = {
-          icon: "/icon-pwa.png",
-          badge: "/icon-pwa.png",
+          icon: "/icon-192.png",
+          badge: "/icon-192.png",
           vibrate: [100, 50, 100],
           ...options,
         };

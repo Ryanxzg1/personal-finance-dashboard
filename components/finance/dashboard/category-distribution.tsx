@@ -57,28 +57,28 @@ export function CategoryDistribution({ transactions }: CategoryDistributionProps
 
   if (data.length === 0) {
     return (
-      <section className="flex h-full min-h-[300px] flex-col items-center justify-center rounded-sm border border-border bg-card p-6 shadow-xs">
+      <section className="flex h-full min-h-[300px] min-w-0 flex-col items-center justify-center rounded-sm border border-border bg-card p-6 shadow-xs">
         <div className="text-center">
-          <p className="font-mono text-[13px] uppercase tracking-widest text-muted-foreground">Analisis Kategori</p>
-          <p className="mt-2 font-serif text-[15px] italic text-muted-foreground">Belum ada data pengeluaran bulan ini.</p>
+          <p className="font-mono text-sm uppercase tracking-widest text-muted-foreground">Analisis Kategori</p>
+          <p className="mt-2 font-serif text-base italic text-muted-foreground">Belum ada data pengeluaran bulan ini.</p>
         </div>
       </section>
     )
   }
 
   return (
-    <section className="flex flex-col rounded-sm border border-border bg-card p-6 shadow-xs">
+    <section className="flex min-w-0 flex-col rounded-sm border border-border bg-card p-6 shadow-xs">
       <div className="mb-4">
         <h3 className="font-sans text-sm font-bold uppercase tracking-[0.1em] text-foreground">
           Alokasi Pengeluaran
         </h3>
-        <p className="font-serif text-[13px] italic text-muted-foreground">
+        <p className="font-serif text-sm italic text-muted-foreground">
           Mana yang paling menguras kantong Anda?
         </p>
       </div>
 
-      <div className="relative h-[200px] w-full">
-        <ResponsiveContainer width="100%" height="100%">
+      <div className="relative h-[200px] min-w-0 w-full">
+        <ResponsiveContainer width="100%" height="100%" minWidth={0}>
           <PieChart>
             <Pie
               data={data}
@@ -100,9 +100,9 @@ export function CategoryDistribution({ transactions }: CategoryDistributionProps
                   const d = payload[0].payload;
                   return (
                     <div className="rounded-sm border border-border bg-card p-2 shadow-md">
-                      <p className="font-mono text-[11px] uppercase text-muted-foreground">{d.name}</p>
+                      <p className="font-mono text-xs uppercase text-muted-foreground">{d.name}</p>
                       <p className="font-sans text-sm font-bold text-foreground">Rp {d.value.toLocaleString("id-ID")}</p>
-                      <div className="mt-1 flex justify-between gap-4 font-mono text-[10px]">
+                      <div className="mt-1 flex justify-between gap-4 font-mono text-xs">
                         <span className="text-[#5a6b3b]">{d.percentage.toFixed(1)}%</span>
                         <span className="text-muted-foreground">{d.count} Transaksi</span>
                       </div>
@@ -117,7 +117,7 @@ export function CategoryDistribution({ transactions }: CategoryDistributionProps
         
         {/* Center Text */}
         <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-          <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground">Total</span>
+          <span className="font-mono text-xs uppercase tracking-[0.2em] text-muted-foreground">Total</span>
           <span className="font-sans text-xl font-bold tracking-tight text-foreground">
             {totalExpense >= 1000000 ? `${(totalExpense/1000000).toFixed(1)}M` : `Rp ${(totalExpense/1000).toFixed(0)}k`}
           </span>
@@ -131,14 +131,14 @@ export function CategoryDistribution({ transactions }: CategoryDistributionProps
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
-                <span className="font-mono text-[13px] uppercase tracking-wider text-muted-foreground group-hover:text-foreground transition-colors">
+                <span className="font-mono text-sm uppercase tracking-wider text-muted-foreground group-hover:text-foreground transition-colors">
                   {entry.name}
                 </span>
-                <span className="font-serif text-[11px] italic text-muted-foreground/40 lowercase">
+                <span className="font-serif text-xs italic text-muted-foreground/40 lowercase">
                   ({entry.count}x)
                 </span>
               </div>
-              <span className="font-sans text-[14px] font-bold text-foreground">
+              <span className="font-sans text-sm font-bold text-foreground">
                 Rp {entry.value.toLocaleString("id-ID")}
               </span>
             </div>
@@ -160,7 +160,7 @@ export function CategoryDistribution({ transactions }: CategoryDistributionProps
       {/* Spotlight Insight */}
       {topCategory && (
         <div className="mt-6 rounded-sm border border-dashed border-border p-2.5 bg-muted/5">
-          <p className="font-serif text-[13px] italic text-muted-foreground text-center line-height-relaxed">
+          <p className="font-serif text-sm italic text-muted-foreground text-center line-height-relaxed">
             Pengeluaran terbanyak ada pada kategori <span className="font-bold text-foreground not-italic">{topCategory.name}</span> dengan total <span className="text-destructive font-sans font-bold not-italic">Rp {topCategory.value.toLocaleString("id-ID")}</span>.
           </p>
         </div>

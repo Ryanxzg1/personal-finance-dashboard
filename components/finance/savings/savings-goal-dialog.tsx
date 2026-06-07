@@ -106,7 +106,7 @@ export function SavingsGoalDialog({ open, initialData, onClose, onSubmit }: Savi
       >
         <div className="flex items-start justify-between gap-4 border-b border-dashed border-border pb-4">
           <div>
-            <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+            <p className="font-mono text-xs uppercase tracking-[0.18em] text-muted-foreground">
               Tabungan Berencana
             </p>
             <h2 className="mt-1 font-sans text-xl font-bold tracking-tight">
@@ -124,7 +124,7 @@ export function SavingsGoalDialog({ open, initialData, onClose, onSubmit }: Savi
 
         <div className="mt-5 flex flex-col gap-5">
           <div className="space-y-1.5">
-            <label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Nama Impian</label>
+            <label className="font-mono text-xs uppercase tracking-wider text-muted-foreground">Nama Impian</label>
             <input 
               type="text"
               value={name}
@@ -149,7 +149,7 @@ export function SavingsGoalDialog({ open, initialData, onClose, onSubmit }: Savi
           </div>
 
           <div className="space-y-1.5">
-            <label className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Target Durasi (Bulan)</label>
+            <label className="font-mono text-xs uppercase tracking-wider text-muted-foreground">Target Durasi (Bulan)</label>
             <div className="flex items-center gap-3">
                <input 
                  type="number"
@@ -166,10 +166,10 @@ export function SavingsGoalDialog({ open, initialData, onClose, onSubmit }: Savi
           <div className="rounded-sm bg-muted/50 p-4 border border-border border-dashed">
             <div className="flex items-center gap-2 mb-2">
               <TrendingUp className="h-4 w-4 text-primary" />
-              <span className="font-sans text-[11px] font-bold uppercase tracking-widest text-foreground">Ringkasan Rencana</span>
+              <span className="font-sans text-xs font-bold uppercase tracking-widest text-foreground">Ringkasan Rencana</span>
             </div>
             <div className="space-y-2">
-              <p className="font-serif text-[12px] text-muted-foreground leading-relaxed">
+              <p className="font-serif text-xs text-muted-foreground leading-relaxed">
                 {targetAmount && parseFloat(targetAmount) > 0 ? (
                   <>
                     Untuk mencapai impian dalam <span className="font-bold text-primary underline underline-offset-4">{duration || 1} bulan</span>, 

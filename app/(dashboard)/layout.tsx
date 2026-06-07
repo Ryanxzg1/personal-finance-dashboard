@@ -36,7 +36,7 @@ export default async function DashboardLayout({
             <UserButton 
               appearance={{
                 elements: {
-                  userButtonAvatarBox: "h-9 w-9 rounded-sm border-2 border-border shadow-xs",
+                  userButtonAvatarBox: "h-10 w-10 rounded-sm border-2 border-border shadow-xs",
                 }
               }}
             />

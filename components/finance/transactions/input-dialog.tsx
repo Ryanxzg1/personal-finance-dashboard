@@ -141,7 +141,7 @@ export function InputDialog({ open, mode, categories, accounts, initialData, onC
           >
             <div className="flex items-start justify-between gap-4 border-b border-dashed border-border pb-4">
               <div>
-                <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+                <p className="font-mono text-xs uppercase tracking-[0.18em] text-muted-foreground">
                   {initialData ? "Sunting Entri" : "Entri Baru"}
                 </p>
                 <h2 id="input-dialog-title" className="mt-1 font-sans text-xl font-bold tracking-tight">
@@ -197,7 +197,7 @@ export function InputDialog({ open, mode, categories, accounts, initialData, onC
               <Field label="Kategori" htmlFor="tx-category">
                 <div className="flex flex-wrap gap-2" role="radiogroup" aria-labelledby="tx-category">
                   {filteredCategories.length === 0 && (
-                    <p className="font-serif text-[11px] text-muted-foreground italic">
+                    <p className="font-serif text-xs text-muted-foreground italic">
                       Belum ada kategori {mode.toLowerCase()}. Silakan buat di menu Kategori.
                     </p>
                   )}
@@ -211,7 +211,7 @@ export function InputDialog({ open, mode, categories, accounts, initialData, onC
                         aria-checked={active}
                         onClick={() => setCategory(c.name)}
                         className={cn(
-                          "rounded-sm border px-4 min-h-[44px] flex items-center justify-center font-mono text-[11px] uppercase tracking-wider transition-colors",
+                          "rounded-sm border px-4 min-h-[44px] flex items-center justify-center font-mono text-xs uppercase tracking-wider transition-colors",
                           active
                             ? tone === "income"
                               ? "border-[#5a6b3b] bg-[#5a6b3b] text-white"
@@ -299,7 +299,7 @@ function Field({
     <div className="flex flex-col gap-1.5">
       <label
         htmlFor={htmlFor}
-        className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground"
+        className="font-mono text-xs uppercase tracking-[0.18em] text-muted-foreground"
       >
         {label}
       </label>

@@ -23,7 +23,7 @@ export function QuickInput({ onIncome, onExpense }: QuickInputProps) {
             Input Cepat
           </h2>
         </div>
-        <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+        <span className="font-mono text-xs uppercase tracking-wider text-muted-foreground">
           Pintasan
         </span>
       </header>
@@ -39,7 +39,7 @@ export function QuickInput({ onIncome, onExpense }: QuickInputProps) {
           className="group flex items-center justify-between rounded-sm border border-[#5a6b3b]/30 bg-[#5a6b3b] px-4 py-4 text-left text-white shadow-xs transition-transform hover:-translate-y-0.5 hover:bg-[#4d5c32] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#5a6b3b]"
         >
           <div className="flex flex-col">
-            <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-white/70">
+            <span className="font-mono text-xs uppercase tracking-[0.18em] text-white/70">
               + Tambah
             </span>
             <span className="font-sans text-base font-bold tracking-tight">Input Pemasukan</span>
@@ -56,7 +56,7 @@ export function QuickInput({ onIncome, onExpense }: QuickInputProps) {
           className="group flex items-center justify-between rounded-sm border border-destructive/40 bg-destructive px-4 py-4 text-left text-destructive-foreground shadow-xs transition-transform hover:-translate-y-0.5 hover:bg-destructive/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-destructive"
         >
           <div className="flex flex-col">
-            <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-white/70">
+            <span className="font-mono text-xs uppercase tracking-[0.18em] text-white/70">
               − Kurangi
             </span>
             <span className="font-sans text-base font-bold tracking-tight">Input Pengeluaran</span>
@@ -69,9 +69,9 @@ export function QuickInput({ onIncome, onExpense }: QuickInputProps) {
       </div>
 
       <footer className="mt-5 border-t border-dashed border-border pt-3">
-        <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
+        <p className="font-mono text-xs uppercase tracking-[0.14em] text-muted-foreground">
           Tip · Tekan{" "}
-          <kbd className="rounded-sm border border-border bg-background px-1.5 py-0.5 font-mono text-[10px]">
+          <kbd className="rounded-sm border border-border bg-background px-1.5 py-0.5 font-mono text-xs">
             N
           </kbd>{" "}
           untuk entri baru

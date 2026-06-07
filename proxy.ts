@@ -4,9 +4,12 @@ import { NextResponse } from "next/server";
 const isPublicRoute = createRouteMatcher([
   '/sign-in(.*)', 
   '/sign-up(.*)',
+  '/legal(.*)',
+  '/offline',
   '/manifest.webmanifest',
   '/sw.js',
-  '/icon-pwa.png'
+  '/icon-pwa.png',
+  '/api/webhooks/clerk',
 ])
 
 // Basic in-memory rate limiting (Note: limited efficacy in distributed serverless env without Redis)

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useTransition, useOptimistic, useMemo, useEffect } from "react"
+import { useState, useTransition, useOptimistic, useMemo } from "react"
 import { Plus, Trash2, Tag, Target, Wallet, Pencil } from "lucide-react"
 import { createCategory, deleteCategory } from "@/lib/actions/categories"
 import { upsertBudget } from "@/lib/actions/budgets"

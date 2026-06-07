@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
-import { transactions } from "@/lib/db/schema";
-import { desc, eq } from "drizzle-orm";
+import { accounts, transactions } from "@/lib/db/schema";
+import { desc, eq, and } from "drizzle-orm";
+import { transactionSchema } from "@/lib/validations/transaction";
+import { z } from "zod";
 
 export async function GET() {
   try {
@@ -34,23 +36,34 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { description, amount, category, type, date } = body;
+    const validatedData = transactionSchema.parse({
+      ...body,
+      date: body.date ? new Date(body.date) : new Date(),
+    });
 
-    if (!description || !amount || !category || !type) {
-      return NextResponse.json({ error: "Missing fields" }, { status: 400 });
+    if (validatedData.accountId) {
+      const userAccount = await db
+        .select({ id: accounts.id })
+        .from(accounts)
+        .where(and(eq(accounts.id, validatedData.accountId), eq(accounts.userId, userId)))
+        .limit(1);
+
+      if (userAccount.length === 0) {
+        return NextResponse.json({ error: "Akun tidak ditemukan atau bukan milik Anda" }, { status: 400 });
+      }
     }
 
     const [transaction] = await db.insert(transactions).values({
+      ...validatedData,
       userId,
-      description,
-      amount: amount.toString(),
-      category,
-      type,
-      date: date ? new Date(date) : new Date(),
+      amount: Math.abs(parseFloat(validatedData.amount)).toString(),
     }).returning();
 
     return NextResponse.json(transaction);
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json({ error: error.issues[0].message }, { status: 400 });
+    }
     console.error("[TRANSACTIONS_POST]", error);
     return NextResponse.json({ error: "Internal Error" }, { status: 500 });
   }

@@ -51,13 +51,13 @@ export function Sidebar({ onNewEntry }: { onNewEntry?: () => void }) {
         </div>
         <div className="flex flex-col leading-tight">
           <span className="font-sans text-lg font-bold tracking-tight">Buku Keuangan</span>
-          <span className="font-serif text-[11px] italic text-muted-foreground">est. 2026</span>
+          <span className="font-serif text-xs italic text-muted-foreground">est. 2026</span>
         </div>
       </div>
 
       {/* Nav */}
       <nav className="flex-1 px-3 py-5" aria-label="Navigasi utama">
-        <p className="mb-2 px-3 font-mono text-[13px] uppercase tracking-[0.18em] text-muted-foreground">
+        <p className="mb-2 px-3 font-mono text-sm uppercase tracking-[0.18em] text-muted-foreground">
           Menu Utama
         </p>
         <ul className="flex flex-col gap-1">
@@ -68,7 +68,7 @@ export function Sidebar({ onNewEntry }: { onNewEntry?: () => void }) {
                 <Link
                   href={href}
                   className={cn(
-                    "group flex w-full items-center gap-3 rounded-sm border border-transparent px-3 py-2 text-left font-serif text-[15px] transition-colors",
+                    "group flex w-full items-center gap-3 rounded-sm border border-transparent px-3 py-2 text-left font-serif text-base transition-colors",
                     isActive
                       ? "border-sidebar-border bg-card text-foreground shadow-xs"
                       : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
@@ -88,7 +88,7 @@ export function Sidebar({ onNewEntry }: { onNewEntry?: () => void }) {
           <Button
             type="button"
             onClick={handleNewEntry}
-            className="w-full justify-center gap-2 rounded-sm bg-primary px-4 py-2.5 font-sans text-[13px] font-bold uppercase tracking-[0.1em] text-primary-foreground shadow-xs hover:bg-primary/90 transition-all active:scale-[0.98]"
+            className="w-full justify-center gap-2 rounded-sm bg-primary px-4 py-2.5 font-sans text-sm font-bold uppercase tracking-[0.1em] text-primary-foreground shadow-xs hover:bg-primary/90 transition-all active:scale-[0.98]"
           >
             <Plus className="h-4 w-4" aria-hidden="true" />
             Input Baru
@@ -97,7 +97,7 @@ export function Sidebar({ onNewEntry }: { onNewEntry?: () => void }) {
             type="button"
             variant="outline"
             onClick={handleTransfer}
-            className="w-full justify-center gap-2 rounded-sm border-sidebar-border bg-sidebar-accent/40 px-4 py-2 font-sans text-[11px] font-bold uppercase tracking-[0.2em] text-foreground hover:bg-sidebar-accent hover:text-foreground transition-all active:scale-[0.98] shadow-xs"
+            className="w-full justify-center gap-2 rounded-sm border-sidebar-border bg-sidebar-accent/40 px-4 py-2 font-sans text-xs font-bold uppercase tracking-[0.16em] text-foreground hover:bg-sidebar-accent hover:text-foreground transition-all active:scale-[0.98] shadow-xs"
           >
             <TrendingUp className="h-3.5 w-3.5 rotate-45 text-primary" aria-hidden="true" />
             Transfer Dana
@@ -117,10 +117,10 @@ export function Sidebar({ onNewEntry }: { onNewEntry?: () => void }) {
             }}
           />
           <div className="min-w-0 flex-1 flex flex-col">
-            <span className="truncate font-sans text-[13px] font-bold text-foreground">
+            <span className="truncate font-sans text-sm font-bold text-foreground">
               {user?.fullName || "Pengguna"}
             </span>
-            <span className="truncate font-mono text-[11px] text-muted-foreground">
+            <span className="truncate font-mono text-xs text-muted-foreground">
               {user?.primaryEmailAddress?.emailAddress || "Sign out"}
             </span>
           </div>

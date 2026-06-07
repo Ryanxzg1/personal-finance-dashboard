@@ -125,7 +125,7 @@ export function CommandMenu() {
             </Command.Empty>
 
             {/* Quick Actions */}
-            <Command.Group heading={<span className="px-2 py-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Navigasi Cepat</span>}>
+            <Command.Group heading={<span className="px-2 py-1 font-mono text-xs uppercase tracking-widest text-muted-foreground">Navigasi Cepat</span>}>
               <Command.Item
                 onSelect={() => runCommand(() => router.push("/"))}
                 className="flex items-center gap-3 rounded-sm px-3 py-2 text-sm transition-colors hover:bg-muted cursor-pointer aria-selected:bg-muted"
@@ -165,7 +165,7 @@ export function CommandMenu() {
 
             {/* Results: Transactions */}
             {results.transactions.length > 0 && (
-              <Command.Group heading={<span className="px-2 py-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground mt-4 block">Transaksi Terkait</span>}>
+              <Command.Group heading={<span className="px-2 py-1 font-mono text-xs uppercase tracking-widest text-muted-foreground mt-4 block">Transaksi Terkait</span>}>
                 {results.transactions.map((tx) => (
                   <Command.Item
                     key={tx.id}
@@ -176,7 +176,7 @@ export function CommandMenu() {
                       <History className="h-4 w-4 text-muted-foreground" />
                       <div className="flex flex-col">
                         <span className="font-serif font-bold">{tx.description}</span>
-                        <span className="font-mono text-[10px] text-muted-foreground uppercase">{tx.category}</span>
+                        <span className="font-mono text-xs text-muted-foreground uppercase">{tx.category}</span>
                       </div>
                     </div>
                     <span className={cn(
@@ -192,7 +192,7 @@ export function CommandMenu() {
 
             {/* Results: Categories */}
             {results.categories.length > 0 && (
-              <Command.Group heading={<span className="px-2 py-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground mt-4 block">Kategori</span>}>
+              <Command.Group heading={<span className="px-2 py-1 font-mono text-xs uppercase tracking-widest text-muted-foreground mt-4 block">Kategori</span>}>
                 {results.categories.map((cat) => (
                   <Command.Item
                     key={cat.id}
@@ -208,7 +208,7 @@ export function CommandMenu() {
 
             {/* Results: Accounts */}
             {results.accounts.length > 0 && (
-              <Command.Group heading={<span className="px-2 py-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground mt-4 block">Dompet & Sumber Dana</span>}>
+              <Command.Group heading={<span className="px-2 py-1 font-mono text-xs uppercase tracking-widest text-muted-foreground mt-4 block">Dompet & Sumber Dana</span>}>
                 {results.accounts.map((acc) => (
                   <Command.Item
                     key={acc.id}
@@ -226,15 +226,15 @@ export function CommandMenu() {
           <div className="border-t border-dashed border-border bg-muted/30 px-4 py-2 flex items-center justify-between">
             <div className="flex items-center gap-4">
                <div className="flex items-center gap-1">
-                 <kbd className="rounded bg-muted px-1.5 py-0.5 font-mono text-[10px] border border-border shadow-xs">↵</kbd>
-                 <span className="font-serif text-[10px] text-muted-foreground">Buka</span>
+                 <kbd className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs border border-border shadow-xs">↵</kbd>
+                 <span className="font-serif text-xs text-muted-foreground">Buka</span>
                </div>
                <div className="flex items-center gap-1">
-                 <kbd className="rounded bg-muted px-1.5 py-0.5 font-mono text-[10px] border border-border shadow-xs">ESC</kbd>
-                 <span className="font-serif text-[10px] text-muted-foreground">Tutup</span>
+                 <kbd className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs border border-border shadow-xs">ESC</kbd>
+                 <span className="font-serif text-xs text-muted-foreground">Tutup</span>
                </div>
             </div>
-            <p className="font-mono text-[10px] text-muted-foreground uppercase tracking-widest italic">Global Search Engine</p>
+            <p className="font-mono text-xs text-muted-foreground uppercase tracking-widest italic">Global Search Engine</p>
           </div>
         </div>
       </Command.Dialog>

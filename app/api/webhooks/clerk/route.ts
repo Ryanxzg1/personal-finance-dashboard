@@ -25,9 +25,8 @@ export async function POST(req: Request) {
     })
   }
 
-  // Get the body
-  const payload = await req.json()
-  const body = JSON.stringify(payload)
+  // Svix verification must use the exact raw request body.
+  const body = await req.text()
 
   // Create a new Svix instance with your secret.
   const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET

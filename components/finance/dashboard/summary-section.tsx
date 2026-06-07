@@ -24,7 +24,7 @@ export function SummarySection({ balance, changePct, lastEntries }: SummaryProps
         <h2 id="ringkasan-heading" className="font-sans text-xl font-bold tracking-tight text-foreground">
           Ringkasan Keuangan
         </h2>
-        <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+        <span className="font-mono text-xs uppercase tracking-[0.18em] text-muted-foreground">
           Periode · Okt 2026
         </span>
       </header>
@@ -39,7 +39,7 @@ export function SummarySection({ balance, changePct, lastEntries }: SummaryProps
                 Total Saldo Saat Ini
               </h3>
             </div>
-            <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+            <span className="font-mono text-xs uppercase tracking-wider text-muted-foreground">
               IDR
             </span>
           </div>
@@ -85,7 +85,7 @@ export function SummarySection({ balance, changePct, lastEntries }: SummaryProps
                 Input Terakhir
               </h3>
             </div>
-            <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+            <span className="font-mono text-xs uppercase tracking-wider text-muted-foreground">
               3 entri
             </span>
           </div>
@@ -97,7 +97,7 @@ export function SummarySection({ balance, changePct, lastEntries }: SummaryProps
                 <li key={idx} className="flex items-center justify-between py-3 first:pt-2 last:pb-0">
                   <div className="min-w-0">
                     <p className="truncate font-serif text-sm text-foreground">{entry.label}</p>
-                    <p className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
+                    <p className="font-mono text-xs uppercase tracking-wider text-muted-foreground">
                       {entry.date}
                     </p>
                   </div>
