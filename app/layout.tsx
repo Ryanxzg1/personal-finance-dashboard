@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Buku Keuangan",
+    title: "Buku Keuangan Pribadi",
   },
   other: {
     "mobile-web-app-capable": "yes",

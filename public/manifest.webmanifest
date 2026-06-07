@@ -1,6 +1,6 @@
 {
-  "name": "Buku Kas Digital",
-  "short_name": "BukuKas",
+  "name": "Buku Keuangan Pribadi",
+  "short_name": "Buku Keuangan Pribadi",
   "description": "Dashboard keuangan pribadi modern.",
   "id": "/",
   "start_url": "/",

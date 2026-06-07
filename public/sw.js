@@ -80,7 +80,7 @@ self.addEventListener('fetch', (event) => {
 // Listener untuk Notifikasi (Tetap dipertahankan)
 self.addEventListener('push', function(event) {
   const data = event.data ? event.data.json() : {};
-  const title = data.title || 'Buku Kas Digital';
+  const title = data.title || 'Buku Keuangan Pribadi';
   const options = {
     body: data.body || 'Ada pembaruan transaksi untuk Anda.',
     icon: '/icon-192.png',
