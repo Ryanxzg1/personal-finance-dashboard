@@ -24,7 +24,7 @@ export function BottomNav() {
   }
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 flex items-center justify-around border-t border-border bg-card/80 px-2 pt-3 pb-[calc(12px+env(safe-area-inset-bottom))] backdrop-blur-md lg:hidden">
+    <div className="fixed bottom-0 left-0 right-0 z-50 flex items-center justify-around border-t border-border bg-card/80 px-2 pt-2 pb-[calc(10px+env(safe-area-inset-bottom))] backdrop-blur-md lg:hidden">
       {navItems.map((item) => {
         const Icon = item.icon
         const isActive = pathname === item.href
@@ -34,12 +34,12 @@ export function BottomNav() {
             <button
               key={item.label}
               onClick={handleAction}
-              className="flex flex-col items-center justify-center gap-1 -mt-8"
+              className="-mt-8 flex flex-col items-center justify-center gap-0.5"
             >
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg active:scale-90 transition-transform">
                 <Plus className="h-6 w-6" />
               </div>
-              <span className="mt-1 max-w-14 truncate font-mono text-xs uppercase leading-tight tracking-wider text-muted-foreground">
+              <span className="mt-1 max-w-16 truncate font-mono text-xs leading-tight text-muted-foreground">
                 {item.label}
               </span>
             </button>
@@ -51,14 +51,14 @@ export function BottomNav() {
             key={item.href}
             href={item.href}
             className={cn(
-              "flex flex-col items-center justify-center gap-1 px-3 transition-colors",
+              "flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 px-1 transition-colors",
               isActive ? "text-primary" : "text-muted-foreground"
             )}
           >
             <Icon className={cn("h-5 w-5", isActive && "stroke-[2.5px]")} />
             <span className={cn(
-              "max-w-14 truncate font-mono text-xs uppercase leading-tight tracking-wider",
-              isActive ? "font-bold" : "font-normal"
+              "max-w-16 truncate font-mono text-xs leading-tight",
+              isActive ? "font-semibold" : "font-normal"
             )}>
               {item.label}
             </span>
