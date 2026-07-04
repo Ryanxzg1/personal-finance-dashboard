@@ -3,7 +3,7 @@
 import { db } from "@/lib/db"
 import { transactions, accounts, NewTransaction } from "@/lib/db/schema"
 import { revalidatePath } from "next/cache"
-import { eq, desc, and } from "drizzle-orm"
+import { eq, desc, and, or } from "drizzle-orm"
 import { auth } from "@clerk/nextjs/server"
 import { transactionSchema } from "@/lib/validations/transaction"
 import { z } from "zod"
@@ -179,8 +179,6 @@ export async function updateTransaction(id: string | number, data: Partial<NewTr
 export async function transferFunds(data: {
   fromAccountId: number;
   toAccountId: number;
-  fromAccountName: string;
-  toAccountName: string;
   amount: string;
   date: Date;
 }) {
@@ -198,44 +196,55 @@ export async function transferFunds(data: {
       return { success: false, error: "Tidak dapat transfer ke dompet yang sama" };
     }
 
-    // Security check: Verifikasi kepemilikan kedua akun (asal dan tujuan) oleh user yang login (cegah IDOR)
-    const fromAccount = await db
-      .select({ id: accounts.id })
+    // Security check: Verifikasi kepemilikan kedua akun dan ambil nama dari server.
+    const transferAccounts = await db
+      .select({
+        id: accounts.id,
+        name: accounts.name,
+      })
       .from(accounts)
-      .where(and(eq(accounts.id, data.fromAccountId), eq(accounts.userId, userId)))
-      .limit(1);
+      .where(
+        and(
+          eq(accounts.userId, userId),
+          or(
+            eq(accounts.id, data.fromAccountId),
+            eq(accounts.id, data.toAccountId)
+          )
+        )
+      );
 
-    const toAccount = await db
-      .select({ id: accounts.id })
-      .from(accounts)
-      .where(and(eq(accounts.id, data.toAccountId), eq(accounts.userId, userId)))
-      .limit(1);
-
-    if (fromAccount.length === 0 || toAccount.length === 0) {
+    if (transferAccounts.length !== 2) {
       return { success: false, error: "Satu atau kedua akun tidak ditemukan atau bukan milik Anda" };
     }
 
-    // 1. Transaksi Keluar dari Dompet Asal (amount selalu absolut, type="expense" menentukan pengurangan)
-    await db.insert(transactions).values({
-      userId,
-      accountId: data.fromAccountId,
-      amount: amountNum.toString(),
-      category: "Transfer Keluar",
-      description: `Transfer ke ${data.toAccountName}`,
-      type: "expense",
-      date: data.date,
-    });
+    const fromAccount = transferAccounts.find((account) => account.id === data.fromAccountId);
+    const toAccount = transferAccounts.find((account) => account.id === data.toAccountId);
 
-    // 2. Transaksi Masuk ke Dompet Tujuan
-    await db.insert(transactions).values({
-      userId,
-      accountId: data.toAccountId,
-      amount: amountNum.toString(),
-      category: "Transfer Masuk",
-      description: `Terima transfer dari ${data.fromAccountName}`,
-      type: "income",
-      date: data.date,
-    });
+    if (!fromAccount || !toAccount) {
+      return { success: false, error: "Satu atau kedua akun tidak ditemukan atau bukan milik Anda" };
+    }
+
+    // Satu multi-row INSERT agar transfer tetap atomik di neon-http.
+    await db.insert(transactions).values([
+      {
+        userId,
+        accountId: data.fromAccountId,
+        amount: amountNum.toString(),
+        category: "Transfer Keluar",
+        description: `Transfer ke ${toAccount.name}`,
+        type: "expense",
+        date: data.date,
+      },
+      {
+        userId,
+        accountId: data.toAccountId,
+        amount: amountNum.toString(),
+        category: "Transfer Masuk",
+        description: `Terima transfer dari ${fromAccount.name}`,
+        type: "income",
+        date: data.date,
+      },
+    ]);
 
     revalidateAll();
     return { success: true };

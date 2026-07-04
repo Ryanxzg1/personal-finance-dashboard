@@ -1,4 +1,4 @@
-import { pgTable, serial, text, numeric, timestamp, varchar, integer, boolean, index } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, numeric, timestamp, varchar, integer, boolean, index, uniqueIndex } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 
 export const transactions = pgTable("transactions", {
@@ -71,6 +71,29 @@ export type Account = typeof accounts.$inferSelect;
 export type NewAccount = typeof accounts.$inferInsert;
 export type SavingsGoal = typeof savingsGoals.$inferSelect;
 export type NewSavingsGoal = typeof savingsGoals.$inferInsert;
+
+export const weeklyReportDeliveries = pgTable("weekly_report_deliveries", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id", { length: 255 }).notNull(),
+  periodStart: timestamp("period_start", { withTimezone: true }).notNull(),
+  periodEnd: timestamp("period_end", { withTimezone: true }).notNull(),
+  status: varchar("status", { length: 20 }).notNull().default("pending"),
+  attemptCount: integer("attempt_count").notNull().default(0),
+  lastAttemptAt: timestamp("last_attempt_at", { withTimezone: true }),
+  sentAt: timestamp("sent_at", { withTimezone: true }),
+  lastError: text("last_error"),
+  resendEmailId: varchar("resend_email_id", { length: 255 }),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [
+  index("weekly_report_deliveries_user_id_idx").on(table.userId),
+  index("weekly_report_deliveries_status_idx").on(table.status),
+  index("weekly_report_deliveries_period_start_idx").on(table.periodStart),
+  uniqueIndex("weekly_report_deliveries_user_period_uidx").on(table.userId, table.periodStart, table.periodEnd),
+]);
+
+export type WeeklyReportDelivery = typeof weeklyReportDeliveries.$inferSelect;
+export type NewWeeklyReportDelivery = typeof weeklyReportDeliveries.$inferInsert;
 
 // --- THE BLUEPRINT (EXPENSE PLANNING) ---
 export const blueprintPlans = pgTable("blueprint_plans", {

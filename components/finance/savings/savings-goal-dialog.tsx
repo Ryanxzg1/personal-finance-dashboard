@@ -20,7 +20,6 @@ interface SavingsGoalDialogProps {
     currentAmount: string
     monthlyTarget: string
     deadline: string
-    icon: string
   }) => void
 }
 
@@ -87,7 +86,6 @@ export function SavingsGoalDialog({ open, initialData, onClose, onSubmit }: Savi
       currentAmount: currentAmount || "0",
       monthlyTarget: calculatedMonthly,
       deadline: deadlineDate.toISOString(),
-      icon: "🎯",
     })
     onClose()
   }

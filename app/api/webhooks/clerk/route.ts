@@ -69,14 +69,14 @@ export async function POST(req: Request) {
 
     try {
       // DELETE ALL USER DATA (GDPR Compliance)
-      await db.transaction(async (tx) => {
-        await tx.delete(transactions).where(eq(transactions.userId, userId))
-        await tx.delete(budgets).where(eq(budgets.userId, userId))
-        await tx.delete(savingsGoals).where(eq(savingsGoals.userId, userId))
-        await tx.delete(blueprintPlans).where(eq(blueprintPlans.userId, userId))
-        await tx.delete(accounts).where(eq(accounts.userId, userId))
-        await tx.delete(categories).where(eq(categories.userId, userId))
-      })
+      await db.batch([
+        db.delete(transactions).where(eq(transactions.userId, userId)),
+        db.delete(budgets).where(eq(budgets.userId, userId)),
+        db.delete(savingsGoals).where(eq(savingsGoals.userId, userId)),
+        db.delete(blueprintPlans).where(eq(blueprintPlans.userId, userId)),
+        db.delete(accounts).where(eq(accounts.userId, userId)),
+        db.delete(categories).where(eq(categories.userId, userId)),
+      ])
 
       console.log(`Webhook: Successfully deleted all data for user ${userId}`)
     } catch (error) {

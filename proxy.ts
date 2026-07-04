@@ -10,6 +10,7 @@ const isPublicRoute = createRouteMatcher([
   '/sw.js',
   '/icon-pwa.png',
   '/api/webhooks/clerk',
+  '/api/cron/weekly-report',
 ])
 
 // Basic in-memory rate limiting (Note: limited efficacy in distributed serverless env without Redis)

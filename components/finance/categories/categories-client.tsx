@@ -125,8 +125,11 @@ export function CategoriesClient({
     })
   }
 
-  const handleTransferSubmit = async (data: { fromAccountId: number; toAccountId: number; fromAccountName: string; toAccountName: string; amount: string; date: Date }) => {
+  const handleTransferSubmit = async (data: { fromAccountId: number; toAccountId: number; amount: string; date: Date }) => {
     startTransition(async () => {
+      const fromAccount = accountBalances.find((account) => Number(account.id) === Number(data.fromAccountId))
+      const toAccount = accountBalances.find((account) => Number(account.id) === Number(data.toAccountId))
+
       // 1. Optimistic Update via useOptimistic
       addOptimisticTransaction([
         {
@@ -136,7 +139,7 @@ export function CategoriesClient({
           date: data.date,
           accountId: data.fromAccountId,
           type: "expense",
-          description: `Transfer ke ${data.toAccountName}`,
+          description: `Transfer ke ${toAccount?.name || "Dompet Tujuan"}`,
           userId: "",
           createdAt: new Date()
         },
@@ -147,7 +150,7 @@ export function CategoriesClient({
           date: data.date,
           accountId: data.toAccountId,
           type: "income",
-          description: `Terima transfer dari ${data.fromAccountName}`,
+          description: `Terima transfer dari ${fromAccount?.name || "Dompet Asal"}`,
           userId: "",
           createdAt: new Date()
         }
@@ -162,6 +165,7 @@ export function CategoriesClient({
         router.refresh()
       } else {
         toast.error(result.error || "Gagal melakukan transfer")
+        router.refresh()
       }
     })
   }
@@ -286,7 +290,10 @@ export function CategoriesClient({
     startTransition(async () => {
       addOptimisticAccount({ type: "DELETE", id })
       const result = await deleteAccount(id)
-      if (!result.success) toast.error("Gagal menghapus dompet")
+      if (!result.success) {
+        toast.error(result.error || "Gagal menghapus dompet")
+        router.refresh()
+      }
     })
   }
 

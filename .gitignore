@@ -80,6 +80,13 @@ manual_fix_db.js
 scratch_check_db.js
 
 # Tools
-.agents
-.codex
+.agents/
+.codex/
 next-env.d.ts
+
+# Testing Coverage & Reports
+coverage/
+.nyc_output/
+playwright-report/
+test-results/
+

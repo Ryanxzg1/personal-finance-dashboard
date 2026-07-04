@@ -1,9 +1,9 @@
 "use server"
 
 import { db } from "@/lib/db"
-import { accounts, transactions } from "@/lib/db/schema"
+import { accounts } from "@/lib/db/schema"
 import { revalidatePath } from "next/cache"
-import { eq, and } from "drizzle-orm"
+import { eq, and, sql } from "drizzle-orm"
 import { auth } from "@clerk/nextjs/server"
 import { accountSchema } from "@/lib/validations/account"
 import { z } from "zod"
@@ -43,25 +43,27 @@ export async function createAccount(data: z.infer<typeof accountSchema>) {
     if (!userId) return { success: false, error: "Unauthorized" };
 
     const validatedData = accountSchema.parse(data);
-
-    const [newAccount] = await db.insert(accounts).values({
-      ...validatedData,
-      initialBalance: "0", // Selalu 0 di tabel agar tidak double counting
-      userId,
-    }).returning();
-    
     const initialBalanceNum = parseFloat(validatedData.initialBalance);
-    if (!isNaN(initialBalanceNum) && initialBalanceNum > 0) {
-      await db.insert(transactions).values({
-        userId,
-        accountId: newAccount.id,
-        amount: initialBalanceNum.toString(),
-        category: "Saldo Awal",
-        description: `Saldo awal dompet ${validatedData.name}`,
-        type: "income",
-        date: new Date(),
-      });
-    }
+
+    // Satu statement SQL atomik: buat akun lalu, jika ada saldo awal, buat transaksi saldo awal.
+    await db.execute(sql`
+      WITH new_account AS (
+        INSERT INTO accounts (user_id, name, type, initial_balance)
+        VALUES (${userId}, ${validatedData.name}, ${validatedData.type}, 0)
+        RETURNING id, name
+      )
+      INSERT INTO transactions (user_id, account_id, description, amount, category, type, date)
+      SELECT
+        ${userId},
+        new_account.id,
+        ${sql`'Saldo awal dompet ' || new_account.name`},
+        ${initialBalanceNum.toString()},
+        'Saldo Awal',
+        'income',
+        NOW()
+      FROM new_account
+      WHERE ${initialBalanceNum} > 0
+    `);
 
     revalidateAll();
     return { success: true };
@@ -82,31 +84,17 @@ export async function deleteAccount(id: number) {
     const { userId } = await auth();
     if (!userId) throw new Error("Unauthorized");
 
-    // Verifikasi akun milik user sebelum menghapus (security check)
-    const [accountToDelete] = await db
-      .select()
-      .from(accounts)
-      .where(and(eq(accounts.id, id), eq(accounts.userId, userId)));
-    
-    if (!accountToDelete) {
-      return { success: false, error: "Akun tidak ditemukan" };
-    }
-
-    // Hapus semua transaksi terkait terlebih dahulu (foreign key constraint)
-    await db.delete(transactions).where(
-      and(
-        eq(transactions.accountId, id),
-        eq(transactions.userId, userId)
-      )
-    );
-
-    // Hapus akun
-    await db.delete(accounts).where(
+    // Satu delete cascade: transaksi terkait ikut terhapus lewat FK onDelete cascade.
+    const deleted = await db.delete(accounts).where(
       and(
         eq(accounts.id, id),
         eq(accounts.userId, userId)
       )
-    );
+    ).returning({ id: accounts.id });
+
+    if (deleted.length === 0) {
+      return { success: false, error: "Akun tidak ditemukan" };
+    }
 
     revalidateAll();
     return { success: true };
@@ -165,6 +153,3 @@ export async function updateAccount(id: number, data: z.infer<typeof accountSche
     return { success: false, error: "Gagal memperbarui akun" };
   }
 }
-
-
-

@@ -144,20 +144,36 @@ export function DashboardClient({
     })
   }
 
-  const handleTransferSubmit = async (data: { fromAccountId: number; toAccountId: number; fromAccountName: string; toAccountName: string; amount: string; date: Date }) => {
+  const handleTransferSubmit = async (data: { fromAccountId: number; toAccountId: number; amount: string; date: Date }) => {
     startTransition(async () => {
-       // Optimistic Update: Tambahkan satu entri dulu agar saldo segera berubah
+      const fromAccount = accountBalances.find((account) => Number(account.id) === Number(data.fromAccountId))
+      const toAccount = accountBalances.find((account) => Number(account.id) === Number(data.toAccountId))
+
+      // Optimistic Update: tampilkan kedua sisi transfer agar saldo langsung konsisten.
        addOptimisticAction({
         type: "ADD",
         transaction: {
-          id: `temp-transfer-${Date.now()}`,
+          id: `temp-transfer-out-${Date.now()}`,
           date: `${String(data.date.getDate()).padStart(2, "0")} ${data.date.toLocaleString("id-ID", { month: "short" })}`.replace(".", ""),
           rawDate: data.date.toISOString(),
           type: "Pengeluaran",
           category: "Transfer Keluar",
-          note: `Transfer ke ${data.toAccountName}`,
+          note: `Transfer ke ${toAccount?.name || "Dompet Tujuan"}`,
           amount: -Math.abs(Number(data.amount)),
           accountId: data.fromAccountId
+        } as any
+      })
+      addOptimisticAction({
+        type: "ADD",
+        transaction: {
+          id: `temp-transfer-in-${Date.now()}`,
+          date: `${String(data.date.getDate()).padStart(2, "0")} ${data.date.toLocaleString("id-ID", { month: "short" })}`.replace(".", ""),
+          rawDate: data.date.toISOString(),
+          type: "Pemasukan",
+          category: "Transfer Masuk",
+          note: `Terima transfer dari ${fromAccount?.name || "Dompet Asal"}`,
+          amount: Math.abs(Number(data.amount)),
+          accountId: data.toAccountId
         } as any
       })
 
@@ -168,6 +184,7 @@ export function DashboardClient({
         router.refresh()
       } else {
         toast.error(result.error || "Gagal melakukan transfer")
+        router.refresh()
       }
     })
   }

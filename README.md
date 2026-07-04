@@ -62,9 +62,22 @@ Kami menggunakan Drizzle untuk manajemen skema:
 - **Security Headers**: CSP, HSTS, dan X-Frame-Options terkonfigurasi.
 - **Strict Typing**: TypeScript Strict Mode aktif untuk stabilitas kode.
 
+## 🧪 Pengujian (Testing)
+
+Untuk melakukan pengujian fungsionalitas dan integritas tipe data TypeScript pada kode Next.js sebelum dirilis, jalankan pemeriksaan tipe statis (*static type-checking*):
+
+```bash
+pnpm exec tsc --noEmit
+```
+atau
+```bash
+npx tsc --noEmit
+```
+
 ## 📄 Lisensi & Dokumentasi
-Dokumentasi internal lebih lanjut tersedia di folder `ryan_workspace/docs/`.
-- [Project Documentation](./ryan_workspace/docs/project_documentation.md) (mencakup detail arsitektur, skema DB, API, strategi backup, serta panduan penanganan gangguan/troubleshooting)
+
+Dokumentasi internal lebih lanjut tersedia di folder `ryan_workspace/`.
+- [Project Documentation](./ryan_workspace/project_documentation.md) (mencakup detail arsitektur, skema DB, API, strategi backup, serta panduan penanganan gangguan/troubleshooting)
 
 ---
-*Dikembangkan dengan oleh Ryan dan dibantu oleh Gemini.*
+*Dikembangkan dengan ❤️ oleh Ryan dan dibantu oleh Gemini.*

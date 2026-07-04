@@ -1,135 +1,287 @@
-"use server"
+import "server-only"
 
-import { db } from "@/lib/db"
-import { transactions } from "@/lib/db/schema"
-import { auth, currentUser } from "@clerk/nextjs/server"
-import { gte, lte, and, eq } from "drizzle-orm"
+import { clerkClient, auth, currentUser } from "@clerk/nextjs/server"
+import { and, desc, eq, gte, isNull, lt, or, sql } from "drizzle-orm"
 import { Resend } from "resend"
+import { db } from "@/lib/db"
+import { transactions, weeklyReportDeliveries } from "@/lib/db/schema"
 import { WeeklyReportEmail } from "@/emails/weekly-report"
-import { generatePDFBuffer } from "@/lib/export-utils"
+import { generatePDFBuffer } from "@/lib/export-utils.server"
+import {
+  formatWibDate,
+  getWeeklyReportWindow,
+  isReportableTransaction,
+  summarizeTransactions,
+  type WeeklyReportWindow,
+} from "@/lib/reports/weekly"
 
-// Initialize Resend
-const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+const MAX_USERS = 100
+const CONCURRENCY = 5
+const MAX_ATTEMPTS = 3
+const STALE_AFTER_MS = 15 * 60 * 1000
 
-export async function sendWeeklyReport() {
+type DeliveryResult =
+  | { status: "sent" }
+  | { status: "skipped"; reason: "duplicate" | "in_progress" | "attempts_exhausted" | "no_transactions" }
+  | { status: "failed"; error: string }
+
+export interface WeeklyReportSummary {
+  periodStart: string
+  periodEnd: string
+  eligible: number
+  sent: number
+  failed: number
+  skipped: number
+  duplicateSkipped: number
+  missingEmail: number
+}
+
+function getResend() {
+  return process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null
+}
+
+async function mapWithConcurrency<T, R>(
+  values: T[],
+  concurrency: number,
+  worker: (value: T) => Promise<R>,
+) {
+  const results = new Array<R>(values.length)
+  let cursor = 0
+
+  await Promise.all(Array.from({ length: Math.min(concurrency, values.length) }, async () => {
+    while (cursor < values.length) {
+      const index = cursor++
+      results[index] = await worker(values[index])
+    }
+  }))
+
+  return results
+}
+
+async function claimDelivery(userId: string, period: WeeklyReportWindow) {
+  const now = new Date()
+  const [inserted] = await db
+    .insert(weeklyReportDeliveries)
+    .values({
+      userId,
+      periodStart: period.start,
+      periodEnd: period.end,
+      status: "pending",
+      attemptCount: 1,
+      lastAttemptAt: now,
+      updatedAt: now,
+    })
+    .onConflictDoNothing()
+    .returning()
+
+  if (inserted) return { claimed: true as const, delivery: inserted }
+
+  const [existing] = await db
+    .select()
+    .from(weeklyReportDeliveries)
+    .where(and(
+      eq(weeklyReportDeliveries.userId, userId),
+      eq(weeklyReportDeliveries.periodStart, period.start),
+      eq(weeklyReportDeliveries.periodEnd, period.end),
+    ))
+    .limit(1)
+
+  if (!existing) return { claimed: false as const, reason: "in_progress" as const }
+  if (existing.status === "sent") return { claimed: false as const, reason: "duplicate" as const }
+  if (existing.status === "skipped") return { claimed: false as const, reason: "no_transactions" as const }
+  if (existing.attemptCount >= MAX_ATTEMPTS) {
+    return { claimed: false as const, reason: "attempts_exhausted" as const }
+  }
+
+  const staleBefore = new Date(now.getTime() - STALE_AFTER_MS)
+  const [reclaimed] = await db
+    .update(weeklyReportDeliveries)
+    .set({
+      status: "pending",
+      attemptCount: existing.attemptCount + 1,
+      lastAttemptAt: now,
+      lastError: null,
+      updatedAt: now,
+    })
+    .where(and(
+      eq(weeklyReportDeliveries.id, existing.id),
+      lt(weeklyReportDeliveries.attemptCount, MAX_ATTEMPTS),
+      or(
+        eq(weeklyReportDeliveries.status, "failed"),
+        isNull(weeklyReportDeliveries.lastAttemptAt),
+        lt(weeklyReportDeliveries.lastAttemptAt, staleBefore),
+      ),
+    ))
+    .returning()
+
+  return reclaimed
+    ? { claimed: true as const, delivery: reclaimed }
+    : { claimed: false as const, reason: "in_progress" as const }
+}
+
+async function updateDelivery(
+  id: number,
+  status: "sent" | "failed" | "skipped",
+  values: { error?: string; providerId?: string } = {},
+) {
+  const now = new Date()
+  await db
+    .update(weeklyReportDeliveries)
+    .set({
+      status,
+      sentAt: status === "sent" ? now : undefined,
+      resendEmailId: values.providerId,
+      lastError: values.error ?? null,
+      updatedAt: now,
+    })
+    .where(eq(weeklyReportDeliveries.id, id))
+}
+
+async function sendForUser(params: {
+  userId: string
+  email: string
+  name: string
+  period: WeeklyReportWindow
+}): Promise<DeliveryResult> {
+  const claim = await claimDelivery(params.userId, params.period)
+  if (!claim.claimed) return { status: "skipped", reason: claim.reason }
+
   try {
-    const { userId } = await auth();
-    if (!userId) return { success: false, error: "Unauthorized" };
-    
-    if (!resend) {
-      return { success: false, error: "Resend API Key is not configured" };
-    }
-
-    const user = await currentUser();
-    const userEmail = user?.primaryEmailAddress?.emailAddress;
-    const userName = user?.fullName || user?.firstName || "Pengguna";
-
-    if (!userEmail) {
-       return { success: false, error: "User email not found" };
-    }
-
-    // Hitung tanggal 1 minggu ke belakang
-    const endDate = new Date();
-    const startDate = new Date();
-    startDate.setDate(endDate.getDate() - 7);
-    
-    // Set ke awal dan akhir hari
-    startDate.setHours(0, 0, 0, 0);
-    endDate.setHours(23, 59, 59, 999);
-
-    // Ambil data transaksi minggu ini
-    const weeklyTxs = await db
+    const rows = await db
       .select()
       .from(transactions)
-      .where(
-        and(
-          eq(transactions.userId, userId),
-          gte(transactions.date, startDate),
-          lte(transactions.date, endDate)
-        )
-      );
+      .where(and(
+        eq(transactions.userId, params.userId),
+        gte(transactions.date, params.period.start),
+        lt(transactions.date, params.period.end),
+      ))
+      .orderBy(desc(transactions.date))
 
-    if (weeklyTxs.length === 0) {
-      return { success: false, error: "Tidak ada transaksi minggu ini" };
+    const reportableRows = rows.filter(isReportableTransaction)
+    if (reportableRows.length === 0) {
+      await updateDelivery(claim.delivery.id, "skipped", { error: "Tidak ada transaksi laporan" })
+      return { status: "skipped", reason: "no_transactions" }
     }
 
-    // Hitung statistik
-    let totalIncome = 0;
-    let totalExpense = 0;
-    const categoryMap: Record<string, number> = {};
+    const resend = getResend()
+    const from = process.env.REPORT_FROM_EMAIL
+    if (!resend || !from) throw new Error("Konfigurasi Resend belum lengkap")
 
-    const cleanTxs = weeklyTxs.filter(t => !t.category.startsWith("Transfer") && t.category !== "Saldo Awal");
+    const stats = summarizeTransactions(reportableRows)
+    const startLabel = formatWibDate(params.period.start, { day: "numeric", month: "short", year: "numeric" })
+    const endLabel = formatWibDate(params.period.end, { day: "numeric", month: "short", year: "numeric" })
+    const title = `Laporan Keuangan Mingguan (${startLabel} - ${endLabel})`
+    const attachment = await generatePDFBuffer(reportableRows.map((transaction) => ({
+      date: formatWibDate(new Date(transaction.date), { day: "2-digit", month: "short" }),
+      type: transaction.type === "income" ? "Pemasukan" : "Pengeluaran",
+      category: transaction.category,
+      note: transaction.description,
+      amount: transaction.type === "income" ? Number(transaction.amount) : -Number(transaction.amount),
+    })), title)
 
-    cleanTxs.forEach(t => {
-       const amount = parseFloat(t.amount);
-       if (t.type === 'income') {
-           totalIncome += amount;
-       } else {
-           totalExpense += amount;
-           if (!categoryMap[t.category]) categoryMap[t.category] = 0;
-           categoryMap[t.category] += amount;
-       }
-    });
-
-    // Cari top kategori pengeluaran
-    let topCategory = "";
-    let topCategoryAmount = 0;
-    for (const [cat, amt] of Object.entries(categoryMap)) {
-        if (amt > topCategoryAmount) {
-            topCategoryAmount = amt;
-            topCategory = cat;
-        }
-    }
-
-    // Format tanggal untuk UI
-    const startStr = startDate.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
-    const endStr = endDate.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
-    const title = `Laporan Keuangan Mingguan (${startStr} - ${endStr})`;
-
-    // Generate PDF Buffer
-    const pdfData = cleanTxs.map(t => ({
-      date: new Date(t.date).toLocaleDateString('id-ID', { day: '2-digit', month: 'short' }),
-      type: t.type === 'income' ? 'Pemasukan' : 'Pengeluaran',
-      category: t.category,
-      note: t.description,
-      amount: t.type === 'income' ? parseFloat(t.amount) : -parseFloat(t.amount)
-    }));
-    
-    const pdfBuffer = await generatePDFBuffer(pdfData, title);
-
-    // Kirim Email
+    const recipient = process.env.NODE_ENV !== "production" && process.env.REPORT_RECIPIENT_OVERRIDE
+      ? process.env.REPORT_RECIPIENT_OVERRIDE
+      : params.email
     const { data, error } = await resend.emails.send({
-      // Dalam versi gratis Resend, Anda hanya bisa mengirim DARI domain yang sudah diverifikasi 
-      // atau 'onboarding@resend.dev' KE email Anda sendiri (yang terdaftar di Resend).
-      // Pastikan email penerima sama dengan email akun Resend Anda untuk testing.
-      from: 'Buku Kas <onboarding@resend.dev>', 
-      to: process.env.NODE_ENV === 'development' ? 'husyenrafi@gmail.com' : userEmail,
-      subject: `Laporan Mingguan Buku Kas: ${startStr} - ${endStr}`,
+      from,
+      to: recipient,
+      subject: `Laporan Mingguan Buku Kas: ${startLabel} - ${endLabel}`,
       react: WeeklyReportEmail({
-        userName,
-        startDate: startStr,
-        endDate: endStr,
-        totalIncome,
-        totalExpense,
-        topCategory,
-        topCategoryAmount
+        userName: params.name,
+        startDate: startLabel,
+        endDate: endLabel,
+        ...stats,
       }),
-      attachments: [
-        {
-          filename: `Laporan_Mingguan_${startStr.replace(' ', '_')}.pdf`,
-          content: pdfBuffer,
-        },
-      ],
-    });
+      attachments: [{ filename: `Laporan_Mingguan_${startLabel.replace(/ /g, "_")}.pdf`, content: attachment }],
+    }, {
+      idempotencyKey: `weekly-report/${params.userId}/${params.period.start.toISOString()}`,
+    })
 
-    if (error) {
-      console.error("Resend error:", error);
-      return { success: false, error: error.message };
+    if (error) throw new Error(error.message)
+    await updateDelivery(claim.delivery.id, "sent", { providerId: data?.id })
+    return { status: "sent" }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Gagal mengirim laporan"
+    await updateDelivery(claim.delivery.id, "failed", { error: message })
+    return { status: "failed", error: message }
+  }
+}
+
+export async function runWeeklyReportHeadless(reference = new Date()) {
+  const period = getWeeklyReportWindow(reference)
+  const candidates = await db
+    .selectDistinct({ userId: transactions.userId })
+    .from(transactions)
+    .where(and(
+      gte(transactions.date, period.start),
+      lt(transactions.date, period.end),
+      sql`${transactions.category} NOT LIKE 'Transfer%'`,
+      sql`${transactions.category} NOT IN ('Saldo Awal', 'Penyesuaian Saldo')`,
+    ))
+    .limit(MAX_USERS)
+
+  const summary: WeeklyReportSummary = {
+    periodStart: period.start.toISOString(),
+    periodEnd: period.end.toISOString(),
+    eligible: candidates.length,
+    sent: 0,
+    failed: 0,
+    skipped: 0,
+    duplicateSkipped: 0,
+    missingEmail: 0,
+  }
+
+  if (candidates.length === 0) return { success: true as const, summary }
+
+  const client = await clerkClient()
+  const users = await client.users.getUserList({
+    userId: candidates.map(({ userId }) => userId),
+    limit: MAX_USERS,
+  })
+  const usersById = new Map(users.data.map((user) => [user.id, user]))
+
+  const results = await mapWithConcurrency(candidates, CONCURRENCY, async ({ userId }) => {
+    const user = usersById.get(userId)
+    const primaryEmail = user?.primaryEmailAddress
+    if (!user || user.banned || user.locked || !primaryEmail || primaryEmail.verification?.status !== "verified") {
+      return { status: "missing_email" as const }
     }
 
-    return { success: true, data };
-  } catch (error: unknown) {
-    console.error("Failed to send weekly report:", error);
-    return { success: false, error: "Gagal mengirim laporan" };
+    const name = user.fullName || [user.firstName, user.lastName].filter(Boolean).join(" ") || "Pengguna"
+    return sendForUser({ userId, email: primaryEmail.emailAddress, name, period })
+  })
+
+  for (const result of results) {
+    if (result.status === "sent") summary.sent++
+    else if (result.status === "failed") summary.failed++
+    else if (result.status === "missing_email") summary.missingEmail++
+    else {
+      summary.skipped++
+      if (result.reason === "duplicate") summary.duplicateSkipped++
+    }
   }
+
+  return summary.failed > 0
+    ? { success: false as const, error: "Sebagian laporan gagal dikirim", summary }
+    : { success: true as const, summary }
+}
+
+export async function sendWeeklyReport() {
+  const { userId } = await auth()
+  if (!userId) return { success: false, error: "Unauthorized" }
+
+  const user = await currentUser()
+  const email = user?.primaryEmailAddress?.emailAddress
+  if (!email) return { success: false, error: "User email not found" }
+
+  const result = await sendForUser({
+    userId,
+    email,
+    name: user.fullName || user.firstName || "Pengguna",
+    period: getWeeklyReportWindow(),
+  })
+
+  return result.status === "failed"
+    ? { success: false, error: result.error }
+    : { success: true, result }
 }

@@ -1,13 +1,13 @@
 "use server"
 
 import { db } from "@/lib/db"
-import { savingsGoals } from "@/lib/db/schema";
+import { savingsGoals } from "@/lib/db/schema"
 import { auth } from "@clerk/nextjs/server";
 import { eq, and } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
-import { savingsGoalSchema } from "@/lib/validations/savings";
+import { savingsGoalWriteSchema } from "@/lib/validations/savings"
 
 export async function getSavingsGoals() {
   try {
@@ -26,31 +26,25 @@ export async function getSavingsGoals() {
   }
 }
 
-export async function createSavingsGoal(data: z.infer<typeof savingsGoalSchema>) {
+export async function createSavingsGoal(data: unknown) {
   try {
     const { userId } = await auth();
     if (!userId) return { success: false, error: "Unauthorized" };
 
-    const validated = savingsGoalSchema.parse(data);
+    const validated = savingsGoalWriteSchema.parse(data)
 
-    // Bug fix: Pastikan targetAmount selalu lebih besar dari currentAmount
-    const target = parseFloat(validated.targetAmount);
-    const current = parseFloat(validated.currentAmount || "0");
-    if (isNaN(target) || target <= 0) {
-      return { success: false, error: "Target tabungan harus lebih dari nol" };
-    }
-    if (current < 0) {
-      return { success: false, error: "Saldo saat ini tidak boleh negatif" };
-    }
-
-    await db.insert(savingsGoals).values({
+    const [created] = await db.insert(savingsGoals).values({
       userId,
       name: validated.name,
       targetAmount: validated.targetAmount,
-      currentAmount: validated.currentAmount || "0",
-      monthlyTarget: validated.monthlyTarget || null,
-      deadline: validated.deadline ? new Date(validated.deadline) : null,
-    });
+      currentAmount: validated.currentAmount,
+      monthlyTarget: validated.monthlyTarget,
+      deadline: new Date(validated.deadline),
+    }).returning({ id: savingsGoals.id })
+
+    if (!created) {
+      return { success: false, error: "Gagal membuat target baru" }
+    }
 
     revalidatePath("/tabungan");
     return { success: true };
@@ -58,46 +52,33 @@ export async function createSavingsGoal(data: z.infer<typeof savingsGoalSchema>)
     if (error instanceof z.ZodError) {
       return { success: false, error: error.issues[0].message };
     }
-    console.error("Failed to create savings goal:", error);
+    console.error("Failed to create savings goal:", error)
     return { success: false, error: "Gagal membuat target baru" };
   }
 }
 
-export async function updateSavingsGoal(id: number, data: Partial<z.infer<typeof savingsGoalSchema>>) {
+export async function updateSavingsGoal(id: number, data: unknown) {
   try {
     const { userId } = await auth();
     if (!userId) return { success: false, error: "Unauthorized" };
 
-    // Verifikasi kepemilikan (security check)
-    const [existing] = await db
-      .select()
-      .from(savingsGoals)
-      .where(and(eq(savingsGoals.id, id), eq(savingsGoals.userId, userId)));
+    const validated = savingsGoalWriteSchema.parse(data)
 
-    if (!existing) {
-      return { success: false, error: "Target tabungan tidak ditemukan" };
-    }
-
-    // Bug fix: Pastikan currentAmount tidak melebihi targetAmount
-    const newCurrent = data.currentAmount !== undefined
-      ? parseFloat(data.currentAmount)
-      : parseFloat(existing.currentAmount);
-    const newTarget = data.targetAmount !== undefined
-      ? parseFloat(data.targetAmount)
-      : parseFloat(existing.targetAmount);
-
-    if (!isNaN(newCurrent) && !isNaN(newTarget) && newCurrent > newTarget) {
-      return { success: false, error: "Saldo saat ini tidak boleh melebihi target" };
-    }
-
-    await db
+    const updated = await db
       .update(savingsGoals)
       .set({
-        ...data,
-        monthlyTarget: data.monthlyTarget || null,
-        deadline: data.deadline ? new Date(data.deadline) : undefined,
+        name: validated.name,
+        targetAmount: validated.targetAmount,
+        currentAmount: validated.currentAmount,
+        monthlyTarget: validated.monthlyTarget,
+        deadline: new Date(validated.deadline),
       })
-      .where(and(eq(savingsGoals.id, id), eq(savingsGoals.userId, userId)));
+      .where(and(eq(savingsGoals.id, id), eq(savingsGoals.userId, userId)))
+      .returning({ id: savingsGoals.id })
+
+    if (updated.length === 0) {
+      return { success: false, error: "Target tabungan tidak ditemukan" };
+    }
 
     revalidatePath("/tabungan");
     return { success: true };

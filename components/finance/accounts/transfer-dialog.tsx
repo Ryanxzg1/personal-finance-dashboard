@@ -18,8 +18,6 @@ interface TransferDialogProps {
   onSubmit: (data: { 
     fromAccountId: number; 
     toAccountId: number; 
-    fromAccountName: string;
-    toAccountName: string;
     amount: string; 
     date: Date 
   }) => void
@@ -61,18 +59,12 @@ export function TransferDialog({ open, accounts, onClose, onSubmit }: TransferDi
       return
     }
 
-    const fromAcc = accounts.find(a => a.id === fromAccountId)
-    const toAcc = accounts.find(a => a.id === toAccountId)
-
     onSubmit({
       fromAccountId: fromAccountId as number,
       toAccountId: toAccountId as number,
-      fromAccountName: fromAcc?.name || "Dompet Asal",
-      toAccountName: toAcc?.name || "Dompet Tujuan",
       amount: num.toString(),
       date: new Date(date),
     })
-    onClose()
   }
 
   return (
