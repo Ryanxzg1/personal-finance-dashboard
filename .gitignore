@@ -79,5 +79,7 @@ scratch/
 manual_fix_db.js
 scratch_check_db.js
 
-# Gemini
-GEMINI.md
+# Tools
+.agents
+.codex
+next-env.d.ts
