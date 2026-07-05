@@ -114,13 +114,16 @@ export function CategoriesClient({
     if (!editingAccount) return
     
     startTransition(async () => {
-      const result = await updateAccount(editingAccount.id, data)
-      if (result.success) {
-        toast.success("Dompet berhasil diperbarui")
-        setAccountDialogOpen(false)
+      try {
+        const result = await updateAccount(editingAccount.id, data)
+        if (result.success) {
+          toast.success("Dompet berhasil diperbarui")
+          setAccountDialogOpen(false)
+        } else {
+          toast.error(result.error || "Gagal memperbarui dompet")
+        }
+      } finally {
         router.refresh()
-      } else {
-        toast.error(result.error || "Gagal memperbarui dompet")
       }
     })
   }
@@ -157,14 +160,16 @@ export function CategoriesClient({
       ])
 
       // 2. Server Action
-      const result = await transferFunds(data)
-      
-      if (result.success) {
-        toast.success("Transfer berhasil dilakukan")
-        setTransferDialogOpen(false)
-        router.refresh()
-      } else {
-        toast.error(result.error || "Gagal melakukan transfer")
+      try {
+        const result = await transferFunds(data)
+        
+        if (result.success) {
+          toast.success("Transfer berhasil dilakukan")
+          setTransferDialogOpen(false)
+        } else {
+          toast.error(result.error || "Gagal melakukan transfer")
+        }
+      } finally {
         router.refresh()
       }
     })
@@ -243,14 +248,18 @@ export function CategoriesClient({
     e.preventDefault()
     if (!name.trim()) return
     startTransition(async () => {
-      const result = await createCategory({
-        name: name.trim(),
-        type: type,
-      })
-      if (!result.success) toast.error("Gagal menambah kategori")
-      else {
-        toast.success("Kategori berhasil ditambahkan")
-        setName("")
+      try {
+        const result = await createCategory({
+          name: name.trim(),
+          type: type,
+        })
+        if (!result.success) toast.error("Gagal menambah kategori")
+        else {
+          toast.success("Kategori berhasil ditambahkan")
+          setName("")
+        }
+      } finally {
+        router.refresh()
       }
     })
   }
@@ -259,8 +268,12 @@ export function CategoriesClient({
     if (!confirm("Hapus kategori ini? Semua anggaran terkait juga akan hilang.")) return
     startTransition(async () => {
       addOptimisticCategory({ type: "DELETE", id })
-      const result = await deleteCategory(id)
-      if (!result.success) toast.error("Gagal menghapus kategori")
+      try {
+        const result = await deleteCategory(id)
+        if (!result.success) toast.error("Gagal menghapus kategori")
+      } finally {
+        router.refresh()
+      }
     })
   }
 
@@ -269,17 +282,21 @@ export function CategoriesClient({
     if (!accountName.trim()) return
     
     startTransition(async () => {
-      const result = await createAccount({
-        name: accountName.trim(),
-        type: accountType,
-        initialBalance: initialBalance || "0",
-      })
-      
-      if (!result.success) toast.error("Gagal menambah dompet")
-      else {
-        toast.success("Dompet berhasil ditambahkan")
-        setAccountName("")
-        setInitialBalance("0")
+      try {
+        const result = await createAccount({
+          name: accountName.trim(),
+          type: accountType,
+          initialBalance: initialBalance || "0",
+        })
+        
+        if (!result.success) toast.error("Gagal menambah dompet")
+        else {
+          toast.success("Dompet berhasil ditambahkan")
+          setAccountName("")
+          setInitialBalance("0")
+        }
+      } finally {
+        router.refresh()
       }
     })
   }
@@ -289,9 +306,12 @@ export function CategoriesClient({
     
     startTransition(async () => {
       addOptimisticAccount({ type: "DELETE", id })
-      const result = await deleteAccount(id)
-      if (!result.success) {
-        toast.error(result.error || "Gagal menghapus dompet")
+      try {
+        const result = await deleteAccount(id)
+        if (!result.success) {
+          toast.error(result.error || "Gagal menghapus dompet")
+        }
+      } finally {
         router.refresh()
       }
     })
@@ -301,14 +321,18 @@ export function CategoriesClient({
     const amount = budgetInputs[categoryId] || "0"
     const now = new Date()
     startTransition(async () => {
-      const result = await upsertBudget({
-        categoryId,
-        limitAmount: amount,
-        month: now.getMonth(),
-        year: now.getFullYear()
-      })
-      if (!result.success) toast.error("Gagal menyimpan anggaran")
-      else toast.success("Anggaran diperbarui")
+      try {
+        const result = await upsertBudget({
+          categoryId,
+          limitAmount: amount,
+          month: now.getMonth(),
+          year: now.getFullYear()
+        })
+        if (!result.success) toast.error("Gagal menyimpan anggaran")
+        else toast.success("Anggaran diperbarui")
+      } finally {
+        router.refresh()
+      }
     })
   }
 

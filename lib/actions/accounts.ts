@@ -5,7 +5,7 @@ import { accounts } from "@/lib/db/schema"
 import { revalidatePath } from "next/cache"
 import { eq, and, sql } from "drizzle-orm"
 import { auth } from "@clerk/nextjs/server"
-import { accountSchema } from "@/lib/validations/account"
+import { createAccountSchema, updateAccountSchema, adjustBalanceSchema } from "@/lib/validations/account"
 import { z } from "zod"
 
 const REVALIDATE_PATHS = ["/", "/kategori", "/riwayat"]
@@ -37,12 +37,12 @@ export async function getAccounts() {
 /**
  * Menambah akun baru
  */
-export async function createAccount(data: z.infer<typeof accountSchema>) {
+export async function createAccount(data: z.infer<typeof createAccountSchema>) {
   try {
     const { userId } = await auth();
     if (!userId) return { success: false, error: "Unauthorized" };
 
-    const validatedData = accountSchema.parse(data);
+    const validatedData = createAccountSchema.parse(data);
     const initialBalanceNum = parseFloat(validatedData.initialBalance);
 
     // Satu statement SQL atomik: buat akun lalu, jika ada saldo awal, buat transaksi saldo awal.
@@ -107,12 +107,12 @@ export async function deleteAccount(id: number) {
 /**
  * Memperbarui akun
  */
-export async function updateAccount(id: number, data: z.infer<typeof accountSchema>) {
+export async function updateAccount(id: number, data: z.infer<typeof updateAccountSchema>) {
   try {
     const { userId } = await auth();
     if (!userId) return { success: false, error: "Unauthorized" };
 
-    const validatedData = accountSchema.parse(data);
+    const validatedData = updateAccountSchema.parse(data);
 
     // Verifikasi akun milik user (security check)
     const [oldAccount] = await db
@@ -124,17 +124,10 @@ export async function updateAccount(id: number, data: z.infer<typeof accountSche
       return { success: false, error: "Akun tidak ditemukan" };
     }
 
-    // Karena kita sekarang menggunakan transaksi 100% untuk saldo,
-    // Kita tidak perlu menghitung diff terhadap initialBalance tabel (karena tabel selalu 0).
-    // Kita biarkan user mengedit nama/tipe saja di sini.
-    // Jika mereka ingin koreksi saldo, mereka harus buat transaksi penyesuaian manual
-    // atau kita bisa hapus logika diff ini untuk sementara agar tidak bingung.
-
     await db.update(accounts)
       .set({ 
         name: validatedData.name,
-        type: validatedData.type,
-        initialBalance: "0" // Pastikan tetap 0
+        type: validatedData.type
       })
       .where(
         and(
@@ -151,5 +144,48 @@ export async function updateAccount(id: number, data: z.infer<typeof accountSche
     }
     console.error("Failed to update account:", error);
     return { success: false, error: "Gagal memperbarui akun" };
+  }
+}
+
+/**
+ * Menyesuaikan saldo akun (dengan mutasi transaksi Ledger)
+ */
+export async function adjustAccountBalance(data: z.infer<typeof adjustBalanceSchema>) {
+  try {
+    const { userId } = await auth();
+    if (!userId) return { success: false, error: "Unauthorized" };
+
+    const validatedData = adjustBalanceSchema.parse(data);
+
+    // Pastikan akun itu milik user
+    const [account] = await db
+      .select()
+      .from(accounts)
+      .where(and(eq(accounts.id, validatedData.accountId), eq(accounts.userId, userId)));
+    
+    if (!account) return { success: false, error: "Akun tidak ditemukan" };
+
+    // Bikin transaksi teknis penyesuaian saldo
+    const txType = validatedData.direction === "increase" ? "income" : "expense";
+    
+    await db.execute(sql`
+      INSERT INTO transactions (user_id, account_id, description, amount, category, type, date)
+      VALUES (
+        ${userId}, 
+        ${validatedData.accountId}, 
+        ${validatedData.note || 'Penyesuaian Saldo'}, 
+        ${validatedData.amount.toString()}, 
+        'Penyesuaian Sistem', 
+        ${txType}, 
+        NOW()
+      )
+    `);
+
+    revalidateAll();
+    return { success: true };
+  } catch (error) {
+    if (error instanceof z.ZodError) return { success: false, error: error.issues[0].message };
+    console.error("Failed to adjust balance:", error);
+    return { success: false, error: "Gagal menyesuaikan saldo" };
   }
 }

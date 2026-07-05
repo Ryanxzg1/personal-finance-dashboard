@@ -74,10 +74,10 @@ export function AccountDialog({ open, initialData, onClose, onSubmit, isPending 
             <div className="flex items-start justify-between gap-4 border-b border-dashed border-border pb-4">
               <div>
                 <p className="font-mono text-xs uppercase tracking-[0.18em] text-muted-foreground">
-                  Sunting Dompet
+                  {initialData ? "Sunting Dompet" : "Tambah Dompet"}
                 </p>
                 <h2 className="mt-1 font-sans text-2xl font-bold tracking-tight">
-                  Edit {initialData?.name}
+                  {initialData ? `Edit ${initialData.name}` : "Dompet Baru"}
                 </h2>
               </div>
               <button
@@ -129,12 +129,14 @@ export function AccountDialog({ open, initialData, onClose, onSubmit, isPending 
                 </div>
               </div>
 
-              <AmountInput 
-                label="Saldo Saat Ini (Rp)"
-                value={initialBalance}
-                onChange={setInitialBalance}
-                helperText="Mengubah saldo awal akan menggeser saldo total Anda saat ini."
-              />
+              {!initialData && (
+                <AmountInput 
+                  label="Saldo Awal (Rp)"
+                  value={initialBalance}
+                  onChange={setInitialBalance}
+                  helperText="Masukkan saldo awal yang ada di dompet ini saat ini."
+                />
+              )}
 
               {error && (
                 <div className="rounded-sm border border-destructive/30 bg-destructive/10 px-3 py-2 font-serif text-sm text-destructive">

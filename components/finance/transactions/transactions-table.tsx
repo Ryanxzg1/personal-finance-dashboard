@@ -1,7 +1,7 @@
 "use client"
 
 import { useMemo, useState, useEffect } from "react"
-import { Calendar, ChevronDown, NotebookPen, Pencil, Tag, Trash2 } from "lucide-react"
+import { Calendar, ChevronDown, NotebookPen, Pencil, Tag, Trash2, Wallet } from "lucide-react"
 import { cn } from "@/lib/utils"
 import dynamic from "next/dynamic"
 import { motion, AnimatePresence } from "framer-motion"
@@ -21,8 +21,14 @@ export interface Transaction {
   accountId?: number | null
 }
 
+export interface Account {
+  id: number
+  name: string
+}
+
 interface TransactionsTableProps {
   transactions: Transaction[]
+  accounts?: Account[]
   onNewEntry?: () => void
   onDelete?: (id: string) => void
   onEdit?: (tx: Transaction) => void
@@ -42,10 +48,11 @@ function formatRupiah(value: number) {
   return `${sign} Rp ${abs}`
 }
 
-export function TransactionsTable({ transactions, onDelete, onEdit }: TransactionsTableProps) {
+export function TransactionsTable({ transactions, accounts, onDelete, onEdit }: TransactionsTableProps) {
   const [selectedMonth, setSelectedMonth] = useState(() => new Date().getMonth())
   const [selectedYear, setSelectedYear] = useState(() => new Date().getFullYear())
   const [category, setCategory] = useState("Semua Kategori")
+  const [selectedAccount, setSelectedAccount] = useState("Semua Dompet")
 
   const months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"]
 
@@ -66,9 +73,10 @@ export function TransactionsTable({ transactions, onDelete, onEdit }: Transactio
       const matchMonth = d.getMonth() === selectedMonth
       const matchYear = d.getFullYear() === selectedYear
       const matchCat = category === "Semua Kategori" || t.category === category
-      return matchMonth && matchYear && matchCat
+      const matchAcc = selectedAccount === "Semua Dompet" || t.accountId?.toString() === selectedAccount
+      return matchMonth && matchYear && matchCat && matchAcc
     })
-  }, [transactions, selectedMonth, selectedYear, category])
+  }, [transactions, selectedMonth, selectedYear, category, selectedAccount])
 
 
   const isEmpty = filtered.length === 0
@@ -79,7 +87,7 @@ export function TransactionsTable({ transactions, onDelete, onEdit }: Transactio
   // Reset to first page when filters change
   useEffect(() => {
     setCurrentPage(1)
-  }, [selectedMonth, selectedYear, category])
+  }, [selectedMonth, selectedYear, category, selectedAccount])
 
   const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE)
   const currentPageSafe = Math.min(Math.max(1, currentPage), totalPages || 1)
@@ -135,6 +143,15 @@ export function TransactionsTable({ transactions, onDelete, onEdit }: Transactio
             onChange={setCategory}
             options={allCategories.map(c => ({ label: c, value: c }))}
           />
+          <FilterSelect
+            icon={Wallet}
+            value={selectedAccount}
+            onChange={setSelectedAccount}
+            options={[
+              { label: "Semua Dompet", value: "Semua Dompet" },
+              ...(accounts || []).map(a => ({ label: a.name, value: a.id.toString() }))
+            ]}
+          />
           <ExportButton 
             filteredData={filtered} 
             selectedMonthName={months[selectedMonth]} 
@@ -189,6 +206,12 @@ export function TransactionsTable({ transactions, onDelete, onEdit }: Transactio
                         <span className={cn("inline-flex w-fit items-center gap-1.5 rounded-sm border px-2 py-0.5 font-mono text-xs font-medium uppercase tracking-wider", CATEGORY_STYLES[tx.category] ?? "border-border bg-secondary text-secondary-foreground")}>
                           {tx.category}
                         </span>
+                        {tx.accountId && accounts && (
+                          <span className="inline-flex w-fit items-center gap-1 text-xs font-mono text-muted-foreground border border-border px-1.5 py-0.5 rounded-sm bg-muted/20">
+                            <Wallet className="h-3 w-3" />
+                            {accounts.find(a => a.id === tx.accountId)?.name || "Dompet"}
+                          </span>
+                        )}
                      </div>
                      <div className="flex items-center gap-1">
                         <IconButton label="Edit" icon={Pencil} onClick={() => onEdit?.(tx)} />
@@ -241,6 +264,12 @@ export function TransactionsTable({ transactions, onDelete, onEdit }: Transactio
                             <span className="h-1.5 w-1.5 rounded-full bg-current" aria-hidden="true" />
                             {tx.category}
                           </span>
+                          {tx.accountId && accounts && (
+                            <span className="inline-flex w-fit items-center gap-1 text-xs font-mono text-muted-foreground border border-border px-1.5 py-0.5 rounded-sm bg-muted/20">
+                              <Wallet className="h-3 w-3" />
+                              {accounts.find(a => a.id === tx.accountId)?.name || "Dompet"}
+                            </span>
+                          )}
                           <span className="font-serif text-sm text-muted-foreground">{tx.note}</span>
                         </div>
                       </Td>

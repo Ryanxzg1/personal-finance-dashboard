@@ -10,7 +10,7 @@ import {
 import { InputDialog, type InputMode } from "../transactions/input-dialog"
 import { createTransaction, deleteTransaction, updateTransaction, transferFunds } from "@/lib/actions/transactions"
 import { TransferDialog } from "../accounts/transfer-dialog"
-import { updateAccount } from "@/lib/actions/accounts"
+import { updateAccount, adjustAccountBalance } from "@/lib/actions/accounts"
 import { toast } from "sonner"
 import { TrendingUp, TrendingDown, Wallet, AlertCircle, Bell, BellOff } from "lucide-react"
 import { cn } from "@/lib/utils"
@@ -18,7 +18,30 @@ import { TypeSelector } from "../transactions/type-selector"
 import { CategoryDistribution } from "./category-distribution"
 import { AccountSummary } from "../accounts/account-summary"
 import { AccountDialog } from "../accounts/account-dialog"
+import { AdjustBalanceDialog } from "../accounts/adjust-balance-dialog"
 import { requestNotificationPermission, sendNotification } from "@/lib/notifications"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+
+const MONTHS = [
+  { value: "0", label: "Januari" },
+  { value: "1", label: "Februari" },
+  { value: "2", label: "Maret" },
+  { value: "3", label: "April" },
+  { value: "4", label: "Mei" },
+  { value: "5", label: "Juni" },
+  { value: "6", label: "Juli" },
+  { value: "7", label: "Agustus" },
+  { value: "8", label: "September" },
+  { value: "9", label: "Oktober" },
+  { value: "10", label: "November" },
+  { value: "11", label: "Desember" },
+]
 
 interface Category {
   id: number
@@ -58,7 +81,24 @@ export function DashboardClient({
   initialAccounts,
   userName: _userName 
 }: DashboardClientProps) {
+  const now = useMemo(() => new Date(), [])
+  const [selectedMonth, setSelectedMonth] = useState<number>(now.getMonth())
+  const [selectedYear, setSelectedYear] = useState<number>(now.getFullYear())
   const [isPending, startTransition] = useTransition()
+
+  const YEARS = useMemo(() => {
+    const currentYear = new Date().getFullYear()
+    const txYears = initialTransactions.map((t) => new Date(t.rawDate).getFullYear())
+    
+    // Generate range 10 tahun ke belakang dan 10 tahun ke depan dari tahun saat ini
+    const rangeYears: number[] = []
+    for (let i = currentYear - 10; i <= currentYear + 10; i++) {
+      rangeYears.push(i)
+    }
+
+    const uniqueYears = Array.from(new Set([...rangeYears, ...txYears]))
+    return uniqueYears.sort((a, b) => b - a).map(String)
+  }, [initialTransactions])
   const searchParams = useSearchParams()
   const router = useRouter()
   const [dialogOpen, setDialogOpen] = useState(false)
@@ -67,6 +107,8 @@ export function DashboardClient({
   const [editingTx, setEditingTx] = useState<UITransaction | null>(null)
   const [editingAccount, setEditingAccount] = useState<Account | undefined>(undefined)
   const [accountDialogOpen, setAccountDialogOpen] = useState(false)
+  const [adjustBalanceDialogOpen, setAdjustBalanceDialogOpen] = useState(false)
+  const [adjustingAccount, setAdjustingAccount] = useState<Account | undefined>(undefined)
   const [notifGranted, setNotifGranted] = useState(false)
   const [mounted, setMounted] = useState(false)
   const [transferDialogOpen, setTransferDialogOpen] = useState(false)
@@ -129,6 +171,11 @@ export function DashboardClient({
     setAccountDialogOpen(true)
   }
 
+  const openAdjustBalanceDialog = (acc: Account) => {
+    setAdjustingAccount(acc)
+    setAdjustBalanceDialogOpen(true)
+  }
+
   const handleAccountSubmit = async (data: { name: string; type: string; initialBalance: string }) => {
     if (!editingAccount) return
     
@@ -140,6 +187,24 @@ export function DashboardClient({
         router.refresh()
       } else {
         toast.error(result.error || "Gagal memperbarui dompet")
+      }
+    })
+  }
+
+  const handleAdjustBalanceSubmit = async (data: { accountId: number; direction: "increase" | "decrease"; amount: string; note: string }) => {
+    startTransition(async () => {
+      const result = await adjustAccountBalance({
+        accountId: data.accountId,
+        direction: data.direction,
+        amount: parseFloat(data.amount),
+        note: data.note
+      })
+      if (result.success) {
+        toast.success("Saldo berhasil disesuaikan")
+        setAdjustBalanceDialogOpen(false)
+        router.refresh()
+      } else {
+        toast.error(result.error || "Gagal menyesuaikan saldo")
       }
     })
   }
@@ -203,10 +268,9 @@ export function DashboardClient({
   )
 
   // --- STATISTICS & BUDGET CALCULATION ---
-  const { stats, budgetProgress, accountBalances, cleanTransactions } = useMemo(() => {
-    const now = new Date()
-    const currentMonth = now.getMonth()
-    const currentYear = now.getFullYear()
+  const { stats, budgetProgress, accountBalances, cleanTransactions, monthlyTxs } = useMemo(() => {
+    const currentMonth = selectedMonth
+    const currentYear = selectedYear
     const lastMonth = currentMonth === 0 ? 11 : currentMonth - 1
     const lastMonthYear = currentMonth === 0 ? currentYear - 1 : currentYear
 
@@ -278,9 +342,10 @@ export function DashboardClient({
       stats: { income, expense, balance, incomeTrend, expenseTrend }, 
       budgetProgress: progress,
       accountBalances,
-      cleanTransactions
+      cleanTransactions,
+      monthlyTxs
     }
-  }, [optimisticTransactions, initialBudgets, initialCategories, initialAccounts])
+  }, [optimisticTransactions, initialBudgets, initialCategories, initialAccounts, selectedMonth, selectedYear])
 
   const openEditDialog = (tx: UITransaction) => {
     setEditingTx(tx)
@@ -304,16 +369,20 @@ export function DashboardClient({
       }
       startTransition(async () => {
         addOptimisticAction({ type: "UPDATE", transaction: updatedTxUI })
-        const result = await updateTransaction(editingTx.id, {
-           amount: data.amount.toString(),
-           category: data.category,
-           description: data.note,
-           date: d,
-           type: data.amount >= 0 ? "income" : "expense",
-           accountId: data.accountId,
-        })
-        if (!result.success) toast.error(result.error || "Gagal memperbarui data")
-        else toast.success("Transaksi diperbarui")
+        try {
+          const result = await updateTransaction(editingTx.id, {
+             amount: data.amount.toString(),
+             category: data.category,
+             description: data.note,
+             date: d,
+             type: data.amount >= 0 ? "income" : "expense",
+             accountId: data.accountId,
+          })
+          if (!result.success) toast.error(result.error || "Gagal memperbarui data")
+          else toast.success("Transaksi diperbarui")
+        } finally {
+          router.refresh()
+        }
       })
     } else {
       const newTxUI: UITransaction = {
@@ -329,57 +398,61 @@ export function DashboardClient({
       startTransition(async () => {
         addOptimisticAction({ type: "ADD", transaction: newTxUI })
         
-        // Cek apakah melebihi budget (Push Notification)
-        if (data.amount < 0) {
-           const category = initialCategories.find(c => c.name === data.category)
-           const budget = initialBudgets.find(b => b.categoryId === category?.id)
-           
-           if (budget) {
-             const now = new Date()
-             const currentMonth = now.getMonth()
-             const currentYear = now.getFullYear()
+        try {
+          // Cek apakah melebihi budget (Push Notification)
+          if (data.amount < 0) {
+             const category = initialCategories.find(c => c.name === data.category)
+             const budget = initialBudgets.find(b => b.categoryId === category?.id)
              
-             // Hitung manual pengeluaran kategori ini di bulan ini (instan)
-             const existingSpent = initialTransactions.filter(t => {
-               const d = new Date(t.rawDate)
-               return d.getMonth() === currentMonth && 
-                      d.getFullYear() === currentYear && 
-                      t.category === data.category && 
-                      t.amount < 0
-             }).reduce((sum, t) => sum + Math.abs(t.amount), 0)
-
-             const totalSpent = existingSpent + Math.abs(data.amount)
-             const limit = parseFloat(budget.limitAmount)
-             
-             if (totalSpent > limit) {
-               const msg = `Pengeluaran ${data.category} (Rp ${totalSpent.toLocaleString("id-ID")}) melebihi batas Rp ${limit.toLocaleString("id-ID")}!`
+             if (budget) {
+               const now = new Date()
+               const currentMonth = now.getMonth()
+               const currentYear = now.getFullYear()
                
-               // 1. Sistem Notification
-               sendNotification("⚠️ Anggaran Terlampaui!", {
-                 body: msg,
-                 tag: "budget-alert"
-               })
-
-               // 2. Fallback Toast (Jika notifikasi sistem diblokir)
-               toast.error(msg, {
-                 duration: 5000,
-                 icon: <AlertCircle className="h-5 w-5" />
-               })
+               // Hitung manual pengeluaran kategori ini di bulan ini (instan)
+               const existingSpent = optimisticTransactions.filter(t => {
+                 const d = new Date(t.rawDate)
+                 return d.getMonth() === currentMonth && 
+                        d.getFullYear() === currentYear && 
+                        t.category === data.category && 
+                        t.amount < 0
+               }).reduce((sum, t) => sum + Math.abs(t.amount), 0)
+  
+               const totalSpent = existingSpent + Math.abs(data.amount)
+               const limit = parseFloat(budget.limitAmount)
+               
+               if (totalSpent > limit) {
+                 const msg = `Pengeluaran ${data.category} (Rp ${totalSpent.toLocaleString("id-ID")}) melebihi batas Rp ${limit.toLocaleString("id-ID")}!`
+                 
+                 // 1. Sistem Notification
+                 sendNotification("⚠️ Anggaran Terlampaui!", {
+                   body: msg,
+                   tag: "budget-alert"
+                 })
+  
+                 // 2. Fallback Toast (Jika notifikasi sistem diblokir)
+                 toast.error(msg, {
+                   duration: 5000,
+                   icon: <AlertCircle className="h-5 w-5" />
+                 })
+               }
              }
-           }
-        }
-
-        const result = await createTransaction({
-          description: data.note,
-          amount: data.amount.toString(),
-          category: data.category,
-          type: data.amount >= 0 ? "income" : "expense",
-          date: d,
-          accountId: data.accountId,
-        })
-        if (!result.success) toast.error(result.error || "Gagal menyimpan data")
-        else {
-          toast.success("Transaksi disimpan")
+          }
+  
+          const result = await createTransaction({
+            description: data.note,
+            amount: data.amount.toString(),
+            category: data.category,
+            type: data.amount >= 0 ? "income" : "expense",
+            date: d,
+            accountId: data.accountId,
+          })
+          if (!result.success) toast.error(result.error || "Gagal menyimpan data")
+          else {
+            toast.success("Transaksi disimpan")
+          }
+        } finally {
+          router.refresh()
         }
       })
     }
@@ -388,7 +461,36 @@ export function DashboardClient({
   return (
     <div className="space-y-4 p-4 lg:p-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-         <h2 className="font-sans text-sm font-bold uppercase tracking-[0.2em] text-muted-foreground">Dashboard Overview</h2>
+         <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+            <h2 className="font-sans text-sm font-bold uppercase tracking-[0.2em] text-muted-foreground">Dashboard Overview</h2>
+            <div className="flex items-center gap-2">
+              <Select value={selectedMonth.toString()} onValueChange={(val) => setSelectedMonth(parseInt(val))}>
+                <SelectTrigger className="h-8 w-[130px] rounded-md text-xs font-mono">
+                  <SelectValue placeholder="Bulan" />
+                </SelectTrigger>
+                <SelectContent>
+                  {MONTHS.map((m) => (
+                    <SelectItem key={m.value} value={m.value} className="text-xs font-mono">
+                      {m.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={selectedYear.toString()} onValueChange={(val) => setSelectedYear(parseInt(val))}>
+                <SelectTrigger className="h-8 w-[90px] rounded-md text-xs font-mono">
+                  <SelectValue placeholder="Tahun" />
+                </SelectTrigger>
+                <SelectContent>
+                  {YEARS.map((y) => (
+                    <SelectItem key={y} value={y} className="text-xs font-mono">
+                      {y}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+         </div>
          <button 
            onClick={handleRequestNotif}
            className={cn(
@@ -407,10 +509,10 @@ export function DashboardClient({
           amount={stats.balance} 
           icon={Wallet} 
           color={stats.balance >= 0 ? "text-foreground" : "text-destructive"} 
-          subLabel={`Akumulasi per ${new Date().toLocaleString("id-ID", { month: "long", year: "numeric" })}`}
+          subLabel="Akumulasi seluruh waktu"
         />
-        <StatCard label="Masuk Bulan Ini" amount={stats.income} icon={TrendingUp} color="text-[#5a6b3b]" trend={stats.incomeTrend} />
-        <StatCard label="Keluar Bulan Ini" amount={stats.expense} icon={TrendingDown} color="text-destructive" trend={stats.expenseTrend} />
+        <StatCard label={`Masuk ${MONTHS[selectedMonth].label}`} amount={stats.income} icon={TrendingUp} color="text-[#5a6b3b]" trend={stats.incomeTrend} />
+        <StatCard label={`Keluar ${MONTHS[selectedMonth].label}`} amount={stats.expense} icon={TrendingDown} color="text-destructive" trend={stats.expenseTrend} />
       </div>
 
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1fr_360px]">
@@ -454,17 +556,22 @@ export function DashboardClient({
            )}
         </div>
         
-        <CategoryDistribution transactions={cleanTransactions} />
-        <AccountSummary accounts={accountBalances} onEditAccount={openEditAccountDialog} />
+        <CategoryDistribution transactions={monthlyTxs} />
+        <AccountSummary accounts={accountBalances} onEditAccount={openEditAccountDialog} onAdjustBalance={openAdjustBalanceDialog} />
       </div>
 
       <TransactionsTable
         transactions={cleanTransactions}
+        accounts={initialAccounts}
         onDelete={(id) => startTransition(async () => {
           addOptimisticAction({ type: "DELETE", id })
-          const result = await deleteTransaction(id)
-          if (!result.success) toast.error("Gagal menghapus data")
-          else toast.success("Transaksi dihapus")
+          try {
+            const result = await deleteTransaction(id)
+            if (!result.success) toast.error("Gagal menghapus data")
+            else toast.success("Transaksi dihapus")
+          } finally {
+            router.refresh()
+          }
         })}
         onEdit={openEditDialog}
         onNewEntry={() => setSelectorOpen(true)}
@@ -492,6 +599,18 @@ export function DashboardClient({
         initialData={editingAccount || undefined}
         onClose={() => setAccountDialogOpen(false)}
         onSubmit={handleAccountSubmit}
+        isPending={isPending}
+      />
+
+      <AdjustBalanceDialog
+        open={adjustBalanceDialogOpen}
+        account={adjustingAccount ? {
+          id: adjustingAccount.id,
+          name: adjustingAccount.name,
+          currentBalance: accountBalances.find(a => a.id === adjustingAccount.id)?.currentBalance || 0
+        } : undefined}
+        onClose={() => setAdjustBalanceDialogOpen(false)}
+        onSubmit={handleAdjustBalanceSubmit}
         isPending={isPending}
       />
 

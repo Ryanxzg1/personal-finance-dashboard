@@ -14,9 +14,10 @@ interface Account {
 interface AccountSummaryProps {
   accounts: Account[]
   onEditAccount?: (acc: Account) => void
+  onAdjustBalance?: (acc: Account) => void
 }
 
-export function AccountSummary({ accounts, onEditAccount }: AccountSummaryProps) {
+export function AccountSummary({ accounts, onEditAccount, onAdjustBalance }: AccountSummaryProps) {
   if (accounts.length === 0) return null
 
   return (
@@ -35,12 +36,22 @@ export function AccountSummary({ accounts, onEditAccount }: AccountSummaryProps)
             className="group flex items-center justify-between p-3 rounded-sm border border-border bg-muted/30 hover:bg-muted/50 transition-colors"
           >
             <div className="flex items-center gap-3">
-              <button 
-                onClick={() => onEditAccount?.(acc)}
-                className="opacity-100 lg:opacity-0 lg:group-hover:opacity-100 p-1 rounded-sm bg-primary/10 text-primary hover:bg-primary/20 transition-all mr-1"
-              >
-                <Pencil className="h-3 w-3" />
-              </button>
+              <div className="flex flex-col gap-1 mr-1 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-all">
+                <button 
+                  title="Edit Info"
+                  onClick={() => onEditAccount?.(acc)}
+                  className="p-1 rounded-sm bg-primary/10 text-primary hover:bg-primary/20 transition-all"
+                >
+                  <Pencil className="h-3 w-3" />
+                </button>
+                <button 
+                  title="Sesuaikan Saldo"
+                  onClick={() => onAdjustBalance?.(acc)}
+                  className="p-1 rounded-sm bg-muted text-muted-foreground border border-border hover:bg-border transition-all"
+                >
+                  <Banknote className="h-3 w-3" />
+                </button>
+              </div>
               <div className="flex h-8 w-8 items-center justify-center rounded-sm bg-background border border-border">
                 {acc.type === "bank" && <Landmark className="h-4 w-4 text-primary" />}
                 {acc.type === "cash" && <Banknote className="h-4 w-4 text-[#5a6b3b]" />}

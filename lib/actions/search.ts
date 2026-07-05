@@ -3,7 +3,7 @@
 import { db } from "@/lib/db";
 import { transactions, categories, accounts } from "@/lib/db/schema";
 import { auth } from "@clerk/nextjs/server";
-import { eq, ilike, or, and } from "drizzle-orm";
+import { eq, ilike, or, and, sql } from "drizzle-orm";
 
 export async function searchEverything(query: string) {
   try {
@@ -21,7 +21,7 @@ export async function searchEverything(query: string) {
             or(
               ilike(transactions.description, `%${query}%`),
               ilike(transactions.category, `%${query}%`),
-              ilike(transactions.amount, `%${query}%`)
+              ilike(sql<string>`cast(${transactions.amount} as text)`, `%${query}%`)
             )
           )
         )
