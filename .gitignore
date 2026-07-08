@@ -84,9 +84,3 @@ scratch_check_db.js
 .codex/
 next-env.d.ts
 
-# Testing Coverage & Reports
-coverage/
-.nyc_output/
-playwright-report/
-test-results/
-
