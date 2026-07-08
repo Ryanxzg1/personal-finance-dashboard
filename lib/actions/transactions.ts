@@ -62,13 +62,36 @@ export async function createTransaction(data: Omit<NewTransaction, "userId">) {
   }
 }
 
+import { getTransactionsQuery } from "@/lib/queries/transactions";
+import { TransactionListQuery } from "@/lib/validations/transaction-query";
+
+/**
+ * Mengambil transaksi dengan cursor pagination
+ */
+export async function getTransactionsPaginated(query: TransactionListQuery, includeTotal: boolean = false) {
+  try {
+    const { userId } = await auth();
+    if (!userId) throw new Error("Unauthorized");
+
+    const data = await getTransactionsQuery(userId, query, includeTotal);
+    return { success: true, data };
+  } catch (error) {
+    console.error("Failed to fetch paginated transactions:", error);
+    return { success: false, error: "Gagal mengambil data transaksi" };
+  }
+}
+
 /**
  * Mengambil semua transaksi dari database
+ * @deprecated Gunakan getTransactionsPaginated untuk mendukung pagination dan agregasi server-side
  */
 export async function getTransactions() {
   try {
     const { userId } = await auth();
     if (!userId) throw new Error("Unauthorized");
+    
+    // Telemetry mock: catat pemakaian legacy method
+    console.warn(`[DEPRECATED] getTransactions called by user ${userId}`);
 
     const items = await db
       .select()

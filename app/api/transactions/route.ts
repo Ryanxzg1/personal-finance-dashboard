@@ -2,11 +2,14 @@ import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
 import { accounts, transactions } from "@/lib/db/schema";
-import { desc, eq, and } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { transactionSchema } from "@/lib/validations/transaction";
 import { z } from "zod";
 
-export async function GET() {
+import { transactionListQuerySchema } from "@/lib/validations/transaction-query";
+import { getTransactionsQuery } from "@/lib/queries/transactions";
+
+export async function GET(req: Request) {
   try {
     const { userId } = await auth();
 
@@ -14,14 +17,28 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const data = await db
-      .select()
-      .from(transactions)
-      .where(eq(transactions.userId, userId))
-      .orderBy(desc(transactions.date));
+    const url = new URL(req.url);
+    const query = {
+      startDate: url.searchParams.get("startDate") || undefined,
+      endDate: url.searchParams.get("endDate") || undefined,
+      category: url.searchParams.get("category") || undefined,
+      accountId: url.searchParams.get("accountId") ? parseInt(url.searchParams.get("accountId")!) : undefined,
+      type: url.searchParams.get("type") || undefined,
+      includeTechnical: url.searchParams.has("includeTechnical") ? url.searchParams.get("includeTechnical") === "true" : undefined,
+      limit: url.searchParams.get("limit") ? parseInt(url.searchParams.get("limit")!) : undefined,
+      after: url.searchParams.get("after") || undefined,
+      before: url.searchParams.get("before") || undefined,
+    };
 
+    const validatedQuery = transactionListQuerySchema.parse(query);
+    const includeTotal = url.searchParams.get("includeTotal") === "true";
+
+    const data = await getTransactionsQuery(userId, validatedQuery, includeTotal);
     return NextResponse.json(data);
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json({ error: error.issues[0].message }, { status: 400 });
+    }
     console.error("[TRANSACTIONS_GET]", error);
     return NextResponse.json({ error: "Internal Error" }, { status: 500 });
   }

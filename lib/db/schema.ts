@@ -16,6 +16,7 @@ export const transactions = pgTable("transactions", {
   index("transactions_date_idx").on(table.date),
   index("transactions_account_id_idx").on(table.accountId),
   index("transactions_category_idx").on(table.category),
+  index("transactions_pagination_idx").on(table.userId, table.date.desc(), table.id.desc()),
 ]);
 
 export const categories = pgTable("categories", {

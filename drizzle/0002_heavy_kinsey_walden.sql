@@ -1,0 +1,1 @@
+CREATE INDEX "transactions_pagination_idx" ON "transactions" USING btree ("user_id","date" DESC NULLS LAST,"id" DESC NULLS LAST);

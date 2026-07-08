@@ -15,6 +15,13 @@
       "when": 1783157036793,
       "tag": "0001_solid_the_enforcers",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1783245438442,
+      "tag": "0002_heavy_kinsey_walden",
+      "breakpoints": true
     }
   ]
 }
